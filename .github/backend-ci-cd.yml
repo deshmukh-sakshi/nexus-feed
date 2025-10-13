@@ -1,0 +1,39 @@
+name: Backend CI & CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build, Test, and Deploy Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 and Maven Cache
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'backend/pom.xml'
+
+      - name: Build and Run Tests
+        run: mvn -B verify --file pom.xml
+
+      # Optional: Add deployment step here if you have a production deploy hook
+      # - name: Trigger Production Deployment
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   run: curl -X POST ${{ secrets.YOUR_DEPLOY_HOOK_URL }}
