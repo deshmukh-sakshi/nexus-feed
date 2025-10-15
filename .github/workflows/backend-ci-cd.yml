@@ -32,6 +32,11 @@ jobs:
 
       - name: Build and Run Tests
         run: mvn -B verify --file pom.xml
+
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         
 
       # Optional: Add deployment step here if you have a production deploy hook
