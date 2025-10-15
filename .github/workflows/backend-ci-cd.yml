@@ -32,6 +32,7 @@ jobs:
 
       - name: Build and Run Tests
         run: mvn -B verify --file pom.xml
+        
 
       # Optional: Add deployment step here if you have a production deploy hook
       # - name: Trigger Production Deployment
