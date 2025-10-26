@@ -14,7 +14,7 @@ import java.util.*;
 @Entity
 @Table(name = "user_badges")
 public class UserBadge {
-    @EmbeddedId
+    @EmbeddedId // This says "use this composite object as the primary key"
     private UserBadgeId id;
 
     @ManyToOne
@@ -32,7 +32,7 @@ public class UserBadge {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Embeddable
+    @Embeddable // This says "this class can be embedded in other entities"
     public static class UserBadgeId implements Serializable {
         private UUID userId;
         private Integer badgeId;
