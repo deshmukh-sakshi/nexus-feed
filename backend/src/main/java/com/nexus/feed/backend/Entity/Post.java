@@ -3,7 +3,7 @@ package com.nexus.feed.backend.Entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Data
@@ -29,8 +29,8 @@ public class Post {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> images = new ArrayList<>();

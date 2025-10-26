@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Data
@@ -24,5 +25,5 @@ public class PostImage {
     @Size(max = 2048)
     private String imageUrl;
 
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 }

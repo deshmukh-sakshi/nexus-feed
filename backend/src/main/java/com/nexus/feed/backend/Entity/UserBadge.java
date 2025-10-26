@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -26,7 +27,7 @@ public class UserBadge {
     @JoinColumn(name = "badge_id")
     private Badge badge;
 
-    private Instant awardedAt;
+    private LocalDateTime awardedAt;
 
     @Data
     @NoArgsConstructor
