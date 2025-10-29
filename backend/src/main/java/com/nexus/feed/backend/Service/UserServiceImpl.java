@@ -18,24 +18,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserCreateRequest request) {
-        // Check if username or email already exists
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        Users user = new Users();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(hashPassword(request.getPassword())); // TODO: Implement proper hashing
-        user.setBio(request.getBio());
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
-        Users savedUser = userRepository.save(user);
-        return convertToResponse(savedUser);
+        throw new UnsupportedOperationException("Use /api/auth/register endpoint to create users");
     }
 
     @Override
@@ -80,19 +63,17 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponse convertToResponse(Users user) {
+        // Get email from AppUser relationship
+        String email = user.getAppUser() != null ? user.getAppUser().getEmail() : null;
+        
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .email(user.getEmail())
+                .email(email)
                 .bio(user.getBio())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
-    }
-
-    private String hashPassword(String password) {
-        // TODO: Implement proper password hashing (BCrypt)
-        return "hashed_" + password; // Temporary implementation
     }
 }

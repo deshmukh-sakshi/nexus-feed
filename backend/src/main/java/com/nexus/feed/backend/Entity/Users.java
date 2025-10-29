@@ -12,8 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
+        @UniqueConstraint(columnNames = "username")
 })
 public class Users {
     @Id
@@ -24,15 +23,6 @@ public class Users {
     @Size(max = 50)
     private String username;
 
-    @NotBlank
-    @Email
-    @Size(max = 255)
-    private String email;
-
-    @NotBlank
-    @Size(max = 255)
-    private String passwordHash;
-
     private String bio;
 
     @Size(max = 255)
@@ -40,6 +30,10 @@ public class Users {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @OneToOne
+    @JoinColumn(name = "app_user_id", unique = true, nullable = false)
+    private com.nexus.feed.backend.Auth.Entity.AppUser appUser;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
