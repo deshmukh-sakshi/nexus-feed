@@ -78,7 +78,7 @@ public class AuthService {
     private AuthResponse createAuthResponse(AppUserDetails userDetails, String token) {
         return new AuthResponse(
                 userDetails.getUserId(),
-                userDetails.getUsername(),
+                userDetails.getDisplayUsername(),
                 userDetails.getEmail(),
                 token
         );

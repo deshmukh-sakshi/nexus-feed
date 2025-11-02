@@ -14,6 +14,7 @@ import java.util.UUID;
 public class AppUserDetails implements UserDetails {
 
     private final UUID userId;
+    private final String displayUsername;
     private final String email;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -22,6 +23,7 @@ public class AppUserDetails implements UserDetails {
         this.email = appUser.getEmail();
         this.password = appUser.getPassword();
         this.userId = appUser.getUserProfile() != null ? appUser.getUserProfile().getId() : null;
+        this.displayUsername = appUser.getUserProfile() != null ? appUser.getUserProfile().getUsername() : null;
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
