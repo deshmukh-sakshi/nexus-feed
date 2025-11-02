@@ -6,7 +6,7 @@ interface PostListProps {
 }
 
 export const PostList = ({ posts }: PostListProps) => {
-  if (posts.length === 0) {
+  if (!Array.isArray(posts) || posts.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No posts yet. Be the first to create one!</p>

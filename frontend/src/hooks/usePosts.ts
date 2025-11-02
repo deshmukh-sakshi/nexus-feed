@@ -47,7 +47,7 @@ export const usePosts = () => {
   })
 
   return {
-    posts: postsQuery.data || [],
+    posts: Array.isArray(postsQuery.data) ? postsQuery.data : [],
     isLoading: postsQuery.isLoading,
     error: postsQuery.error,
     refetch: postsQuery.refetch,
