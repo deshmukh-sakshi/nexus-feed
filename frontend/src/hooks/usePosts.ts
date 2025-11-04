@@ -1,15 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { postsApi } from '@/lib/api-client'
+import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { PostCreateRequest, VoteRequest } from '@/types'
+import type { PostCreateRequest, PostUpdateRequest, VoteRequest } from '@/types'
 
-export const usePosts = () => {
+export const usePosts = (pageSize = 10) => {
   const queryClient = useQueryClient()
 
-  const postsQuery = useQuery({
-    queryKey: ['posts'],
-    queryFn: postsApi.getPosts,
+  const postsQuery = useInfiniteQuery({
+    queryKey: ['posts', pageSize],
+    queryFn: ({ pageParam = 0 }) => postsApi.getPosts(pageParam, pageSize),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) return undefined
+      return lastPage.number + 1
+    },
+    initialPageParam: 0,
     retry: false,
   })
 
@@ -24,11 +29,25 @@ export const usePosts = () => {
     },
   })
 
-  const votePostMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: VoteRequest }) =>
-      postsApi.votePost(id, data),
+  const updatePostMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PostUpdateRequest }) =>
+      postsApi.updatePost(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['post'] })
+      toast.success('Post updated successfully!')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const votePostMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: VoteRequest }) =>
+      votesApi.votePost(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['post'] })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -46,12 +65,22 @@ export const usePosts = () => {
     },
   })
 
+  const posts = postsQuery.data?.pages.flatMap((page) => page.content) ?? []
+  const hasNextPage = postsQuery.hasNextPage
+  const isLastPage = postsQuery.data?.pages[postsQuery.data.pages.length - 1]?.last ?? false
+
   return {
-    posts: Array.isArray(postsQuery.data) ? postsQuery.data : [],
+    posts,
     isLoading: postsQuery.isLoading,
     error: postsQuery.error,
     refetch: postsQuery.refetch,
+    fetchNextPage: postsQuery.fetchNextPage,
+    hasNextPage,
+    isLastPage,
+    isFetchingNextPage: postsQuery.isFetchingNextPage,
     createPost: (data: PostCreateRequest) => createPostMutation.mutate(data),
+    updatePost: (id: string, data: PostUpdateRequest) =>
+      updatePostMutation.mutate({ id, data }),
     votePost: (id: string, data: VoteRequest) =>
       votePostMutation.mutate({ id, data }),
     deletePost: (id: string) => deletePostMutation.mutate(id),

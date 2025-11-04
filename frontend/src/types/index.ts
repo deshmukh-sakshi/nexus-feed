@@ -57,6 +57,8 @@ export interface Comment {
   userId: string
   username: string
   postId: string
+  parentCommentId?: string
+  replies?: Comment[]
   upvotes: number
   downvotes: number
   userVote?: 'UPVOTE' | 'DOWNVOTE' | null
@@ -64,7 +66,19 @@ export interface Comment {
 
 export interface CommentCreateRequest {
   body: string
-  postId: string
+  postId?: string
+  parentCommentId?: string
+}
+
+export interface CommentUpdateRequest {
+  body: string
+}
+
+export interface PostUpdateRequest {
+  title?: string
+  url?: string
+  body?: string
+  imageUrls?: string[]
 }
 
 // Vote types
@@ -72,9 +86,48 @@ export interface VoteRequest {
   voteType: 'UPVOTE' | 'DOWNVOTE'
 }
 
+// Pagination types
+export interface PageInfo {
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  last: boolean
+  first: boolean
+}
+
+export interface PageResponse<T> {
+  content: T[]
+  pageable: {
+    pageNumber: number
+    pageSize: number
+  }
+  totalElements: number
+  totalPages: number
+  last: boolean
+  first: boolean
+  number: number
+  size: number
+  numberOfElements: number
+  empty: boolean
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   data: T
   message?: string
   success: boolean
+}
+
+// User Profile types
+export interface UserProfile {
+  userId: string
+  username: string
+  email: string
+  bio?: string
+  profileImageUrl?: string
+  createdAt: string
+  postCount: number
+  commentCount: number
+  totalUpvotes: number
 }

@@ -6,6 +6,8 @@ import { Layout } from '@/components/layout/Layout'
 import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
+import { PostDetail } from '@/pages/PostDetail'
+import { UserProfile } from '@/pages/UserProfile'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +28,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/user/:username" element={<UserProfile />} />
           </Route>
         </Routes>
         <Toaster />

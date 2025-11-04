@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePosts } from '@/hooks/usePosts'
@@ -17,6 +18,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const { votePost } = usePosts()
 
   const score = post.upvotes - post.downvotes
+  const isEdited = post.createdAt !== post.updatedAt
 
   const handleVote = (voteType: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) return
@@ -27,7 +29,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 pt-1">
             <Button
               variant="ghost"
               size="sm"
@@ -55,16 +57,27 @@ export const PostCard = ({ post }: PostCardProps) => {
             </Button>
           </div>
 
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Link
-                to={`/user/${post.username}`}
-                className="hover:underline font-medium"
-              >
-                u/{post.username}
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2">
+              <Link to={`/user/${post.username}`} className="hover:opacity-80">
+                <UserAvatar username={post.username} size="sm" />
               </Link>
-              <span>•</span>
-              <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Link
+                  to={`/user/${post.username}`}
+                  className="hover:underline font-medium"
+                >
+                  u/{post.username}
+                </Link>
+                <span>•</span>
+                <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
+                {isEdited && (
+                  <>
+                    <span>•</span>
+                    <span className="italic">edited</span>
+                  </>
+                )}
+              </div>
             </div>
 
             <Link to={`/post/${post.id}`}>
@@ -102,13 +115,19 @@ export const PostCard = ({ post }: PostCardProps) => {
         </CardContent>
       )}
 
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex gap-2">
         <Link to={`/post/${post.id}`}>
           <Button variant="ghost" size="sm">
             <MessageSquare className="mr-2 h-4 w-4" />
-            {post.commentCount} Comments
+            {post.commentCount} {post.commentCount === 1 ? 'Comment' : 'Comments'}
           </Button>
         </Link>
+        <div className="text-xs text-muted-foreground flex items-center">
+          <ArrowBigUp className="h-4 w-4 text-orange-500" />
+          <span className="ml-1">{post.upvotes}</span>
+          <ArrowBigDown className="h-4 w-4 ml-2 text-blue-500" />
+          <span className="ml-1">{post.downvotes}</span>
+        </div>
       </CardFooter>
     </Card>
   )
