@@ -284,8 +284,6 @@ class PostControllerTest {
     @DisplayName("Should return 400 when delete fails")
     void shouldReturn400WhenDeleteFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId()).thenReturn(userId);
-        doNothing().when(postService).deletePost(any(UUID.class), any(UUID.class));
         when(authenticationService.getCurrentUserId())
                 .thenThrow(new RuntimeException("Delete failed"));
 

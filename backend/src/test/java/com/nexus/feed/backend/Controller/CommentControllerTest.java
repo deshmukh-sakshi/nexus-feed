@@ -297,8 +297,6 @@ class CommentControllerTest {
     @DisplayName("Should return 400 when delete comment fails")
     void shouldReturn400WhenDeleteCommentFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId()).thenReturn(userId);
-        doNothing().when(commentService).deleteComment(any(UUID.class), any(UUID.class));
         when(authenticationService.getCurrentUserId())
                 .thenThrow(new RuntimeException("Unauthorized or comment not found"));
 

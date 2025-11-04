@@ -149,8 +149,6 @@ class VoteControllerTest {
     @DisplayName("Should return 400 when vote fails")
     void shouldReturn400WhenVoteFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId()).thenReturn(userId);
-        doNothing().when(voteService).vote(any(UUID.class), any(VoteRequest.class));
         when(authenticationService.getCurrentUserId())
                 .thenThrow(new RuntimeException("Vote failed"));
 
@@ -178,8 +176,6 @@ class VoteControllerTest {
     @DisplayName("Should return 400 when remove vote fails")
     void shouldReturn400WhenRemoveVoteFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId()).thenReturn(userId);
-        doNothing().when(voteService).removeVote(any(UUID.class), any(UUID.class), any(Vote.VotableType.class));
         when(authenticationService.getCurrentUserId())
                 .thenThrow(new RuntimeException("Vote not found"));
 
