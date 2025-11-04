@@ -7,9 +7,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"post"})
+@EqualsAndHashCode(exclude = {"post"})
 @Entity
 @Table(name = "post_images")
 public class PostImage {
@@ -26,4 +29,9 @@ public class PostImage {
     private String imageUrl;
 
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

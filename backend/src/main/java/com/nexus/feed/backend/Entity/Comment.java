@@ -7,9 +7,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"post", "parentComment", "replies"})
+@EqualsAndHashCode(exclude = {"post", "parentComment", "replies"})
 @Entity
 @Table(name = "comments")
 public class Comment {
@@ -37,4 +40,15 @@ public class Comment {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
