@@ -8,6 +8,7 @@ import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
 import { PostDetail } from '@/pages/PostDetail'
 import { UserProfile } from '@/pages/UserProfile'
+import { CreatePost } from '@/pages/CreatePost'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/post/:id" element={<PostDetail />} />
             <Route path="/user/:username" element={<UserProfile />} />
+            <Route path="/create-post" element={<CreatePost />} />
           </Route>
         </Routes>
         <Toaster />
