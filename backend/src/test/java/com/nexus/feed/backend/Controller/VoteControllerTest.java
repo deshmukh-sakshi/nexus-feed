@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(VoteController.class)
+@WebMvcTest(controllers = VoteController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @DisplayName("VoteController Tests")
@@ -41,6 +41,12 @@ class VoteControllerTest {
 
     @MockBean
     private AuthenticationService authenticationService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
     private UUID votableId;
@@ -197,7 +203,7 @@ class VoteControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.upvotes").value(10))
                 .andExpect(jsonPath("$.downvotes").value(2))
-                .andExpect(jsonPath("$.userVote").value(null));
+                .andExpect(jsonPath("$.userVote").isEmpty());
     }
 
     @Test
@@ -236,7 +242,7 @@ class VoteControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.upvotes").value(10))
                 .andExpect(jsonPath("$.downvotes").value(2))
-                .andExpect(jsonPath("$.userVote").value(null));
+                .andExpect(jsonPath("$.userVote").isEmpty());
     }
 
     @Test

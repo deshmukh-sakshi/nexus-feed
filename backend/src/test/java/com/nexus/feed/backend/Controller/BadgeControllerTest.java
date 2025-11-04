@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(BadgeController.class)
+@WebMvcTest(controllers = BadgeController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @DisplayName("BadgeController Tests")
@@ -35,6 +35,12 @@ class BadgeControllerTest {
 
     @MockBean
     private BadgeService badgeService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private BadgeResponse badgeResponse;
     private UUID userId;

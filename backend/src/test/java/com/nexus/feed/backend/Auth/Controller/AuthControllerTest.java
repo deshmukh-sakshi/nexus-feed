@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest(controllers = AuthController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @DisplayName("AuthController Tests")
@@ -39,6 +39,12 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+
+    @MockBean
+    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private LoginRequest validLoginRequest;
     private RegistrationRequest validRegistrationRequest;
