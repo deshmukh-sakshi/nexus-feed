@@ -5,9 +5,12 @@ import type {
   RegistrationRequest,
   Post,
   PostCreateRequest,
+  PostUpdateRequest,
   Comment,
   CommentCreateRequest,
-  VoteRequest,
+  CommentUpdateRequest,
+  PageResponse,
+  UserProfile,
 } from '@/types'
 
 // Auth API
@@ -25,8 +28,10 @@ export const authApi = {
 
 // Posts API
 export const postsApi = {
-  getPosts: async (): Promise<Post[]> => {
-    const response = await api.get<Post[]>('/posts')
+  getPosts: async (page = 0, size = 10): Promise<PageResponse<Post>> => {
+    const response = await api.get<PageResponse<Post>>('/posts', {
+      params: { page, size },
+    })
     return response.data
   },
 
@@ -40,24 +45,47 @@ export const postsApi = {
     return response.data
   },
 
+  updatePost: async (id: string, data: PostUpdateRequest): Promise<Post> => {
+    const response = await api.put<Post>(`/posts/${id}`, data)
+    return response.data
+  },
+
   deletePost: async (id: string): Promise<void> => {
     await api.delete(`/posts/${id}`)
   },
 
-  votePost: async (id: string, data: VoteRequest): Promise<void> => {
-    await api.post(`/posts/${id}/vote`, data)
+  getUserPosts: async (
+    userId: string,
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<Post>> => {
+    const response = await api.get<PageResponse<Post>>(`/posts/user/${userId}`, {
+      params: { page, size },
+    })
+    return response.data
   },
 }
 
 // Comments API
 export const commentsApi = {
   getComments: async (postId: string): Promise<Comment[]> => {
-    const response = await api.get<Comment[]>(`/posts/${postId}/comments`)
+    const response = await api.get<Comment[]>(`/comments/post/${postId}`)
     return response.data
   },
 
-  createComment: async (data: CommentCreateRequest): Promise<Comment> => {
-    const response = await api.post<Comment>('/comments', data)
+  createComment: async (
+    postId: string,
+    data: CommentCreateRequest
+  ): Promise<Comment> => {
+    const response = await api.post<Comment>(`/comments/post/${postId}`, data)
+    return response.data
+  },
+
+  updateComment: async (
+    id: string,
+    data: CommentUpdateRequest
+  ): Promise<Comment> => {
+    const response = await api.put<Comment>(`/comments/${id}`, data)
     return response.data
   },
 
@@ -65,7 +93,49 @@ export const commentsApi = {
     await api.delete(`/comments/${id}`)
   },
 
-  voteComment: async (id: string, data: VoteRequest): Promise<void> => {
-    await api.post(`/comments/${id}/vote`, data)
+  getUserComments: async (
+    userId: string,
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<Comment>> => {
+    const response = await api.get<PageResponse<Comment>>(
+      `/comments/user/${userId}`,
+      {
+        params: { page, size },
+      }
+    )
+    return response.data
+  },
+}
+
+// Votes API
+export const votesApi = {
+  votePost: async (postId: string, voteValue: 'UPVOTE' | 'DOWNVOTE'): Promise<void> => {
+    await api.post(`/votes`, {
+      votableId: postId,
+      votableType: 'POST',
+      voteValue,
+    })
+  },
+
+  voteComment: async (commentId: string, voteValue: 'UPVOTE' | 'DOWNVOTE'): Promise<void> => {
+    await api.post(`/votes`, {
+      votableId: commentId,
+      votableType: 'COMMENT',
+      voteValue,
+    })
+  },
+}
+
+// Users API
+export const usersApi = {
+  getUserByUsername: async (username: string): Promise<UserProfile> => {
+    const response = await api.get<UserProfile>(`/users/username/${username}`)
+    return response.data
+  },
+
+  getUserById: async (userId: string): Promise<UserProfile> => {
+    const response = await api.get<UserProfile>(`/users/id/${userId}`)
+    return response.data
   },
 }

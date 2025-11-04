@@ -4,7 +4,16 @@ import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export const Home = () => {
-  const { posts, isLoading, error, refetch } = usePosts()
+  const {
+    posts,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isLastPage,
+    isFetchingNextPage,
+  } = usePosts()
 
   if (isLoading) {
     return (
@@ -33,6 +42,34 @@ export const Home = () => {
         <p className="text-muted-foreground">Latest posts from the community</p>
       </div>
       <PostList posts={posts} />
+      
+      {posts.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          {!isLastPage && hasNextPage && (
+            <Button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              variant="outline"
+              size="lg"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More'
+              )}
+            </Button>
+          )}
+          
+          {isLastPage && (
+            <p className="text-muted-foreground text-sm">
+              That's the end — no more posts to load
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

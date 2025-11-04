@@ -1,0 +1,118 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { Loader2, ArrowLeft, Edit2 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { PostList } from '@/components/posts/PostList'
+import { usersApi, postsApi } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/authStore'
+import { formatDistanceToNow } from 'date-fns'
+
+export const UserProfile = () => {
+  const { username } = useParams<{ username: string }>()
+  const navigate = useNavigate()
+  const { user: currentUser } = useAuthStore()
+
+  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ['user', username],
+    queryFn: () => usersApi.getUserByUsername(username!),
+    enabled: !!username,
+    retry: false,
+  })
+
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ['userPosts', profile?.id],
+    queryFn: () => postsApi.getUserPosts(profile!.id, 0, 20),
+    enabled: !!profile?.id,
+    retry: false,
+  })
+
+  const posts = postsData?.content ?? []
+  const isOwnProfile = currentUser?.userId === profile?.id
+
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (profileError || !profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <p className="text-destructive">User not found.</p>
+        <Button onClick={() => navigate('/')} variant="outline">
+          Go Back Home
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate(-1)}
+        className="mb-4"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-start gap-4">
+            <UserAvatar 
+              username={profile.username} 
+              profileImageUrl={profile.profilePictureUrl}
+              size="lg" 
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold">u/{profile.username}</h1>
+                {isOwnProfile && (
+                  <Button variant="outline" size="sm">
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Member since {formatDistanceToNow(new Date(profile.createdAt))} ago
+              </p>
+              {profile.bio && (
+                <p className="mt-3 text-muted-foreground">{profile.bio}</p>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+
+        <Separator />
+
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold">{posts.length}</div>
+              <div className="text-sm text-muted-foreground">Posts (showing last 20)</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Posts by u/{profile.username}</h2>
+        {postsLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <PostList posts={posts} />
+        )}
+      </div>
+    </div>
+  )
+}
