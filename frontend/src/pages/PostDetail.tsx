@@ -215,7 +215,13 @@ export const PostDetail = () => {
                       className="flex items-center gap-1 text-sm text-blue-500 hover:underline"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      {new URL(post.url).hostname}
+                      {(() => {
+                        try {
+                          return new URL(post.url).hostname
+                        } catch {
+                          return post.url
+                        }
+                      })()}
                     </a>
                   )}
                 </>

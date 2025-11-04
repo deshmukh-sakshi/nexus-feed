@@ -18,7 +18,8 @@ const buildCommentTree = (comments: Comment[]): Comment[] => {
 
   // Second pass: build the tree
   comments.forEach((comment) => {
-    const commentWithReplies = commentMap.get(comment.id)!
+    const commentWithReplies = commentMap.get(comment.id)
+    if (!commentWithReplies) return
     
     if (comment.parentCommentId) {
       const parent = commentMap.get(comment.parentCommentId)

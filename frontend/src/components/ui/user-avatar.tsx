@@ -14,7 +14,7 @@ const generateAvatarGradient = (username: string): string => {
   let hash = 0
   for (let i = 0; i < username.length; i++) {
     hash = username.charCodeAt(i) + ((hash << 5) - hash)
-    hash = hash & hash // Convert to 32-bit integer
+    hash = hash | 0 // Convert to 32-bit integer
   }
 
   // Generate two colors for gradient

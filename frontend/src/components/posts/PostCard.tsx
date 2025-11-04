@@ -97,7 +97,13 @@ export const PostCard = ({ post }: PostCardProps) => {
                 className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
               >
                 <ExternalLink className="h-3 w-3" />
-                {new URL(post.url).hostname}
+                {(() => {
+                  try {
+                    return new URL(post.url).hostname
+                  } catch {
+                    return post.url
+                  }
+                })()}
               </a>
             )}
           </div>
