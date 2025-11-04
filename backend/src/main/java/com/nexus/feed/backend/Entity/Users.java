@@ -7,9 +7,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"posts", "comments", "userBadges"})
+@EqualsAndHashCode(exclude = {"posts", "comments", "userBadges"})
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "username")

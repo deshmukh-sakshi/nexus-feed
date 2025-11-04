@@ -8,9 +8,12 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"user", "badge"})
+@EqualsAndHashCode(exclude = {"user", "badge"})
 @Entity
 @Table(name = "user_badges")
 public class UserBadge {
@@ -28,6 +31,11 @@ public class UserBadge {
     private Badge badge;
 
     private LocalDateTime awardedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        awardedAt = LocalDateTime.now();
+    }
 
     @Data
     @NoArgsConstructor

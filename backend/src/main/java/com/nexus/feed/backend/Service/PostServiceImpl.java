@@ -1,0 +1,179 @@
+package com.nexus.feed.backend.Service;
+
+import com.nexus.feed.backend.DTO.*;
+import com.nexus.feed.backend.Entity.*;
+import com.nexus.feed.backend.Repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class PostServiceImpl implements PostService {
+    
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final PostImageRepository postImageRepository;
+    private final VoteRepository voteRepository;
+    private final CommentRepository commentRepository;
+    private final AuthenticationService authenticationService;
+
+    @Override
+    public PostResponse createPost(UUID userId, PostCreateRequest request) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Post post = new Post();
+        post.setTitle(request.getTitle());
+        post.setUrl(request.getUrl());
+        post.setBody(request.getBody());
+        post.setUser(user);
+
+        Post savedPost = postRepository.save(post);
+
+        // Handle images
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            List<PostImage> images = request.getImageUrls().stream()
+                    .map(url -> {
+                        PostImage image = new PostImage();
+                        image.setPost(savedPost);
+                        image.setImageUrl(url);
+                        return image;
+                    })
+                    .collect(Collectors.toList());
+            postImageRepository.saveAll(images);
+            savedPost.setImages(images);
+        }
+
+        return convertToResponse(savedPost);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PostResponse getPostById(UUID id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        return convertToResponse(post);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getAllPosts(Pageable pageable) {
+        return postRepository.findAllOrderByCreatedAtDesc(pageable)
+                .map(this::convertToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getPostsByUser(UUID userId, Pageable pageable) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return postRepository.findByUserOrderByCreatedAtDesc(user, pageable)
+                .map(this::convertToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchPosts(String keyword, Pageable pageable) {
+        return postRepository.findByTitleContainingOrBodyContainingOrderByCreatedAtDesc(keyword, pageable)
+                .map(this::convertToResponse);
+    }
+
+    @Override
+    public PostResponse updatePost(UUID postId, UUID userId, PostUpdateRequest request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Not authorized to update this post");
+        }
+
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
+        }
+        if (request.getUrl() != null) {
+            post.setUrl(request.getUrl());
+        }
+        if (request.getBody() != null) {
+            post.setBody(request.getBody());
+        }
+
+        // Handle image updates
+        if (request.getImageUrls() != null) {
+            postImageRepository.deleteByPost(post);
+            if (!request.getImageUrls().isEmpty()) {
+                List<PostImage> images = request.getImageUrls().stream()
+                        .map(url -> {
+                            PostImage image = new PostImage();
+                            image.setPost(post);
+                            image.setImageUrl(url);
+                            return image;
+                        })
+                        .collect(Collectors.toList());
+                postImageRepository.saveAll(images);
+            }
+        }
+
+        Post updatedPost = postRepository.save(post);
+        return convertToResponse(updatedPost);
+    }
+
+    @Override
+    public void deletePost(UUID postId, UUID userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Not authorized to delete this post");
+        }
+
+        postRepository.delete(post);
+    }
+
+    private PostResponse convertToResponse(Post post) {
+        List<String> imageUrls = post.getImages().stream()
+                .map(PostImage::getImageUrl)
+                .collect(Collectors.toList());
+
+        long upvotes = voteRepository.countByVotableIdAndVotableTypeAndVoteValue(
+                post.getId(), Vote.VotableType.POST, Vote.VoteValue.UPVOTE);
+        long downvotes = voteRepository.countByVotableIdAndVotableTypeAndVoteValue(
+                post.getId(), Vote.VotableType.POST, Vote.VoteValue.DOWNVOTE);
+
+        String userVote = null;
+        try {
+            UUID currentUserId = authenticationService.getCurrentUserId();
+            userVote = voteRepository.findByUserIdAndVotableIdAndVotableType(
+                    currentUserId, post.getId(), Vote.VotableType.POST)
+                    .map(vote -> vote.getVoteValue().name())
+                    .orElse(null);
+        } catch (RuntimeException e) {
+            // User not authenticated, userVote remains null
+        }
+
+        long commentCount = commentRepository.countByPost(post);
+
+        return PostResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .url(post.getUrl())
+                .body(post.getBody())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .userId(post.getUser().getId())
+                .username(post.getUser().getUsername())
+                .imageUrls(imageUrls)
+                .commentCount((int) commentCount)
+                .upvotes((int) upvotes)
+                .downvotes((int) downvotes)
+                .userVote(userVote)
+                .build();
+    }
+}

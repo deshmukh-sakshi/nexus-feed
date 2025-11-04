@@ -5,9 +5,12 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"userBadges"})
+@EqualsAndHashCode(exclude = {"userBadges"})
 @Entity
 @Table(name = "badges")
 public class Badge {
