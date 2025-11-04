@@ -65,12 +65,12 @@ export const PostDetail = () => {
   const isOwner = user?.userId === post.userId
   const isEdited = post.createdAt !== post.updatedAt
 
-  const handleVote = (voteType: 'UPVOTE' | 'DOWNVOTE') => {
+  const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) {
       setShowAuthModal(true)
       return
     }
-    votePost(post.id, { voteType })
+    votePost(post.id, voteValue)
   }
 
   const handleSubmitComment = () => {

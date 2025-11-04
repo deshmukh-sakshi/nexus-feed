@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { commentsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { CommentCreateRequest, CommentUpdateRequest, VoteRequest } from '@/types'
+import type { CommentCreateRequest, CommentUpdateRequest } from '@/types'
 
 export const useComments = (postId: string) => {
   const queryClient = useQueryClient()
@@ -52,8 +52,8 @@ export const useComments = (postId: string) => {
   })
 
   const voteCommentMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: VoteRequest }) =>
-      votesApi.voteComment(id, data),
+    mutationFn: ({ id, voteValue }: { id: string; voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
+      votesApi.voteComment(id, voteValue),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] })
     },
@@ -72,8 +72,8 @@ export const useComments = (postId: string) => {
     updateComment: (id: string, data: CommentUpdateRequest) =>
       updateCommentMutation.mutate({ id, data }),
     deleteComment: (id: string) => deleteCommentMutation.mutate(id),
-    voteComment: (id: string, data: VoteRequest) =>
-      voteCommentMutation.mutate({ id, data }),
+    voteComment: (id: string, voteValue: 'UPVOTE' | 'DOWNVOTE') =>
+      voteCommentMutation.mutate({ id, voteValue }),
     isCreating: createCommentMutation.isPending,
   }
 }

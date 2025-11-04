@@ -20,9 +20,9 @@ export const PostCard = ({ post }: PostCardProps) => {
   const score = post.upvotes - post.downvotes
   const isEdited = post.createdAt !== post.updatedAt
 
-  const handleVote = (voteType: 'UPVOTE' | 'DOWNVOTE') => {
+  const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) return
-    votePost(post.id, { voteType })
+    votePost(post.id, voteValue)
   }
 
   return (

@@ -83,7 +83,9 @@ export interface PostUpdateRequest {
 
 // Vote types
 export interface VoteRequest {
-  voteType: 'UPVOTE' | 'DOWNVOTE'
+  votableId: string
+  votableType: 'POST' | 'COMMENT'
+  voteValue: 'UPVOTE' | 'DOWNVOTE'
 }
 
 // Pagination types
@@ -121,13 +123,11 @@ export interface ApiResponse<T> {
 
 // User Profile types
 export interface UserProfile {
-  userId: string
+  id: string
   username: string
   email: string
   bio?: string
-  profileImageUrl?: string
+  profilePictureUrl?: string
   createdAt: string
-  postCount: number
-  commentCount: number
-  totalUpvotes: number
+  updatedAt?: string
 }

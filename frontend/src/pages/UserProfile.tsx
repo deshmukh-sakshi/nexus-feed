@@ -23,14 +23,14 @@ export const UserProfile = () => {
   })
 
   const { data: postsData, isLoading: postsLoading } = useQuery({
-    queryKey: ['userPosts', profile?.userId],
-    queryFn: () => postsApi.getUserPosts(profile!.userId, 0, 20),
-    enabled: !!profile?.userId,
+    queryKey: ['userPosts', profile?.id],
+    queryFn: () => postsApi.getUserPosts(profile!.id, 0, 20),
+    enabled: !!profile?.id,
     retry: false,
   })
 
   const posts = postsData?.content ?? []
-  const isOwnProfile = currentUser?.userId === profile?.userId
+  const isOwnProfile = currentUser?.userId === profile?.id
 
   if (profileLoading) {
     return (
@@ -66,7 +66,11 @@ export const UserProfile = () => {
       <Card>
         <CardHeader>
           <div className="flex items-start gap-4">
-            <UserAvatar username={profile.username} size="lg" />
+            <UserAvatar 
+              username={profile.username} 
+              profileImageUrl={profile.profilePictureUrl}
+              size="lg" 
+            />
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold">u/{profile.username}</h1>
@@ -90,18 +94,10 @@ export const UserProfile = () => {
         <Separator />
 
         <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold">{profile.postCount}</div>
-              <div className="text-sm text-muted-foreground">Posts</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{profile.commentCount}</div>
-              <div className="text-sm text-muted-foreground">Comments</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{profile.totalUpvotes}</div>
-              <div className="text-sm text-muted-foreground">Total Upvotes</div>
+              <div className="text-2xl font-bold">{posts.length}</div>
+              <div className="text-sm text-muted-foreground">Posts (showing last 20)</div>
             </div>
           </div>
         </CardContent>

@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from '@tansta
 import { toast } from 'sonner'
 import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { PostCreateRequest, PostUpdateRequest, VoteRequest } from '@/types'
+import type { PostCreateRequest, PostUpdateRequest } from '@/types'
 
 export const usePosts = (pageSize = 10) => {
   const queryClient = useQueryClient()
@@ -43,8 +43,8 @@ export const usePosts = (pageSize = 10) => {
   })
 
   const votePostMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: VoteRequest }) =>
-      votesApi.votePost(id, data),
+    mutationFn: ({ id, voteValue }: { id: string; voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
+      votesApi.votePost(id, voteValue),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       queryClient.invalidateQueries({ queryKey: ['post'] })
@@ -81,8 +81,8 @@ export const usePosts = (pageSize = 10) => {
     createPost: (data: PostCreateRequest) => createPostMutation.mutate(data),
     updatePost: (id: string, data: PostUpdateRequest) =>
       updatePostMutation.mutate({ id, data }),
-    votePost: (id: string, data: VoteRequest) =>
-      votePostMutation.mutate({ id, data }),
+    votePost: (id: string, voteValue: 'UPVOTE' | 'DOWNVOTE') =>
+      votePostMutation.mutate({ id, voteValue }),
     deletePost: (id: string) => deletePostMutation.mutate(id),
     isCreating: createPostMutation.isPending,
   }

@@ -43,12 +43,12 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
   const isEdited = comment.createdAt !== comment.updatedAt
   const canNest = depth < MAX_DEPTH
 
-  const handleVote = (voteType: 'UPVOTE' | 'DOWNVOTE') => {
+  const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) {
       setShowAuthModal(true)
       return
     }
-    voteComment(comment.id, { voteType })
+    voteComment(comment.id, voteValue)
   }
 
   const handleSaveEdit = () => {

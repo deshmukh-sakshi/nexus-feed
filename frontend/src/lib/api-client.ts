@@ -9,7 +9,6 @@ import type {
   Comment,
   CommentCreateRequest,
   CommentUpdateRequest,
-  VoteRequest,
   PageResponse,
   UserProfile,
 } from '@/types'
@@ -111,19 +110,19 @@ export const commentsApi = {
 
 // Votes API
 export const votesApi = {
-  votePost: async (postId: string, data: VoteRequest): Promise<void> => {
+  votePost: async (postId: string, voteValue: 'UPVOTE' | 'DOWNVOTE'): Promise<void> => {
     await api.post(`/votes`, {
       votableId: postId,
       votableType: 'POST',
-      ...data,
+      voteValue,
     })
   },
 
-  voteComment: async (commentId: string, data: VoteRequest): Promise<void> => {
+  voteComment: async (commentId: string, voteValue: 'UPVOTE' | 'DOWNVOTE'): Promise<void> => {
     await api.post(`/votes`, {
       votableId: commentId,
       votableType: 'COMMENT',
-      ...data,
+      voteValue,
     })
   },
 }
