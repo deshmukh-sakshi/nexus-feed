@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { AuthModal } from '@/components/ui/auth-modal'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePosts } from '@/hooks/usePosts'
@@ -16,18 +18,23 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const { isAuthenticated } = useAuthStore()
   const { votePost } = usePosts()
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   const score = post.upvotes - post.downvotes
   const isEdited = post.createdAt !== post.updatedAt
 
   const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      setShowAuthModal(true)
+      return
+    }
     votePost(post.id, voteValue)
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
+    <>
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <div className="flex flex-col items-center gap-1 pt-1">
             <Button
@@ -38,7 +45,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                 post.userVote === 'UPVOTE' && 'text-orange-500'
               )}
               onClick={() => handleVote('UPVOTE')}
-              disabled={!isAuthenticated}
             >
               <ArrowBigUp className="h-5 w-5" />
             </Button>
@@ -51,7 +57,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                 post.userVote === 'DOWNVOTE' && 'text-blue-500'
               )}
               onClick={() => handleVote('DOWNVOTE')}
-              disabled={!isAuthenticated}
             >
               <ArrowBigDown className="h-5 w-5" />
             </Button>
@@ -130,5 +135,12 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
       </CardFooter>
     </Card>
+
+    <AuthModal
+      isOpen={showAuthModal}
+      onClose={() => setShowAuthModal(false)}
+      message="You need to be logged in to vote on posts."
+    />
+  </>
   )
 }
