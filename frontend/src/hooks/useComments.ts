@@ -71,7 +71,7 @@ export const useComments = (postId: string) => {
       createCommentMutation.mutate(data),
     updateComment: (id: string, data: CommentUpdateRequest) =>
       updateCommentMutation.mutate({ id, data }),
-    deleteComment: (id: string) => deleteCommentMutation.mutate(id),
+    deleteComment: (id: string) => deleteCommentMutation.mutateAsync(id),
     voteComment: (id: string, voteValue: 'UPVOTE' | 'DOWNVOTE') =>
       voteCommentMutation.mutate({ id, voteValue }),
     isCreating: createCommentMutation.isPending,

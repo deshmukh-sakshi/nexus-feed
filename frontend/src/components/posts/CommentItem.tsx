@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { formatDistanceToNow } from 'date-fns'
-import ReactMarkdown from 'react-markdown'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import ReactMarkdown from "react-markdown";
 import {
   ArrowBigUp,
   ArrowBigDown,
@@ -10,96 +10,109 @@ import {
   Trash2,
   Save,
   X,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { UserAvatar } from '@/components/ui/user-avatar'
-import { AuthModal } from '@/components/ui/auth-modal'
-import { cn } from '@/lib/utils'
-import { useAuthStore } from '@/stores/authStore'
-import { useComments } from '@/hooks/useComments'
-import type { Comment } from '@/types'
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { AuthModal } from "@/components/ui/auth-modal";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
+import { useComments } from "@/hooks/useComments";
+import type { Comment } from "@/types";
 
 interface CommentItemProps {
-  comment: Comment
-  postId: string
-  depth?: number
+  comment: Comment;
+  postId: string;
+  depth?: number;
 }
 
-const MAX_DEPTH = 6
+const MAX_DEPTH = 6;
 
-export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) => {
-  const { user, isAuthenticated } = useAuthStore()
+export const CommentItem = ({
+  comment,
+  postId,
+  depth = 0,
+}: CommentItemProps) => {
+  const { user, isAuthenticated } = useAuthStore();
   const { voteComment, updateComment, deleteComment, createComment } =
-    useComments(postId)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editBody, setEditBody] = useState(comment.body)
-  const [isReplying, setIsReplying] = useState(false)
-  const [replyBody, setReplyBody] = useState('')
-  const [showAuthModal, setShowAuthModal] = useState(false)
+    useComments(postId);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editBody, setEditBody] = useState(comment.body);
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyBody, setReplyBody] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const score = comment.upvotes - comment.downvotes
-  const isOwner = user?.userId === comment.userId
-  const isEdited = comment.createdAt !== comment.updatedAt
-  const canNest = depth < MAX_DEPTH
+  const score = comment.upvotes - comment.downvotes;
+  const isOwner = user?.userId === comment.userId;
+  const isEdited = comment.createdAt !== comment.updatedAt;
+  const canNest = depth < MAX_DEPTH;
+  const hasReplies = comment.replies && comment.replies.length > 0;
 
-  const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
+  const handleVote = (voteValue: "UPVOTE" | "DOWNVOTE") => {
     if (!isAuthenticated) {
-      setShowAuthModal(true)
-      return
+      setShowAuthModal(true);
+      return;
     }
-    voteComment(comment.id, voteValue)
-  }
+    voteComment(comment.id, voteValue);
+  };
 
   const handleSaveEdit = () => {
     if (editBody.trim()) {
-      updateComment(comment.id, { body: editBody.trim() })
-      setIsEditing(false)
+      updateComment(comment.id, { body: editBody.trim() });
+      setIsEditing(false);
     }
-  }
+  };
 
   const handleCancelEdit = () => {
-    setEditBody(comment.body)
-    setIsEditing(false)
-  }
+    setEditBody(comment.body);
+    setIsEditing(false);
+  };
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this comment?')) {
-      deleteComment(comment.id)
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        await deleteComment(comment.id);
+      } catch (error) {
+        console.error("Failed to delete comment:", error);
+      }
     }
-  }
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   const handleReply = () => {
     if (!isAuthenticated) {
-      setShowAuthModal(true)
-      return
+      setShowAuthModal(true);
+      return;
     }
-    setIsReplying(true)
-  }
+    setIsReplying(true);
+  };
 
   const handleSaveReply = () => {
     if (replyBody.trim()) {
       createComment({
         body: replyBody.trim(),
         parentCommentId: comment.id,
-      })
-      setReplyBody('')
-      setIsReplying(false)
+      });
+      setReplyBody("");
+      setIsReplying(false);
     }
-  }
+  };
 
   const handleCancelReply = () => {
-    setReplyBody('')
-    setIsReplying(false)
-  }
+    setReplyBody("");
+    setIsReplying(false);
+  };
 
   return (
     <>
       <div
-        className={cn(
-          'border-l-2 border-muted pl-4 py-2',
-          depth > 0 && 'ml-4'
-        )}
+        className={cn("border-l-2 border-muted pl-4 py-2", depth > 0 && "ml-4")}
       >
         <div className="space-y-2">
           <div className="flex items-start gap-2">
@@ -108,6 +121,20 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
             </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                {hasReplies && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 hover:bg-transparent"
+                    onClick={toggleCollapse}
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </Button>
+                )}
                 <Link
                   to={`/user/${comment.username}`}
                   className="hover:underline font-medium"
@@ -115,11 +142,26 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
                   u/{comment.username}
                 </Link>
                 <span>•</span>
-                <span>{formatDistanceToNow(new Date(comment.createdAt))} ago</span>
+                <span>
+                  {formatDistanceToNow(new Date(comment.createdAt))} ago
+                </span>
                 {isEdited && (
                   <>
                     <span>•</span>
                     <span className="italic">edited</span>
+                  </>
+                )}
+                {hasReplies && (
+                  <>
+                    <span>•</span>
+                    <button
+                      onClick={toggleCollapse}
+                      className="hover:underline text-blue-500"
+                    >
+                      {isCollapsed
+                        ? `[+] ${comment.replies?.length || 0} replies`
+                        : `[-] ${comment.replies?.length || 0} replies`}
+                    </button>
                   </>
                 )}
               </div>
@@ -159,10 +201,10 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'h-7 px-2',
-                      comment.userVote === 'UPVOTE' && 'text-orange-500'
+                      "h-7 px-2",
+                      comment.userVote === "UPVOTE" && "text-orange-500"
                     )}
-                    onClick={() => handleVote('UPVOTE')}
+                    onClick={() => handleVote("UPVOTE")}
                   >
                     <ArrowBigUp className="h-4 w-4" />
                   </Button>
@@ -171,10 +213,10 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'h-7 px-2',
-                      comment.userVote === 'DOWNVOTE' && 'text-blue-500'
+                      "h-7 px-2",
+                      comment.userVote === "DOWNVOTE" && "text-blue-500"
                     )}
-                    onClick={() => handleVote('DOWNVOTE')}
+                    onClick={() => handleVote("DOWNVOTE")}
                   >
                     <ArrowBigDown className="h-4 w-4" />
                   </Button>
@@ -242,9 +284,9 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
             </div>
           </div>
 
-          {comment.replies && comment.replies.length > 0 && (
+          {hasReplies && !isCollapsed && (
             <div className="space-y-2">
-              {comment.replies.map((reply) => (
+              {comment.replies?.map((reply) => (
                 <CommentItem
                   key={reply.id}
                   comment={reply}
@@ -263,5 +305,5 @@ export const CommentItem = ({ comment, postId, depth = 0 }: CommentItemProps) =>
         message="You need to be logged in to vote or reply to comments."
       />
     </>
-  )
-}
+  );
+};

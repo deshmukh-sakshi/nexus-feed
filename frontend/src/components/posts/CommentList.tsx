@@ -1,48 +1,23 @@
-import { CommentItem } from './CommentItem'
-import type { Comment } from '@/types'
+import { CommentItem } from "./CommentItem";
+import type { Comment } from "@/types";
 
 interface CommentListProps {
-  comments: Comment[]
-  postId: string
+  comments: Comment[];
+  postId: string;
 }
 
-// Build a tree structure from flat comment list
+// Handle properly nested comments from backend
 const buildCommentTree = (comments: Comment[]): Comment[] => {
-  const commentMap = new Map<string, Comment>()
-  const rootComments: Comment[] = []
+  if (!comments || comments.length === 0) {
+    return [];
+  }
 
-  // First pass: create a map of all comments
-  comments.forEach((comment) => {
-    commentMap.set(comment.id, { ...comment, replies: [] })
-  })
-
-  // Second pass: build the tree
-  comments.forEach((comment) => {
-    const commentWithReplies = commentMap.get(comment.id)
-    if (!commentWithReplies) return
-    
-    if (comment.parentCommentId) {
-      const parent = commentMap.get(comment.parentCommentId)
-      if (parent) {
-        parent.replies = parent.replies || []
-        parent.replies.push(commentWithReplies)
-      } else {
-        // Parent not found, treat as root
-        rootComments.push(commentWithReplies)
-      }
-    } else {
-      rootComments.push(commentWithReplies)
-    }
-  })
-
-  // Sort by creation time (newest first for root level)
-  rootComments.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
-
-  return rootComments
-}
+  // The backend now returns fully nested comments with all levels of replies
+  // Just sort the root level comments and return them
+  return comments.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+};
 
 export const CommentList = ({ comments, postId }: CommentListProps) => {
   if (!Array.isArray(comments) || comments.length === 0) {
@@ -52,10 +27,10 @@ export const CommentList = ({ comments, postId }: CommentListProps) => {
           No comments yet. Be the first to comment!
         </p>
       </div>
-    )
+    );
   }
 
-  const commentTree = buildCommentTree(comments)
+  const commentTree = buildCommentTree(comments);
 
   return (
     <div className="space-y-4">
@@ -63,5 +38,5 @@ export const CommentList = ({ comments, postId }: CommentListProps) => {
         <CommentItem key={comment.id} comment={comment} postId={postId} />
       ))}
     </div>
-  )
-}
+  );
+};
