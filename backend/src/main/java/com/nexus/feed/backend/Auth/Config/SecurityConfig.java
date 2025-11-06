@@ -38,9 +38,29 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        
+                        // Health and actuator endpoints
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/", "/health").permitAll()
+                        
+                        // Public read access to posts and comments (like Reddit)
+                        .requestMatchers("GET", "/api/posts/**").permitAll()
+                        .requestMatchers("GET", "/api/comments/**").permitAll()
+                        .requestMatchers("GET", "/api/users/**").permitAll()
+                        .requestMatchers("GET", "/api/votes/*/counts").permitAll()
+                        
+                        // Require authentication for write operations
+                        .requestMatchers("POST", "/api/posts").authenticated()
+                        .requestMatchers("PUT", "/api/posts/**").authenticated()
+                        .requestMatchers("DELETE", "/api/posts/**").authenticated()
+                        .requestMatchers("POST", "/api/comments/**").authenticated()
+                        .requestMatchers("PUT", "/api/comments/**").authenticated()
+                        .requestMatchers("DELETE", "/api/comments/**").authenticated()
+                        .requestMatchers("/api/votes").authenticated()
+                        
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
