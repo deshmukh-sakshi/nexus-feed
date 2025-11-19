@@ -33,7 +33,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none">
         <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <div className="flex flex-col items-center gap-1 pt-1">
@@ -41,20 +41,20 @@ export const PostCard = ({ post }: PostCardProps) => {
               variant="ghost"
               size="sm"
               className={cn(
-                'h-8 w-8 p-0',
-                post.userVote === 'UPVOTE' && 'text-orange-500'
+                'h-8 w-8 p-0 rounded-none',
+                post.userVote === 'UPVOTE' && 'text-orange-500 border-orange-500 bg-orange-100 dark:bg-orange-900/20'
               )}
               onClick={() => handleVote('UPVOTE')}
             >
               <ArrowBigUp className="h-5 w-5" />
             </Button>
-            <span className="text-sm font-semibold">{score}</span>
+            <span className="text-sm font-bold">{score}</span>
             <Button
               variant="ghost"
               size="sm"
               className={cn(
-                'h-8 w-8 p-0',
-                post.userVote === 'DOWNVOTE' && 'text-blue-500'
+                'h-8 w-8 p-0 rounded-none',
+                post.userVote === 'DOWNVOTE' && 'text-blue-500 border-blue-500 bg-blue-100 dark:bg-blue-900/20'
               )}
               onClick={() => handleVote('DOWNVOTE')}
             >
@@ -65,12 +65,12 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <Link to={`/user/${post.username}`} className="hover:opacity-80">
-                <UserAvatar username={post.username} size="sm" />
+                <UserAvatar username={post.username} size="sm" className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
               </Link>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                 <Link
                   to={`/user/${post.username}`}
-                  className="hover:underline font-medium"
+                  className="hover:underline font-bold text-foreground"
                 >
                   u/{post.username}
                 </Link>
@@ -86,7 +86,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             </div>
 
             <Link to={`/post/${post.id}`}>
-              <h3 className="text-lg font-semibold hover:underline">{post.title}</h3>
+              <h3 className="text-xl font-black hover:underline decoration-2 decoration-primary">{post.title}</h3>
             </Link>
 
             {post.url && (
@@ -94,7 +94,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 href={post.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                className="flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline decoration-2"
               >
                 <ExternalLink className="h-3 w-3" />
                 {(() => {
@@ -112,7 +112,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
       {post.body && (
         <CardContent className="pb-3">
-          <p className="text-sm text-muted-foreground line-clamp-3">{post.body}</p>
+          <p className="text-sm text-foreground font-medium line-clamp-3">{post.body}</p>
         </CardContent>
       )}
 
@@ -121,23 +121,23 @@ export const PostCard = ({ post }: PostCardProps) => {
           <img
             src={post.imageUrls[0]}
             alt={post.title}
-            className="rounded-md w-full max-h-96 object-cover"
+            className="w-full max-h-96 object-cover border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
           />
         </CardContent>
       )}
 
-      <CardFooter className="pt-0 flex gap-2">
+      <CardFooter className="pt-0 flex gap-2 border-t-2 border-border mt-2 pt-3">
         <Link to={`/post/${post.id}`}>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="rounded-none font-bold">
             <MessageSquare className="mr-2 h-4 w-4" />
             {post.commentCount} {post.commentCount === 1 ? 'Comment' : 'Comments'}
           </Button>
         </Link>
-        <div className="text-xs text-muted-foreground flex items-center">
+        <div className="text-xs text-muted-foreground flex items-center font-mono ml-auto">
           <ArrowBigUp className="h-4 w-4 text-orange-500" />
-          <span className="ml-1">{post.upvotes}</span>
+          <span className="ml-1 font-bold">{post.upvotes}</span>
           <ArrowBigDown className="h-4 w-4 ml-2 text-blue-500" />
-          <span className="ml-1">{post.downvotes}</span>
+          <span className="ml-1 font-bold">{post.downvotes}</span>
         </div>
       </CardFooter>
     </Card>
