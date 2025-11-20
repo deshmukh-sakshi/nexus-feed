@@ -15,14 +15,6 @@ export const Home = () => {
     isFetchingNextPage,
   } = usePosts()
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -41,7 +33,7 @@ export const Home = () => {
         <h1 className="text-3xl font-bold">Home Feed</h1>
         <p className="text-muted-foreground">Latest posts from the community</p>
       </div>
-      <PostList posts={posts} />
+      <PostList posts={posts} isLoading={isLoading} />
       
       {posts.length > 0 && (
         <div className="mt-6 flex justify-center">

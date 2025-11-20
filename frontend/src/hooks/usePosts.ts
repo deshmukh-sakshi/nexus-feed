@@ -45,12 +45,74 @@ export const usePosts = (pageSize = 10) => {
   const votePostMutation = useMutation({
     mutationFn: ({ id, voteValue }: { id: string; voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
       votesApi.votePost(id, voteValue),
-    onSuccess: () => {
+    onMutate: async ({ id, voteValue }) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
+      await queryClient.cancelQueries({ queryKey: ['post', id] })
+
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueryData(['posts'])
+      const previousPost = queryClient.getQueryData(['post', id])
+
+      // Helper to update a single post based on its CURRENT cache state
+      // This ensures that if multiple votes happen rapidly, we calculate based on the *latest* optimistic state
+      const updatePostOptimistically = (post: any) => {
+        if (!post || post.id !== id) return post
+
+        const isSameVote = post.userVote === voteValue
+        const newVote = isSameVote ? null : voteValue
+
+        let upvotes = post.upvotes
+        let downvotes = post.downvotes
+
+        // Remove old vote
+        if (post.userVote === 'UPVOTE') upvotes--
+        if (post.userVote === 'DOWNVOTE') downvotes--
+
+        // Add new vote
+        if (newVote === 'UPVOTE') upvotes++
+        if (newVote === 'DOWNVOTE') downvotes++
+
+        return {
+          ...post,
+          userVote: newVote,
+          upvotes,
+          downvotes,
+        }
+      }
+
+      // Update Infinite Query Cache
+      queryClient.setQueryData(['posts', pageSize], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            content: page.content.map(updatePostOptimistically),
+          })),
+        }
+      })
+
+      // Update Single Post Cache
+      queryClient.setQueryData(['post', id], (old: any) => {
+        if (!old) return old
+        return updatePostOptimistically(old)
+      })
+
+      return { previousPosts, previousPost }
+    },
+    onError: (err, newTodo, context) => {
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['posts', pageSize], context.previousPosts)
+      }
+      if (context?.previousPost) {
+        queryClient.setQueryData(['post', newTodo.id], context.previousPost)
+      }
+      toast.error(getErrorMessage(err))
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       queryClient.invalidateQueries({ queryKey: ['post'] })
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
     },
   })
 

@@ -59,42 +59,42 @@
 }
 
 :root {
-    --radius: 0.25rem;
-    /* 4px - slightly rounded but mostly sharp */
+    --radius: 0rem;
+    /* Sharp corners */
 
-    /* Light Mode - Bold and Bright */
-    --background: oklch(1 0 0);
-    /* White */
-    --foreground: oklch(0 0 0);
-    /* Black */
+    /* Light Mode - Premium Cream Neubrutalism */
+    --background: oklch(0.98 0.01 85);
+    /* #FDFBF7 - Warm Cream */
+    --foreground: oklch(0.1 0 0);
+    /* #1a1a1a - Soft Black */
 
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0 0 0);
+    /* Pure White */
+    --card-foreground: oklch(0.1 0 0);
 
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0 0 0);
+    --popover-foreground: oklch(0.1 0 0);
 
-    /* Primary - Vibrant Blue/Purple or similar. Let's go with a bold Blue */
+    /* Primary - Vibrant Blue */
     --primary: oklch(0.6 0.2 250);
     --primary-foreground: oklch(1 0 0);
 
-    /* Secondary - Bright Yellow/Orange for contrast */
-    --secondary: oklch(0.85 0.2 85);
+    /* Secondary - Bright Orange */
+    --secondary: oklch(0.7 0.2 40);
     --secondary-foreground: oklch(0 0 0);
 
-    --muted: oklch(0.95 0 0);
+    --muted: oklch(0.96 0.01 85);
     --muted-foreground: oklch(0.4 0 0);
 
-    --accent: oklch(0.7 0.2 320);
-    /* Vibrant Pink */
-    --accent-foreground: oklch(0 0 0);
+    /* Accent - Electric Purple */
+    --accent: oklch(0.65 0.25 290);
+    --accent-foreground: oklch(1 0 0);
 
     --destructive: oklch(0.6 0.25 20);
-    /* Red */
     --destructive-foreground: oklch(1 0 0);
 
     --border: oklch(0 0 0);
-    /* Black borders always */
+    /* Pure Black Borders */
     --input: oklch(1 0 0);
     --ring: oklch(0 0 0);
 
@@ -104,18 +104,23 @@
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
 
-    --sidebar: oklch(1 0 0);
-    --sidebar-foreground: oklch(0 0 0);
+    --sidebar: oklch(0.98 0.01 85);
+    --sidebar-foreground: oklch(0.1 0 0);
     --sidebar-primary: oklch(0.6 0.2 250);
     --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(0.95 0 0);
-    --sidebar-accent-foreground: oklch(0 0 0);
+    --sidebar-accent: oklch(0.96 0.01 85);
+    --sidebar-accent-foreground: oklch(0.1 0 0);
     --sidebar-border: oklch(0 0 0);
     --sidebar-ring: oklch(0 0 0);
+
+    /* Custom Shadows */
+    --shadow-neubrutal: 4px 4px 0px 0px #000000;
+    --shadow-neubrutal-sm: 2px 2px 0px 0px #000000;
+    --shadow-neubrutal-lg: 6px 6px 0px 0px #000000;
 }
 
 .dark {
-    /* Dark Mode - High Contrast Dark */
+    /* Dark Mode - High Contrast Neon */
     --background: oklch(0.1 0 0);
     --foreground: oklch(1 0 0);
 
@@ -128,20 +133,19 @@
     --primary: oklch(0.7 0.2 250);
     --primary-foreground: oklch(0 0 0);
 
-    --secondary: oklch(0.85 0.2 85);
+    --secondary: oklch(0.7 0.2 340);
     --secondary-foreground: oklch(0 0 0);
 
     --muted: oklch(0.2 0 0);
     --muted-foreground: oklch(0.7 0 0);
 
-    --accent: oklch(0.85 0.2 140);
+    --accent: oklch(0.8 0.2 140);
     --accent-foreground: oklch(0 0 0);
 
     --destructive: oklch(0.6 0.25 20);
     --destructive-foreground: oklch(1 0 0);
 
     --border: oklch(1 0 0);
-    /* White borders in dark mode */
     --input: oklch(0.1 0 0);
     --ring: oklch(1 0 0);
 
@@ -160,9 +164,6 @@
     --sidebar-border: oklch(1 0 0);
     --sidebar-ring: oklch(1 0 0);
 
-    /* Shadow needs to be white or a bright color in dark mode for visibility, or keep black if background is light enough? 
-     Actually, standard neubrutalism in dark mode often uses white shadows or just keeps black if it works. 
-     Let's use a hard white/grey shadow for dark mode to pop. */
     --shadow-neubrutal: 4px 4px 0px 0px #ffffff;
     --shadow-neubrutal-sm: 2px 2px 0px 0px #ffffff;
     --shadow-neubrutal-lg: 6px 6px 0px 0px #ffffff;
@@ -175,6 +176,29 @@
 
     body {
         @apply bg-background text-foreground;
+        /* Complex Cross-Grid Pattern */
+        background-color: var(--background);
+        background-image:
+            /* Small Grid */
+            linear-gradient(oklch(0.1 0 0 / 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, oklch(0.1 0 0 / 0.03) 1px, transparent 1px),
+            /* Larger Grid */
+            linear-gradient(oklch(0.1 0 0 / 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, oklch(0.1 0 0 / 0.06) 1px, transparent 1px),
+            /* Crosses at intersections */
+            radial-gradient(circle at 1px 1px, oklch(0.2 0 0 / 0.2) 1px, transparent 0);
+        background-size:
+            20px 20px,
+            20px 20px,
+            100px 100px,
+            100px 100px,
+            20px 20px;
+        background-position:
+            -1px -1px,
+            -1px -1px,
+            -1px -1px,
+            -1px -1px,
+            9px 9px;
     }
 
     /* Apply default neubrutal styles to common elements */

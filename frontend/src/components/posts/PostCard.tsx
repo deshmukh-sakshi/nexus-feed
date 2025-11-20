@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink } from 'lucide-react'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
@@ -33,113 +34,141 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <>
-      <Card className="overflow-hidden border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none">
-        <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
-          <div className="flex flex-col items-center gap-1 pt-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'h-8 w-8 p-0 rounded-none',
-                post.userVote === 'UPVOTE' && 'text-orange-500 border-orange-500 bg-orange-100 dark:bg-orange-900/20'
-              )}
-              onClick={() => handleVote('UPVOTE')}
-            >
-              <ArrowBigUp className="h-5 w-5" />
-            </Button>
-            <span className="text-sm font-bold">{score}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'h-8 w-8 p-0 rounded-none',
-                post.userVote === 'DOWNVOTE' && 'text-blue-500 border-blue-500 bg-blue-100 dark:bg-blue-900/20'
-              )}
-              onClick={() => handleVote('DOWNVOTE')}
-            >
-              <ArrowBigDown className="h-5 w-5" />
-            </Button>
-          </div>
+    <Card 
+        className="flex flex-col overflow-hidden border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-card transition-all duration-100 has-[.post-content:hover]:translate-x-[2px] has-[.post-content:hover]:translate-y-[2px] has-[.post-content:hover]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+    >
+      {/* Content Area - Triggers Card Animation */}
+      <div 
+        className="post-content px-4 py-3 cursor-pointer"
+        onClick={() => window.location.href = `/post/${post.id}`}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5">
+           {/* User Link - Stop Propagation */}
+           <Link 
+              to={`/user/${post.username}`} 
+              className="flex items-center gap-1 hover:bg-muted rounded p-1 -ml-1 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+           >
+              <UserAvatar username={post.username} size="sm" className="h-5 w-5 border border-black" />
+              <span className="font-bold text-foreground hover:underline">u/{post.username}</span>
+           </Link>
+           <span>•</span>
+           <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
+           {isEdited && <span className="italic">(edited)</span>}
+        </div>
 
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2">
-              <Link to={`/user/${post.username}`} className="hover:opacity-80">
-                <UserAvatar username={post.username} size="sm" className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" />
-              </Link>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                <Link
-                  to={`/user/${post.username}`}
-                  className="hover:underline font-bold text-foreground"
-                >
-                  u/{post.username}
-                </Link>
-                <span>•</span>
-                <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
-                {isEdited && (
-                  <>
-                    <span>•</span>
-                    <span className="italic">edited</span>
-                  </>
+        {/* Body */}
+        <h3 className="text-lg font-bold mb-0.5 leading-none">{post.title}</h3>
+
+        {post.url && (
+            <a
+              href={post.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline mb-1 w-fit"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="h-3 w-3" />
+              {(() => {
+                try {
+                  return new URL(post.url).hostname
+                } catch {
+                  return post.url
+                }
+              })()}
+            </a>
+          )}
+
+        {post.body && (
+          <div className="mb-0.5">
+            <p className="text-sm text-foreground/90 line-clamp-3 font-medium leading-tight">{post.body}</p>
+          </div>
+        )}
+
+        {post.imageUrls && post.imageUrls.length > 0 && (
+          <div className="mb-1">
+            <img
+              src={post.imageUrls[0]}
+              alt={post.title}
+              className="w-full max-h-[500px] object-cover border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer - Static relative to hover trigger */}
+      <div className="px-4 pb-3 flex items-center gap-2">
+          {/* Vote Pill */}
+          <div 
+            className="flex items-center bg-white border-2 border-black rounded-full h-10 px-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-full hover:bg-neutral-200 text-muted-foreground hover:text-foreground transition-colors',
+                  post.userVote === 'UPVOTE' && 'text-orange-600 bg-orange-100 hover:bg-orange-200 hover:text-orange-700'
                 )}
-              </div>
-            </div>
-
-            <Link to={`/post/${post.id}`}>
-              <h3 className="text-xl font-black hover:underline decoration-2 decoration-primary">{post.title}</h3>
-            </Link>
-
-            {post.url && (
-              <a
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline decoration-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleVote('UPVOTE');
+                }}
               >
-                <ExternalLink className="h-3 w-3" />
-                {(() => {
-                  try {
-                    return new URL(post.url).hostname
-                  } catch {
-                    return post.url
-                  }
-                })()}
-              </a>
-            )}
+                <ArrowBigUp className={cn("h-6 w-6", post.userVote === 'UPVOTE' && "fill-current")} />
+              </Button>
+              <span className="text-sm font-bold mx-2 min-w-[1.5rem] text-center">{score}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-full hover:bg-neutral-200 text-muted-foreground hover:text-foreground transition-colors',
+                  post.userVote === 'DOWNVOTE' && 'text-blue-600 bg-blue-100 hover:bg-blue-200 hover:text-blue-700'
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleVote('DOWNVOTE');
+                }}
+              >
+                <ArrowBigDown className={cn("h-6 w-6", post.userVote === 'DOWNVOTE' && "fill-current")} />
+              </Button>
           </div>
-        </div>
-      </CardHeader>
 
-      {post.body && (
-        <CardContent className="pb-3">
-          <p className="text-sm text-foreground font-medium line-clamp-3">{post.body}</p>
-        </CardContent>
-      )}
-
-      {post.imageUrls && post.imageUrls.length > 0 && (
-        <CardContent className="pb-3">
-          <img
-            src={post.imageUrls[0]}
-            alt={post.title}
-            className="w-full max-h-96 object-cover border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-          />
-        </CardContent>
-      )}
-
-      <CardFooter className="pt-0 flex gap-2 border-t-2 border-border mt-2 pt-3">
-        <Link to={`/post/${post.id}`}>
-          <Button variant="ghost" size="sm" className="rounded-none font-bold">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            {post.commentCount} {post.commentCount === 1 ? 'Comment' : 'Comments'}
+          {/* Comment Button */}
+          <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-10 px-3 text-xs font-bold border-2 border-black bg-white text-foreground hover:bg-accent rounded-full gap-2 transition-colors"
+              onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.href = `/post/${post.id}`;
+              }}
+          >
+            <MessageSquare className="h-4 w-4" />
+            {post.commentCount} Comments
           </Button>
-        </Link>
-        <div className="text-xs text-muted-foreground flex items-center font-mono ml-auto">
-          <ArrowBigUp className="h-4 w-4 text-orange-500" />
-          <span className="ml-1 font-bold">{post.upvotes}</span>
-          <ArrowBigDown className="h-4 w-4 ml-2 text-blue-500" />
-          <span className="ml-1 font-bold">{post.downvotes}</span>
-        </div>
-      </CardFooter>
+          
+          {/* Share Button */}
+          <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-10 px-3 text-xs font-bold border-2 border-black bg-white text-foreground hover:bg-accent rounded-full gap-2 transition-colors"
+              onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    await navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                    toast.success("Link copied to clipboard!");
+                  } catch (err) {
+                    console.error("Failed to copy:", err);
+                    toast.error("Failed to copy link");
+                  }
+              }}
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+      </div>
     </Card>
 
     <AuthModal
