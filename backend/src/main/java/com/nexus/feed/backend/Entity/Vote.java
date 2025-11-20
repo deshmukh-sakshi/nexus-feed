@@ -9,19 +9,26 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "votes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "votable_id", "votable_type"})
-})
+@Table(name = "votes", 
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "votable_id", "votable_type"})
+    },
+    indexes = {
+        @Index(name = "idx_vote_votable", columnList = "votable_id, votable_type"),
+        @Index(name = "idx_vote_votable_value", columnList = "votable_id, votable_type, vote_value"),
+        @Index(name = "idx_vote_user_votable", columnList = "user_id, votable_id, votable_type")
+    }
+)
 public class Vote {
     @EmbeddedId
     private VoteId id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "votable_type", nullable = false)
     private VotableType votableType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "vote_value", nullable = false)
     private VoteValue voteValue;
 
     @Data
@@ -29,7 +36,10 @@ public class Vote {
     @AllArgsConstructor
     @Embeddable
     public static class VoteId implements Serializable {
+        @Column(name = "user_id")
         private UUID userId;
+        
+        @Column(name = "votable_id")
         private UUID votableId;
     }
 

@@ -63,9 +63,86 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         
         List<Comment> topLevelComments = commentRepository.findByPostAndParentCommentIsNullOrderByCreatedAtDesc(post);
+        
+        // Collect all comment IDs (including nested replies)
+        List<UUID> allCommentIds = new java.util.ArrayList<>();
+        collectCommentIds(topLevelComments, allCommentIds);
+        
+        if (allCommentIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        // Batch fetch vote counts
+        List<VoteRepository.VoteCount> voteCounts = voteRepository.countByVotableIdsAndVotableType(
+                allCommentIds, Vote.VotableType.COMMENT);
+        
+        java.util.Map<UUID, Integer> upvotesMap = new java.util.HashMap<>();
+        java.util.Map<UUID, Integer> downvotesMap = new java.util.HashMap<>();
+        
+        for (VoteRepository.VoteCount vc : voteCounts) {
+            if (vc.getVoteValue() == Vote.VoteValue.UPVOTE) {
+                upvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            } else {
+                downvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            }
+        }
+        
+        // Batch fetch user votes
+        java.util.Map<UUID, String> userVotesMap = new java.util.HashMap<>();
+        try {
+            UUID currentUserId = authenticationService.getCurrentUserId();
+            List<Vote> userVotes = voteRepository.findByUserIdAndVotableIdsAndVotableType(
+                    currentUserId, allCommentIds, Vote.VotableType.COMMENT);
+            for (Vote vote : userVotes) {
+                userVotesMap.put(vote.getId().getVotableId(), vote.getVoteValue().name());
+            }
+        } catch (RuntimeException e) {
+            // User not authenticated, userVotesMap remains empty
+        }
+        
         return topLevelComments.stream()
-                .map(this::convertToResponseWithReplies)
+                .map(comment -> convertToResponseWithRepliesBatch(comment, upvotesMap, downvotesMap, userVotesMap))
                 .collect(Collectors.toList());
+    }
+    
+    private void collectCommentIds(List<Comment> comments, List<UUID> allIds) {
+        for (Comment comment : comments) {
+            allIds.add(comment.getId());
+            List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
+            if (!replies.isEmpty()) {
+                collectCommentIds(replies, allIds);
+            }
+        }
+    }
+    
+    private CommentResponse convertToResponseWithRepliesBatch(
+            Comment comment,
+            java.util.Map<UUID, Integer> upvotesMap,
+            java.util.Map<UUID, Integer> downvotesMap,
+            java.util.Map<UUID, String> userVotesMap) {
+        
+        CommentResponse response = CommentResponse.builder()
+                .id(comment.getId())
+                .body(comment.getBody())
+                .createdAt(comment.getCreatedAt().toInstant(java.time.ZoneOffset.UTC))
+                .updatedAt(comment.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC))
+                .userId(comment.getUser().getId())
+                .username(comment.getUser().getUsername())
+                .postId(comment.getPost().getId())
+                .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
+                .upvotes(upvotesMap.getOrDefault(comment.getId(), 0))
+                .downvotes(downvotesMap.getOrDefault(comment.getId(), 0))
+                .userVote(userVotesMap.get(comment.getId()))
+                .build();
+        
+        // Load replies recursively
+        List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
+        List<CommentResponse> replyResponses = replies.stream()
+                .map(reply -> convertToResponseWithRepliesBatch(reply, upvotesMap, downvotesMap, userVotesMap))
+                .collect(Collectors.toList());
+        
+        response.setReplies(replyResponses);
+        return response;
     }
 
     @Override

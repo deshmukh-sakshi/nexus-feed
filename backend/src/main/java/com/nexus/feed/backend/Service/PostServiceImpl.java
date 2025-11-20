@@ -59,7 +59,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public PostResponse getPostById(UUID id) {
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findByIdWithUserAndImages(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         return convertToResponse(post);
     }
@@ -79,8 +79,8 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public Page<PostResponse> getAllPosts(Pageable pageable) {
-        return postRepository.findAllOrderByCreatedAtDesc(pageable)
-                .map(this::convertToResponse);
+        Page<Post> posts = postRepository.findAllOrderByCreatedAtDesc(pageable);
+        return convertToResponseBatch(posts);
     }
 
     @Override
@@ -88,15 +88,15 @@ public class PostServiceImpl implements PostService {
     public Page<PostResponse> getPostsByUser(UUID userId, Pageable pageable) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return postRepository.findByUserOrderByCreatedAtDesc(user, pageable)
-                .map(this::convertToResponse);
+        Page<Post> posts = postRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+        return convertToResponseBatch(posts);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PostResponse> searchPosts(String keyword, Pageable pageable) {
-        return postRepository.findByTitleContainingOrBodyContainingOrderByCreatedAtDesc(keyword, pageable)
-                .map(this::convertToResponse);
+        Page<Post> posts = postRepository.findByTitleContainingOrBodyContainingOrderByCreatedAtDesc(keyword, pageable);
+        return convertToResponseBatch(posts);
     }
 
     @Override
@@ -188,5 +188,73 @@ public class PostServiceImpl implements PostService {
                 .downvotes((int) downvotes)
                 .userVote(userVote)
                 .build();
+    }
+    
+    private Page<PostResponse> convertToResponseBatch(Page<Post> posts) {
+        if (posts.isEmpty()) {
+            return posts.map(this::convertToResponse);
+        }
+        
+        List<UUID> postIds = posts.getContent().stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+        
+        // Batch fetch vote counts
+        List<VoteRepository.VoteCount> voteCounts = voteRepository.countByVotableIdsAndVotableType(
+                postIds, Vote.VotableType.POST);
+        
+        java.util.Map<UUID, Integer> upvotesMap = new java.util.HashMap<>();
+        java.util.Map<UUID, Integer> downvotesMap = new java.util.HashMap<>();
+        
+        for (VoteRepository.VoteCount vc : voteCounts) {
+            if (vc.getVoteValue() == Vote.VoteValue.UPVOTE) {
+                upvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            } else {
+                downvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            }
+        }
+        
+        // Batch fetch user votes
+        java.util.Map<UUID, String> userVotesMap = new java.util.HashMap<>();
+        try {
+            UUID currentUserId = authenticationService.getCurrentUserId();
+            List<Vote> userVotes = voteRepository.findByUserIdAndVotableIdsAndVotableType(
+                    currentUserId, postIds, Vote.VotableType.POST);
+            for (Vote vote : userVotes) {
+                userVotesMap.put(vote.getId().getVotableId(), vote.getVoteValue().name());
+            }
+        } catch (RuntimeException e) {
+            // User not authenticated, userVotesMap remains empty
+        }
+        
+        // Batch fetch comment counts
+        List<CommentRepository.CommentCount> commentCounts = commentRepository.countByPostIds(postIds);
+        java.util.Map<UUID, Integer> commentCountMap = commentCounts.stream()
+                .collect(Collectors.toMap(
+                        CommentRepository.CommentCount::getPostId,
+                        cc -> cc.getCount().intValue()
+                ));
+        
+        return posts.map(post -> {
+            List<String> imageUrls = post.getImages().stream()
+                    .map(PostImage::getImageUrl)
+                    .collect(Collectors.toList());
+            
+            return PostResponse.builder()
+                    .id(post.getId())
+                    .title(post.getTitle())
+                    .url(post.getUrl())
+                    .body(post.getBody())
+                    .createdAt(post.getCreatedAt())
+                    .updatedAt(post.getUpdatedAt())
+                    .userId(post.getUser().getId())
+                    .username(post.getUser().getUsername())
+                    .imageUrls(imageUrls)
+                    .commentCount(commentCountMap.getOrDefault(post.getId(), 0))
+                    .upvotes(upvotesMap.getOrDefault(post.getId(), 0))
+                    .downvotes(downvotesMap.getOrDefault(post.getId(), 0))
+                    .userVote(userVotesMap.get(post.getId()))
+                    .build();
+        });
     }
 }

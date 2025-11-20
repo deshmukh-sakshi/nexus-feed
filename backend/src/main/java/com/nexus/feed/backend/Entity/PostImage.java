@@ -14,7 +14,9 @@ import java.util.*;
 @ToString(exclude = {"post"})
 @EqualsAndHashCode(exclude = {"post"})
 @Entity
-@Table(name = "post_images")
+@Table(name = "post_images", indexes = {
+    @Index(name = "idx_post_image_post_id", columnList = "post_id")
+})
 public class PostImage {
     @Id
     @GeneratedValue

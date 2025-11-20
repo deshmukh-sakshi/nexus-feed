@@ -3,7 +3,6 @@ package com.nexus.feed.backend.Entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -14,9 +13,15 @@ import java.util.*;
 @ToString(exclude = {"posts", "comments", "userBadges"})
 @EqualsAndHashCode(exclude = {"posts", "comments", "userBadges"})
 @Entity
-@Table(name = "users", uniqueConstraints = {
+@Table(name = "users", 
+    uniqueConstraints = {
         @UniqueConstraint(columnNames = "username")
-})
+    },
+    indexes = {
+        @Index(name = "idx_user_username", columnList = "username"),
+        @Index(name = "idx_user_app_user", columnList = "app_user_id")
+    }
+)
 public class Users {
     @Id
     @GeneratedValue
