@@ -131,3 +131,9 @@ export interface UserProfile {
   createdAt: string
   updatedAt?: string
 }
+
+// Post Detail with Comments
+export interface PostDetail {
+  post: Post
+  comments: Comment[]
+}

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   ArrowBigUp,
   ArrowBigDown,
@@ -24,23 +26,71 @@ import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { usePost } from '@/hooks/usePosts'
-import { useComments } from '@/hooks/useComments'
-import { usePosts } from '@/hooks/usePosts'
+import { usePostWithComments } from '@/hooks/usePosts'
+import { postsApi, commentsApi, votesApi } from '@/lib/api-client'
+import { getErrorMessage } from '@/types/errors'
+import type { PostUpdateRequest, CommentCreateRequest } from '@/types'
 
 export const PostDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
-  const { data: post, isLoading: postLoading, error: postError } = usePost(id!)
-  const { comments, createComment } = useComments(id!)
-  const { votePost, updatePost, deletePost } = usePosts()
+  const queryClient = useQueryClient()
+  const { data: postDetail, isLoading: postLoading, error: postError } = usePostWithComments(id!)
+  
+  const post = postDetail?.post
+  const comments = postDetail?.comments || []
 
   const [commentBody, setCommentBody] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
+
+  // Mutations
+  const votePostMutation = useMutation({
+    mutationFn: ({ voteValue }: { voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
+      votesApi.votePost(id!, voteValue),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const updatePostMutation = useMutation({
+    mutationFn: (data: PostUpdateRequest) => postsApi.updatePost(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
+      toast.success('Post updated successfully!')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => postsApi.deletePost(id!),
+    onSuccess: () => {
+      toast.success('Post deleted successfully!')
+      navigate('/')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const createCommentMutation = useMutation({
+    mutationFn: (data: CommentCreateRequest) => commentsApi.createComment(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
+      toast.success('Comment posted successfully!')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
 
   if (postLoading) {
     return <PostDetailSkeleton navigate={navigate} />
@@ -69,7 +119,7 @@ export const PostDetail = () => {
       setShowAuthModal(true)
       return
     }
-    votePost(post.id, voteValue)
+    votePostMutation.mutate({ voteValue })
   }
 
   const handleSubmitComment = () => {
@@ -78,7 +128,7 @@ export const PostDetail = () => {
       return
     }
     if (commentBody.trim()) {
-      createComment({ body: commentBody.trim() })
+      createCommentMutation.mutate({ body: commentBody.trim() })
       setCommentBody('')
     }
   }
@@ -91,7 +141,7 @@ export const PostDetail = () => {
 
   const handleSaveEdit = () => {
     if (editTitle.trim()) {
-      updatePost(post.id, {
+      updatePostMutation.mutate({
         title: editTitle.trim(),
         body: editBody.trim() || undefined,
       })
@@ -107,8 +157,7 @@ export const PostDetail = () => {
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
-      deletePost(post.id)
-      navigate('/')
+      deletePostMutation.mutate()
     }
   }
 

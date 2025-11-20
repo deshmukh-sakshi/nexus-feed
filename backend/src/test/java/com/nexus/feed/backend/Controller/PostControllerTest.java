@@ -305,4 +305,67 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
+
+    @Test
+    @DisplayName("Should get post with comments successfully")
+    void shouldGetPostWithCommentsSuccessfully() throws Exception {
+        // Given
+        com.nexus.feed.backend.DTO.CommentResponse comment1 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+                .id(UUID.randomUUID())
+                .body("Test comment 1")
+                .userId(userId)
+                .username("testuser")
+                .postId(postId)
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
+                .upvotes(0)
+                .downvotes(0)
+                .build();
+
+        com.nexus.feed.backend.DTO.CommentResponse comment2 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+                .id(UUID.randomUUID())
+                .body("Test comment 2")
+                .userId(userId)
+                .username("testuser")
+                .postId(postId)
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
+                .upvotes(0)
+                .downvotes(0)
+                .build();
+
+        List<com.nexus.feed.backend.DTO.CommentResponse> comments = Arrays.asList(comment1, comment2);
+        
+        com.nexus.feed.backend.DTO.PostDetailResponse postDetailResponse = com.nexus.feed.backend.DTO.PostDetailResponse.builder()
+                .post(postResponse)
+                .comments(comments)
+                .build();
+
+        when(postService.getPostWithComments(postId)).thenReturn(postDetailResponse);
+
+        // When & Then
+        mockMvc.perform(get("/api/posts/{id}/with-comments", postId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.post").exists())
+                .andExpect(jsonPath("$.post.id").value(postId.toString()))
+                .andExpect(jsonPath("$.post.title").value("Test Post Title"))
+                .andExpect(jsonPath("$.comments").isArray())
+                .andExpect(jsonPath("$.comments.length()").value(2))
+                .andExpect(jsonPath("$.comments[0].body").value("Test comment 1"))
+                .andExpect(jsonPath("$.comments[1].body").value("Test comment 2"));
+    }
+
+    @Test
+    @DisplayName("Should return 404 when post with comments not found")
+    void shouldReturn404WhenPostWithCommentsNotFound() throws Exception {
+        // Given
+        UUID nonExistentId = UUID.randomUUID();
+        when(postService.getPostWithComments(nonExistentId))
+                .thenThrow(new RuntimeException("Post not found"));
+
+        // When & Then
+        mockMvc.perform(get("/api/posts/{id}/with-comments", nonExistentId))
+                .andExpect(status().isNotFound());
+    }
 }

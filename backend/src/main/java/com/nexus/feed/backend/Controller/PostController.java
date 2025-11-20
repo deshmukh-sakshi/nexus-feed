@@ -43,6 +43,16 @@ public class PostController {
         }
     }
 
+    @GetMapping("/{id}/with-comments")
+    public ResponseEntity<PostDetailResponse> getPostWithComments(@PathVariable UUID id) {
+        try {
+            PostDetailResponse postDetail = postService.getPostWithComments(id);
+            return ResponseEntity.ok(postDetail);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,

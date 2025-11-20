@@ -150,10 +150,10 @@ export const usePosts = (pageSize = 10) => {
   }
 }
 
-export const usePost = (id: string) => {
+export const usePostWithComments = (id: string) => {
   return useQuery({
-    queryKey: ['post', id],
-    queryFn: () => postsApi.getPost(id),
+    queryKey: ['postWithComments', id],
+    queryFn: () => postsApi.getPostWithComments(id),
     enabled: !!id,
   })
 }

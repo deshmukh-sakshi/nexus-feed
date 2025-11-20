@@ -24,6 +24,7 @@ public class PostServiceImpl implements PostService {
     private final VoteRepository voteRepository;
     private final CommentRepository commentRepository;
     private final AuthenticationService authenticationService;
+    private final CommentService commentService;
 
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
@@ -61,6 +62,18 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         return convertToResponse(post);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PostDetailResponse getPostWithComments(UUID id) {
+        PostResponse post = getPostById(id);
+        List<CommentResponse> comments = commentService.getCommentsByPost(id);
+        
+        return PostDetailResponse.builder()
+                .post(post)
+                .comments(comments)
+                .build();
     }
 
     @Override
