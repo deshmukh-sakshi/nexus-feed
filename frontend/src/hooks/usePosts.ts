@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from '@tansta
 import { toast } from 'sonner'
 import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { PostCreateRequest, PostUpdateRequest } from '@/types'
+import type { PostCreateRequest, PostUpdateRequest, Post } from '@/types'
 
 export const usePosts = (pageSize = 10) => {
   const queryClient = useQueryClient()
@@ -56,7 +56,7 @@ export const usePosts = (pageSize = 10) => {
 
       // Helper to update a single post based on its CURRENT cache state
       // This ensures that if multiple votes happen rapidly, we calculate based on the *latest* optimistic state
-      const updatePostOptimistically = (post: any) => {
+      const updatePostOptimistically = (post: Post) => {
         if (!post || post.id !== id) return post
 
         const isSameVote = post.userVote === voteValue
@@ -82,11 +82,12 @@ export const usePosts = (pageSize = 10) => {
       }
 
       // Update Infinite Query Cache
-      queryClient.setQueryData(['posts', pageSize], (old: any) => {
+      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
         if (!old) return old
+        const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
         return {
-          ...old,
-          pages: old.pages.map((page: any) => ({
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
             ...page,
             content: page.content.map(updatePostOptimistically),
           })),
@@ -94,9 +95,9 @@ export const usePosts = (pageSize = 10) => {
       })
 
       // Update Single Post Cache
-      queryClient.setQueryData(['post', id], (old: any) => {
+      queryClient.setQueryData(['post', id], (old: unknown) => {
         if (!old) return old
-        return updatePostOptimistically(old)
+        return updatePostOptimistically(old as Post)
       })
 
       return { previousPosts, previousPost }
@@ -110,9 +111,8 @@ export const usePosts = (pageSize = 10) => {
       }
       toast.error(getErrorMessage(err))
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
-      queryClient.invalidateQueries({ queryKey: ['post'] })
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['post', variables.id] })
     },
   })
 

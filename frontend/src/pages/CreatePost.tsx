@@ -56,10 +56,9 @@ export const CreatePost = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
       <Button
-        variant="ghost"
         size="sm"
         onClick={() => navigate(-1)}
-        className="mb-4"
+        className="mb-4 bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
@@ -117,14 +116,18 @@ export const CreatePost = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={!title.trim() || isCreating}>
+              <Button 
+                type="submit" 
+                disabled={!title.trim() || isCreating}
+                className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+              >
                 {isCreating ? 'Creating...' : 'Create Post'}
               </Button>
               <Button
                 type="button"
-                variant="outline"
                 onClick={() => navigate(-1)}
                 disabled={isCreating}
+                className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
               >
                 Cancel
               </Button>

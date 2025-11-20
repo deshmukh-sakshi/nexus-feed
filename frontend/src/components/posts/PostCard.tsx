@@ -35,23 +35,32 @@ export const PostCard = ({ post }: PostCardProps) => {
   return (
     <>
     <Card 
-        className="flex flex-col overflow-hidden border-2 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-card transition-all duration-100 has-[.post-content:hover]:translate-x-[2px] has-[.post-content:hover]:translate-y-[2px] has-[.post-content:hover]:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        className="flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50"
     >
-      {/* Content Area - Triggers Card Animation */}
+      {/* Content Area - Clickable with hover effect */}
       <div 
-        className="post-content px-4 py-3 cursor-pointer"
-        onClick={() => window.location.href = `/post/${post.id}`}
+        className="post-content"
       >
+        <div className="hover:bg-yellow-100 px-4 py-3 pb-0 transition-all duration-100 cursor-pointer active:translate-x-[2px] active:translate-y-[2px]"
+             onClick={() => window.location.href = `/post/${post.id}`}
+        >
         {/* Header */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5">
-           {/* User Link - Stop Propagation */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 group">
+           {/* User Avatar - Stop Propagation */}
            <Link 
               to={`/user/${post.username}`} 
-              className="flex items-center gap-1 hover:bg-muted rounded p-1 -ml-1 transition-colors"
+              className="group-hover:opacity-80"
               onClick={(e) => e.stopPropagation()}
            >
               <UserAvatar username={post.username} size="sm" className="h-5 w-5 border border-black" />
-              <span className="font-bold text-foreground hover:underline">u/{post.username}</span>
+           </Link>
+           {/* Username Link - Stop Propagation */}
+           <Link 
+              to={`/user/${post.username}`} 
+              className="font-bold text-foreground group-hover:underline"
+              onClick={(e) => e.stopPropagation()}
+           >
+              u/{post.username}
            </Link>
            <span>•</span>
            <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
@@ -86,8 +95,10 @@ export const PostCard = ({ post }: PostCardProps) => {
           </div>
         )}
 
+        </div>
+        
         {post.imageUrls && post.imageUrls.length > 0 && (
-          <div className="mb-1">
+          <div className="mb-1 mt-2">
             <img
               src={post.imageUrls[0]}
               alt={post.title}
@@ -98,48 +109,49 @@ export const PostCard = ({ post }: PostCardProps) => {
       </div>
 
       {/* Footer - Static relative to hover trigger */}
-      <div className="px-4 pb-3 flex items-center gap-2">
+      <div className="px-4 py-3 flex items-center gap-2">
           {/* Vote Pill */}
           <div 
-            className="flex items-center bg-white border-2 border-black rounded-full h-10 px-2"
+            className="flex items-center bg-pink-200 border-2 border-black rounded-full h-10 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
             onClick={(e) => e.stopPropagation()}
           >
               <Button
-                variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-8 w-8 rounded-full hover:bg-neutral-200 text-muted-foreground hover:text-foreground transition-colors',
-                  post.userVote === 'UPVOTE' && 'text-orange-600 bg-orange-100 hover:bg-orange-200 hover:text-orange-700'
+                  'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
+                  post.userVote === 'UPVOTE' 
+                    ? 'bg-orange-400 text-black hover:bg-orange-500' 
+                    : 'bg-white text-black hover:bg-orange-100'
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleVote('UPVOTE');
                 }}
               >
-                <ArrowBigUp className={cn("h-6 w-6", post.userVote === 'UPVOTE' && "fill-current")} />
+                <ArrowBigUp className={cn("h-5 w-5", post.userVote === 'UPVOTE' && "fill-current")} />
               </Button>
               <span className="text-sm font-bold mx-2 min-w-[1.5rem] text-center">{score}</span>
               <Button
-                variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-8 w-8 rounded-full hover:bg-neutral-200 text-muted-foreground hover:text-foreground transition-colors',
-                  post.userVote === 'DOWNVOTE' && 'text-blue-600 bg-blue-100 hover:bg-blue-200 hover:text-blue-700'
+                  'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
+                  post.userVote === 'DOWNVOTE' 
+                    ? 'bg-blue-400 text-black hover:bg-blue-500' 
+                    : 'bg-white text-black hover:bg-blue-100'
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleVote('DOWNVOTE');
                 }}
               >
-                <ArrowBigDown className={cn("h-6 w-6", post.userVote === 'DOWNVOTE' && "fill-current")} />
+                <ArrowBigDown className={cn("h-5 w-5", post.userVote === 'DOWNVOTE' && "fill-current")} />
               </Button>
           </div>
 
           {/* Comment Button */}
           <Button 
-              variant="ghost" 
               size="sm" 
-              className="h-10 px-3 text-xs font-bold border-2 border-black bg-white text-foreground hover:bg-accent rounded-full gap-2 transition-colors"
+              className="h-10 px-3 text-xs font-bold border-2 border-black bg-cyan-300 text-black hover:bg-cyan-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               onClick={(e) => {
                   e.stopPropagation();
                   window.location.href = `/post/${post.id}`;
@@ -151,9 +163,8 @@ export const PostCard = ({ post }: PostCardProps) => {
           
           {/* Share Button */}
           <Button 
-              variant="ghost" 
               size="sm" 
-              className="h-10 px-3 text-xs font-bold border-2 border-black bg-white text-foreground hover:bg-accent rounded-full gap-2 transition-colors"
+              className="h-10 px-3 text-xs font-bold border-2 border-black bg-lime-300 text-black hover:bg-lime-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               onClick={async (e) => {
                   e.stopPropagation();
                   try {

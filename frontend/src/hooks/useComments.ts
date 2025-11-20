@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { commentsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { CommentCreateRequest, CommentUpdateRequest } from '@/types'
+import type { CommentCreateRequest, CommentUpdateRequest, Comment } from '@/types'
 
 export const useComments = (postId: string) => {
   const queryClient = useQueryClient()
@@ -19,7 +19,11 @@ export const useComments = (postId: string) => {
       commentsApi.createComment(postId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] })
-      queryClient.invalidateQueries({ queryKey: ['post', postId] })
+      queryClient.setQueryData(['post', postId], (old: unknown) => {
+        if (!old) return old
+        const post = old as { commentCount: number; [key: string]: unknown }
+        return { ...post, commentCount: post.commentCount + 1 }
+      })
       toast.success('Comment posted successfully!')
     },
     onError: (error) => {
@@ -43,7 +47,11 @@ export const useComments = (postId: string) => {
     mutationFn: commentsApi.deleteComment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] })
-      queryClient.invalidateQueries({ queryKey: ['post', postId] })
+      queryClient.setQueryData(['post', postId], (old: unknown) => {
+        if (!old) return old
+        const post = old as { commentCount: number; [key: string]: unknown }
+        return { ...post, commentCount: Math.max(0, post.commentCount - 1) }
+      })
       toast.success('Comment deleted successfully!')
     },
     onError: (error) => {
@@ -54,11 +62,51 @@ export const useComments = (postId: string) => {
   const voteCommentMutation = useMutation({
     mutationFn: ({ id, voteValue }: { id: string; voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
       votesApi.voteComment(id, voteValue),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] })
+    onMutate: async ({ id, voteValue }) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', postId] })
+      
+      const previousComments = queryClient.getQueryData(['comments', postId])
+      
+      const updateCommentVote = (comment: Comment): Comment => {
+        if (comment.id === id) {
+          const isSameVote = comment.userVote === voteValue
+          const newVote = isSameVote ? null : voteValue
+          
+          let upvotes = comment.upvotes
+          let downvotes = comment.downvotes
+          
+          if (comment.userVote === 'UPVOTE') upvotes--
+          if (comment.userVote === 'DOWNVOTE') downvotes--
+          
+          if (newVote === 'UPVOTE') upvotes++
+          if (newVote === 'DOWNVOTE') downvotes++
+          
+          return { ...comment, userVote: newVote, upvotes, downvotes }
+        }
+        
+        if (comment.replies && comment.replies.length > 0) {
+          return { ...comment, replies: comment.replies.map(updateCommentVote) }
+        }
+        
+        return comment
+      }
+      
+      queryClient.setQueryData(['comments', postId], (old: unknown) => {
+        if (!old) return old
+        const comments = old as Comment[]
+        return comments.map(updateCommentVote)
+      })
+      
+      return { previousComments }
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
+    onError: (err, _variables, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(['comments', postId], context.previousComments)
+      }
+      toast.error(getErrorMessage(err))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] })
     },
   })
 
