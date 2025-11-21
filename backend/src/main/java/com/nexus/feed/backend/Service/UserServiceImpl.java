@@ -2,13 +2,16 @@ package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.DTO.*;
 import com.nexus.feed.backend.Entity.Users;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -25,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
         Users user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         return convertToResponse(user);
     }
 
@@ -33,14 +36,14 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserByUsername(String username) {
         Users user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
         return convertToResponse(user);
     }
 
     @Override
     public UserResponse updateUser(UUID id, UserUpdateRequest request) {
         Users user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         if (request.getBio() != null) {
             user.setBio(request.getBio());
@@ -51,15 +54,17 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
 
         Users updatedUser = userRepository.save(user);
+        log.info("User updated: id={}", id);
         return convertToResponse(updatedUser);
     }
 
     @Override
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User", "id", id);
         }
         userRepository.deleteById(id);
+        log.info("User deleted: id={}", id);
     }
 
     private UserResponse convertToResponse(Users user) {

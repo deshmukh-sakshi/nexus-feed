@@ -2,8 +2,11 @@ package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.DTO.*;
 import com.nexus.feed.backend.Entity.*;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -29,7 +33,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         Post post = new Post();
         post.setTitle(request.getTitle());
@@ -38,6 +42,7 @@ public class PostServiceImpl implements PostService {
         post.setUser(user);
 
         Post savedPost = postRepository.save(post);
+        log.info("Post created: id={}, userId={}", savedPost.getId(), userId);
 
         // Handle images
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
@@ -60,7 +65,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public PostResponse getPostById(UUID id) {
         Post post = postRepository.findByIdWithUserAndImages(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
         return convertToResponse(post);
     }
 
@@ -87,7 +92,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public Page<PostResponse> getPostsByUser(UUID userId, Pageable pageable) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         Page<Post> posts = postRepository.findByUserOrderByCreatedAtDesc(user, pageable);
         return convertToResponseBatch(posts);
     }
@@ -102,10 +107,11 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse updatePost(UUID postId, UUID userId, PostUpdateRequest request) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to update this post");
+            log.warn("Unauthorized update attempt: userId={}, postId={}, ownerId={}", userId, postId, post.getUser().getId());
+            throw new UnauthorizedException("Not authorized to update this post");
         }
 
         if (request.getTitle() != null) {
@@ -135,19 +141,22 @@ public class PostServiceImpl implements PostService {
         }
 
         Post updatedPost = postRepository.save(post);
+        log.info("Post updated: id={}, userId={}", postId, userId);
         return convertToResponse(updatedPost);
     }
 
     @Override
     public void deletePost(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to delete this post");
+            log.warn("Unauthorized delete attempt: userId={}, postId={}, ownerId={}", userId, postId, post.getUser().getId());
+            throw new UnauthorizedException("Not authorized to delete this post");
         }
 
         postRepository.delete(post);
+        log.info("Post deleted: id={}, userId={}", postId, userId);
     }
 
     private PostResponse convertToResponse(Post post) {

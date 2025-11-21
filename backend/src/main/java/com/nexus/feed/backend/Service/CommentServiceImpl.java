@@ -2,8 +2,11 @@ package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.DTO.*;
 import com.nexus.feed.backend.Entity.*;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,10 +31,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse createComment(UUID userId, UUID postId, CommentCreateRequest request) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         Comment comment = new Comment();
         comment.setBody(request.getBody());
@@ -40,11 +44,12 @@ public class CommentServiceImpl implements CommentService {
         // Handle parent comment for replies
         if (request.getParentCommentId() != null) {
             Comment parentComment = commentRepository.findById(request.getParentCommentId())
-                    .orElseThrow(() -> new RuntimeException("Parent comment not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", request.getParentCommentId()));
             comment.setParentComment(parentComment);
         }
 
         Comment savedComment = commentRepository.save(comment);
+        log.info("Comment created: id={}, postId={}, userId={}", savedComment.getId(), postId, userId);
         return convertToResponse(savedComment);
     }
 
@@ -52,7 +57,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public CommentResponse getCommentById(UUID id) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
         return convertToResponse(comment);
     }
 
@@ -60,7 +65,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
         
         List<Comment> topLevelComments = commentRepository.findByPostAndParentCommentIsNullOrderByCreatedAtDesc(post);
         
@@ -149,7 +154,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByUser(UUID userId, Pageable pageable) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         return commentRepository.findByUserOrderByCreatedAtDesc(user, pageable)
                 .map(this::convertToResponse);
     }
@@ -157,28 +162,32 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to update this comment");
+            log.warn("Unauthorized update attempt: userId={}, commentId={}, ownerId={}", userId, commentId, comment.getUser().getId());
+            throw new UnauthorizedException("Not authorized to update this comment");
         }
 
         comment.setBody(request.getBody());
 
         Comment updatedComment = commentRepository.save(comment);
+        log.info("Comment updated: id={}, userId={}", commentId, userId);
         return convertToResponse(updatedComment);
     }
 
     @Override
     public void deleteComment(UUID commentId, UUID userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to delete this comment");
+            log.warn("Unauthorized delete attempt: userId={}, commentId={}, ownerId={}", userId, commentId, comment.getUser().getId());
+            throw new UnauthorizedException("Not authorized to delete this comment");
         }
 
         commentRepository.delete(comment);
+        log.info("Comment deleted: id={}, userId={}", commentId, userId);
     }
 
     private CommentResponse convertToResponse(Comment comment) {

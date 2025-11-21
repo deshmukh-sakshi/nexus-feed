@@ -15,7 +15,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/votes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class VoteController {
 
     private final VoteService voteService;
