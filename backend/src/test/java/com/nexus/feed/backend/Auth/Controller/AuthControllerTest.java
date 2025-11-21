@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,13 +37,13 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private LoginRequest validLoginRequest;
@@ -59,14 +59,14 @@ class AuthControllerTest {
 
         // Setup valid registration request
         validRegistrationRequest = new RegistrationRequest();
-        validRegistrationRequest.setUsername("testuser");
+        validRegistrationRequest.setUsername("tester");
         validRegistrationRequest.setEmail("test@example.com");
         validRegistrationRequest.setPassword("password123");
 
         // Setup auth response
         authResponse = new AuthResponse(
                 UUID.randomUUID(),
-                "testuser",
+                "tester",
                 "test@example.com",
                 "mock-jwt-token"
         );
@@ -85,7 +85,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").exists())
-                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.username").value("tester"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.token").value("mock-jwt-token"));
     }
@@ -162,7 +162,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").exists())
-                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.username").value("tester"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.token").value("mock-jwt-token"));
     }
@@ -204,7 +204,7 @@ class AuthControllerTest {
     void shouldFailRegisterWithInvalidEmail() throws Exception {
         // Given
         RegistrationRequest invalidRequest = new RegistrationRequest();
-        invalidRequest.setUsername("testuser");
+        invalidRequest.setUsername("tester");
         invalidRequest.setEmail("invalid-email");
         invalidRequest.setPassword("password123");
 
@@ -220,7 +220,7 @@ class AuthControllerTest {
     void shouldFailRegisterWithShortPassword() throws Exception {
         // Given
         RegistrationRequest invalidRequest = new RegistrationRequest();
-        invalidRequest.setUsername("testuser");
+        invalidRequest.setUsername("tester");
         invalidRequest.setEmail("test@example.com");
         invalidRequest.setPassword("pass"); // Less than 8 characters
 
@@ -236,7 +236,7 @@ class AuthControllerTest {
     void shouldFailRegisterWithLongPassword() throws Exception {
         // Given
         RegistrationRequest invalidRequest = new RegistrationRequest();
-        invalidRequest.setUsername("testuser");
+        invalidRequest.setUsername("tester");
         invalidRequest.setEmail("test@example.com");
         invalidRequest.setPassword("a".repeat(21)); // Exceeds max length of 20
 

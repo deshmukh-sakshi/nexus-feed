@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,13 +33,13 @@ class BadgeControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private BadgeService badgeService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private BadgeResponse badgeResponse;
@@ -172,7 +172,7 @@ class BadgeControllerTest {
     @DisplayName("Should get empty list for user with no badges")
     void shouldGetEmptyListForUserWithNoBadges() throws Exception {
         // Given
-        when(badgeService.getUserBadges(userId)).thenReturn(Arrays.asList());
+        when(badgeService.getUserBadges(userId)).thenReturn(List.of());
 
         // When & Then
         mockMvc.perform(get("/api/badges/user/{userId}", userId))

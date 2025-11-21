@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,16 +44,16 @@ class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private PostService postService;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
@@ -71,7 +72,7 @@ class PostControllerTest {
         postCreateRequest.setTitle("Test Post Title");
         postCreateRequest.setBody("Test post body content");
         postCreateRequest.setUrl("https://example.com");
-        postCreateRequest.setImageUrls(Arrays.asList("https://example.com/image1.jpg"));
+        postCreateRequest.setImageUrls(List.of("https://example.com/image1.jpg"));
 
         // Setup update request
         postUpdateRequest = new PostUpdateRequest();
@@ -85,7 +86,7 @@ class PostControllerTest {
         postResponse.setBody("Test post body content");
         postResponse.setUrl("https://example.com");
         postResponse.setUserId(userId);
-        postResponse.setUsername("testuser");
+        postResponse.setUsername("tester");
         postResponse.setCreatedAt(LocalDateTime.now());
         postResponse.setUpdatedAt(LocalDateTime.now());
         postResponse.setUpvotes(0);
@@ -109,7 +110,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Test Post Title"))
                 .andExpect(jsonPath("$.body").value("Test post body content"))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.username").value("tester"));
     }
 
     @Test
@@ -173,7 +174,7 @@ class PostControllerTest {
     @DisplayName("Should get all posts with pagination")
     void shouldGetAllPostsWithPagination() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
 
@@ -192,7 +193,7 @@ class PostControllerTest {
     @DisplayName("Should get posts by user with pagination")
     void shouldGetPostsByUserWithPagination() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getPostsByUser(any(UUID.class), any(PageRequest.class)))
                 .thenReturn(postPage);
@@ -211,7 +212,7 @@ class PostControllerTest {
     @DisplayName("Should search posts with keyword")
     void shouldSearchPostsWithKeyword() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.searchPosts(anyString(), any(PageRequest.class)))
                 .thenReturn(postPage);
@@ -236,7 +237,7 @@ class PostControllerTest {
         updatedPost.setTitle("Updated Post Title");
         updatedPost.setBody("Updated post body content");
         updatedPost.setUserId(userId);
-        updatedPost.setUsername("testuser");
+        updatedPost.setUsername("tester");
         updatedPost.setCreatedAt(LocalDateTime.now());
         updatedPost.setUpdatedAt(LocalDateTime.now());
 
@@ -296,7 +297,7 @@ class PostControllerTest {
     @DisplayName("Should use default pagination values")
     void shouldUseDefaultPaginationValues() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
 
@@ -314,7 +315,7 @@ class PostControllerTest {
                 .id(UUID.randomUUID())
                 .body("Test comment 1")
                 .userId(userId)
-                .username("testuser")
+                .username("tester")
                 .postId(postId)
                 .createdAt(java.time.Instant.now())
                 .updatedAt(java.time.Instant.now())
@@ -326,7 +327,7 @@ class PostControllerTest {
                 .id(UUID.randomUUID())
                 .body("Test comment 2")
                 .userId(userId)
-                .username("testuser")
+                .username("tester")
                 .postId(postId)
                 .createdAt(java.time.Instant.now())
                 .updatedAt(java.time.Instant.now())
@@ -369,3 +370,4 @@ class PostControllerTest {
                 .andExpect(status().isNotFound());
     }
 }
+

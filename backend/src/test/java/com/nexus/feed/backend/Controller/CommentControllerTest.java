@@ -12,16 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,16 +41,16 @@ class CommentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private CommentService commentService;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
@@ -81,7 +79,7 @@ class CommentControllerTest {
         commentResponse.setId(commentId);
         commentResponse.setBody("Test comment body");
         commentResponse.setUserId(userId);
-        commentResponse.setUsername("testuser");
+        commentResponse.setUsername("tester");
         commentResponse.setPostId(postId);
         commentResponse.setCreatedAt(java.time.Instant.now());
         commentResponse.setUpdatedAt(java.time.Instant.now());
@@ -103,7 +101,7 @@ class CommentControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.body").value("Test comment body"))
-                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.username").value("tester"))
                 .andExpect(jsonPath("$.postId").value(postId.toString()));
     }
 
@@ -181,7 +179,7 @@ class CommentControllerTest {
     @DisplayName("Should get comments by post successfully")
     void shouldGetCommentsByPostSuccessfully() throws Exception {
         // Given
-        List<CommentResponse> comments = Arrays.asList(commentResponse);
+        List<CommentResponse> comments = Collections.singletonList(commentResponse);
         when(commentService.getCommentsByPost(postId)).thenReturn(comments);
 
         // When & Then
@@ -209,7 +207,7 @@ class CommentControllerTest {
     @DisplayName("Should get comments by user with pagination")
     void shouldGetCommentsByUserWithPagination() throws Exception {
         // Given
-        List<CommentResponse> comments = Arrays.asList(commentResponse);
+        List<CommentResponse> comments = Collections.singletonList(commentResponse);
         Page<CommentResponse> commentPage = new PageImpl<>(comments, PageRequest.of(0, 10), 1);
         when(commentService.getCommentsByUser(any(UUID.class), any(PageRequest.class)))
                 .thenReturn(commentPage);
@@ -229,7 +227,7 @@ class CommentControllerTest {
     @DisplayName("Should use default pagination values for user comments")
     void shouldUseDefaultPaginationValuesForUserComments() throws Exception {
         // Given
-        List<CommentResponse> comments = Arrays.asList(commentResponse);
+        List<CommentResponse> comments = Collections.singletonList(commentResponse);
         Page<CommentResponse> commentPage = new PageImpl<>(comments, PageRequest.of(0, 10), 1);
         when(commentService.getCommentsByUser(any(UUID.class), any(PageRequest.class)))
                 .thenReturn(commentPage);
@@ -249,7 +247,7 @@ class CommentControllerTest {
         updatedComment.setId(commentId);
         updatedComment.setBody("Updated comment body");
         updatedComment.setUserId(userId);
-        updatedComment.setUsername("testuser");
+        updatedComment.setUsername("tester");
         updatedComment.setPostId(postId);
         updatedComment.setCreatedAt(java.time.Instant.now());
         updatedComment.setUpdatedAt(java.time.Instant.now());
@@ -318,7 +316,7 @@ class CommentControllerTest {
         replyResponse.setId(UUID.randomUUID());
         replyResponse.setBody("Reply to comment");
         replyResponse.setUserId(userId);
-        replyResponse.setUsername("testuser");
+        replyResponse.setUsername("tester");
         replyResponse.setPostId(postId);
         replyResponse.setParentCommentId(parentCommentId);
         replyResponse.setCreatedAt(java.time.Instant.now());

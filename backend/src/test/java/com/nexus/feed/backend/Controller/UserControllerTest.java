@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,16 +39,16 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
@@ -62,7 +62,7 @@ class UserControllerTest {
 
         // Setup create request
         userCreateRequest = new UserCreateRequest();
-        userCreateRequest.setUsername("testuser");
+        userCreateRequest.setUsername("tester");
         userCreateRequest.setEmail("test@example.com");
         userCreateRequest.setPassword("password123");
 
@@ -74,7 +74,7 @@ class UserControllerTest {
         // Setup response
         userResponse = new UserResponse();
         userResponse.setId(userId);
-        userResponse.setUsername("testuser");
+        userResponse.setUsername("tester");
         userResponse.setEmail("test@example.com");
         userResponse.setCreatedAt(LocalDateTime.now());
         userResponse.setUpdatedAt(LocalDateTime.now());
@@ -126,7 +126,7 @@ class UserControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.username").value("tester"))
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
@@ -148,13 +148,13 @@ class UserControllerTest {
     @DisplayName("Should get user by username successfully")
     void shouldGetUserByUsernameSuccessfully() throws Exception {
         // Given
-        when(userService.getUserByUsername("testuser")).thenReturn(userResponse);
+        when(userService.getUserByUsername("tester")).thenReturn(userResponse);
 
         // When & Then
-        mockMvc.perform(get("/api/users/username/{username}", "testuser"))
+        mockMvc.perform(get("/api/users/username/{username}", "tester"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.username").value("tester"));
     }
 
     @Test
@@ -201,7 +201,7 @@ class UserControllerTest {
         // Given
         UserResponse updatedUser = new UserResponse();
         updatedUser.setId(userId);
-        updatedUser.setUsername("testuser");
+        updatedUser.setUsername("tester");
         updatedUser.setBio("Updated bio");
         updatedUser.setProfilePictureUrl("https://example.com/profile.jpg");
         updatedUser.setEmail("test@example.com");
@@ -217,7 +217,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(userUpdateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.username").value("tester"))
                 .andExpect(jsonPath("$.bio").value("Updated bio"))
                 .andExpect(jsonPath("$.profilePictureUrl").value("https://example.com/profile.jpg"));
     }
@@ -258,3 +258,4 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 }
+
