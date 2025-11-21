@@ -20,11 +20,56 @@ export const usePosts = (pageSize = 10) => {
 
   const createPostMutation = useMutation({
     mutationFn: postsApi.createPost,
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['posts', pageSize] })
+      
+      const previousPosts = queryClient.getQueryData(['posts', pageSize])
+      
+      // Add skeleton post at the top
+      const skeletonPost = {
+        id: 'temp-creating',
+        title: data.title,
+        body: data.body,
+        url: data.url,
+        userId: 'temp',
+        username: 'loading',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        upvotes: 0,
+        downvotes: 0,
+        commentCount: 0,
+        userVote: null,
+        imageUrls: data.imageUrls || [],
+        isLoading: true, // Flag to show skeleton
+      }
+      
+      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: unknown[]; [key: string]: unknown }[] }
+        const firstPage = typedOld.pages[0]
+        return {
+          ...typedOld,
+          pages: [
+            { ...firstPage, content: [skeletonPost, ...firstPage.content] },
+            ...typedOld.pages.slice(1),
+          ],
+        }
+      })
+      
+      toast.loading('Creating post...', { id: 'create-post' })
+      
+      return { previousPosts }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
-      toast.success('Post created successfully!')
+      toast.dismiss('create-post')
+      toast.success('Post created!')
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['posts', pageSize], context.previousPosts)
+      }
+      toast.dismiss('create-post')
       toast.error(getErrorMessage(error))
     },
   })
@@ -110,9 +155,6 @@ export const usePosts = (pageSize = 10) => {
         queryClient.setQueryData(['post', newTodo.id], context.previousPost)
       }
       toast.error(getErrorMessage(err))
-    },
-    onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['post', variables.id] })
     },
   })
 

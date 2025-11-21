@@ -17,12 +17,15 @@ export const Navbar = () => {
   const { logout } = useAuth()
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-2 border-border bg-background">
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-yellow-50 backdrop-blur-sm">
       <div className="container mx-auto px-4 flex h-14 items-center">
         <div className="mr-4 flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <Home className="h-6 w-6" />
-            <span className="font-bold">Nexus Feed</span>
+          <Link 
+            to="/" 
+            className="mr-6 flex items-center gap-2 px-4 py-2 bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all rounded-none font-bold"
+          >
+            <Home className="h-5 w-5" />
+            <span>Nexus Feed</span>
           </Link>
         </div>
 

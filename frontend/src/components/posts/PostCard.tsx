@@ -7,19 +7,25 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
+import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePosts } from '@/hooks/usePosts'
 import type { Post } from '@/types'
 
 interface PostCardProps {
-  post: Post
+  post: Post & { isLoading?: boolean }
 }
 
 export const PostCard = ({ post }: PostCardProps) => {
   const { isAuthenticated } = useAuthStore()
   const { votePost } = usePosts()
   const [showAuthModal, setShowAuthModal] = useState(false)
+
+  // Show skeleton if post is loading
+  if (post.isLoading) {
+    return <PostSkeleton />
+  }
 
   const score = post.upvotes - post.downvotes
   const isEdited = post.createdAt !== post.updatedAt
@@ -37,28 +43,19 @@ export const PostCard = ({ post }: PostCardProps) => {
     <Card 
         className="flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50"
     >
-      {/* Content Area - Clickable with hover effect */}
-      <div 
-        className="post-content"
-      >
-        <div className="hover:bg-yellow-100 px-4 py-3 pb-0 transition-all duration-100 cursor-pointer active:translate-x-[2px] active:translate-y-[2px]"
-             onClick={() => window.location.href = `/post/${post.id}`}
-        >
+      {/* Content Area */}
+      <div className="post-content px-4 py-3 pb-0">
         {/* Header */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 group">
-           {/* User Avatar - Stop Propagation */}
            <Link 
               to={`/user/${post.username}`} 
               className="group-hover:opacity-80"
-              onClick={(e) => e.stopPropagation()}
            >
               <UserAvatar username={post.username} size="sm" className="h-5 w-5 border border-black" />
            </Link>
-           {/* Username Link - Stop Propagation */}
            <Link 
               to={`/user/${post.username}`} 
               className="font-bold text-foreground group-hover:underline"
-              onClick={(e) => e.stopPropagation()}
            >
               u/{post.username}
            </Link>
@@ -76,7 +73,6 @@ export const PostCard = ({ post }: PostCardProps) => {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline mb-1 w-fit"
-              onClick={(e) => e.stopPropagation()}
             >
               <ExternalLink className="h-3 w-3" />
               {(() => {
@@ -94,8 +90,6 @@ export const PostCard = ({ post }: PostCardProps) => {
             <p className="text-sm text-foreground/90 line-clamp-3 font-medium leading-tight">{post.body}</p>
           </div>
         )}
-
-        </div>
         
         {post.imageUrls && post.imageUrls.length > 0 && (
           <div className="mb-1 mt-2">
@@ -108,12 +102,11 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-      {/* Footer - Static relative to hover trigger */}
+      {/* Footer */}
       <div className="px-4 py-3 flex items-center gap-2">
           {/* Vote Pill */}
           <div 
             className="flex items-center bg-pink-200 border-2 border-black rounded-full h-10 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
-            onClick={(e) => e.stopPropagation()}
           >
               <Button
                 size="icon"
@@ -123,10 +116,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     ? 'bg-orange-400 text-black hover:bg-orange-500' 
                     : 'bg-white text-black hover:bg-orange-100'
                 )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleVote('UPVOTE');
-                }}
+                onClick={() => handleVote('UPVOTE')}
               >
                 <ArrowBigUp className={cn("h-5 w-5", post.userVote === 'UPVOTE' && "fill-current")} />
               </Button>
@@ -139,34 +129,28 @@ export const PostCard = ({ post }: PostCardProps) => {
                     ? 'bg-blue-400 text-black hover:bg-blue-500' 
                     : 'bg-white text-black hover:bg-blue-100'
                 )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleVote('DOWNVOTE');
-                }}
+                onClick={() => handleVote('DOWNVOTE')}
               >
                 <ArrowBigDown className={cn("h-5 w-5", post.userVote === 'DOWNVOTE' && "fill-current")} />
               </Button>
           </div>
 
           {/* Comment Button */}
-          <Button 
-              size="sm" 
-              className="h-10 px-3 text-xs font-bold border-2 border-black bg-cyan-300 text-black hover:bg-cyan-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              onClick={(e) => {
-                  e.stopPropagation();
-                  window.location.href = `/post/${post.id}`;
-              }}
-          >
-            <MessageSquare className="h-4 w-4" />
-            {post.commentCount} Comments
-          </Button>
+          <Link to={`/post/${post.id}`}>
+            <Button 
+                size="sm" 
+                className="h-10 px-3 text-xs font-bold border-2 border-black bg-cyan-300 text-black hover:bg-cyan-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {post.commentCount} Comments
+            </Button>
+          </Link>
           
           {/* Share Button */}
           <Button 
               size="sm" 
               className="h-10 px-3 text-xs font-bold border-2 border-black bg-lime-300 text-black hover:bg-lime-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              onClick={async (e) => {
-                  e.stopPropagation();
+              onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
                     toast.success("Link copied to clipboard!");

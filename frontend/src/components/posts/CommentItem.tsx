@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { AuthModal } from "@/components/ui/auth-modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { useComments } from "@/hooks/useComments";
@@ -43,6 +44,7 @@ export const CommentItem = ({
   const [isReplying, setIsReplying] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const score = comment.upvotes - comment.downvotes;
@@ -71,13 +73,15 @@ export const CommentItem = ({
     setIsEditing(false);
   };
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      try {
-        await deleteComment(comment.id);
-      } catch (error) {
-        console.error("Failed to delete comment:", error);
-      }
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteComment(comment.id);
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
     }
   };
 
@@ -306,6 +310,16 @@ export const CommentItem = ({
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         message="You need to be logged in to vote or reply to comments."
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Comment"
+        description="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </>
   );

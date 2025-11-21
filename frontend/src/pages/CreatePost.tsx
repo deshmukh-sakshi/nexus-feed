@@ -38,15 +38,11 @@ export const CreatePost = () => {
       body: body.trim() || undefined,
     })
 
-    // Reset form
+    // Reset form and navigate immediately
     setTitle('')
     setUrl('')
     setBody('')
-    
-    // Navigate to home after a short delay to show success toast
-    setTimeout(() => {
-      navigate('/')
-    }, 500)
+    navigate('/')
   }
 
   if (!isAuthenticated) {

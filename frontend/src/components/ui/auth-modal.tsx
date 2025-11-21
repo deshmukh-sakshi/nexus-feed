@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Dialog,
@@ -22,43 +21,40 @@ export const AuthModal = ({
   message = 'You need to be logged in to perform this action.',
 }: AuthModalProps) => {
   const navigate = useNavigate()
-  const [isClosing, setIsClosing] = useState(false)
 
   const handleLoginClick = () => {
-    setIsClosing(true)
     onClose()
     navigate('/login')
   }
 
   const handleRegisterClick = () => {
-    setIsClosing(true)
     onClose()
     navigate('/register')
   }
 
-  const handleStayLoggedOut = () => {
-    setIsClosing(true)
-    onClose()
-  }
-
   return (
-    <Dialog open={isOpen && !isClosing} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50">
         <DialogHeader>
-          <DialogTitle>Authentication Required</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
+          <DialogTitle className="text-xl font-bold">Authentication Required</DialogTitle>
+          <DialogDescription className="text-base">{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col sm:flex-col gap-2">
-          <Button onClick={handleRegisterClick} className="w-full">
-            Sign Up
-          </Button>
-          <Button onClick={handleLoginClick} variant="outline" className="w-full">
+          <Button 
+            onClick={handleLoginClick}
+            className="w-full bg-blue-400 text-black hover:bg-blue-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+          >
             Log In
           </Button>
+          <Button 
+            onClick={handleRegisterClick}
+            className="w-full bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+          >
+            Sign Up
+          </Button>
           <Button
-            onClick={handleStayLoggedOut}
-            variant="ghost"
-            className="w-full"
+            onClick={onClose}
+            className="w-full bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
           >
             Stay Logged Out
           </Button>

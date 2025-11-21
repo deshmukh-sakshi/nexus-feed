@@ -32,7 +32,7 @@ export const Login = () => {
 
   return (
     <div className="flex items-center justify-center w-full min-h-[calc(100vh-8rem)]">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-full max-w-md mx-4 bg-yellow-50">
         <CardHeader>
           <CardTitle>Welcome back</CardTitle>
           <CardDescription>Log in to your Nexus Feed account</CardDescription>

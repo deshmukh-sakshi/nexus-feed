@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn } from '@/lib/utils'
@@ -46,6 +47,7 @@ export const PostDetail = () => {
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Mutations
   const votePostMutation = useMutation({
@@ -61,22 +63,77 @@ export const PostDetail = () => {
 
   const updatePostMutation = useMutation({
     mutationFn: (data: PostUpdateRequest) => postsApi.updatePost(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
-      toast.success('Post updated successfully!')
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      
+      const previousData = queryClient.getQueryData(['postWithComments', id])
+      
+      // Optimistically update the post
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        if (!postDetail.post) return old
+        return {
+          ...postDetail,
+          post: {
+            ...postDetail.post,
+            title: data.title || postDetail.post.title,
+            body: data.body !== undefined ? data.body : postDetail.post.body,
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      })
+      
+      return { previousData }
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['postWithComments', id], context.previousData)
+      }
       toast.error(getErrorMessage(error))
     },
   })
 
   const deletePostMutation = useMutation({
     mutationFn: () => postsApi.deletePost(id!),
-    onSuccess: () => {
-      toast.success('Post deleted successfully!')
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['posts', 10] })
+      
+      // Snapshot previous value
+      const previousPosts = queryClient.getQueryData(['posts', 10])
+      
+      // Optimistically remove post from list
+      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.filter((p) => p.id !== id),
+          })),
+        }
+      })
+      
+      // Navigate and show loading toast
       navigate('/')
+      toast.loading('Deleting post...', { id: 'delete-post' })
+      
+      return { previousPosts }
     },
-    onError: (error) => {
+    onSuccess: () => {
+      // Refetch to get fresh data
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      toast.dismiss('delete-post')
+      toast.success('Post deleted!')
+    },
+    onError: (error, _variables, context) => {
+      // Restore previous posts on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['posts', 10], context.previousPosts)
+      }
+      toast.dismiss('delete-post')
       toast.error(getErrorMessage(error))
     },
   })
@@ -85,7 +142,6 @@ export const PostDetail = () => {
     mutationFn: (data: CommentCreateRequest) => commentsApi.createComment(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
-      toast.success('Comment posted successfully!')
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -156,9 +212,11 @@ export const PostDetail = () => {
   }
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      deletePostMutation.mutate()
-    }
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = () => {
+    deletePostMutation.mutate()
   }
 
   return (
@@ -361,6 +419,16 @@ export const PostDetail = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         message="You need to be logged in to vote or comment."
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </div>
   )
