@@ -20,7 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -87,8 +87,8 @@ class PostControllerTest {
         postResponse.setUrl("https://example.com");
         postResponse.setUserId(userId);
         postResponse.setUsername("tester");
-        postResponse.setCreatedAt(LocalDateTime.now());
-        postResponse.setUpdatedAt(LocalDateTime.now());
+        postResponse.setCreatedAt(Instant.now());
+        postResponse.setUpdatedAt(Instant.now());
         postResponse.setUpvotes(0);
         postResponse.setDownvotes(0);
     }
@@ -238,8 +238,8 @@ class PostControllerTest {
         updatedPost.setBody("Updated post body content");
         updatedPost.setUserId(userId);
         updatedPost.setUsername("tester");
-        updatedPost.setCreatedAt(LocalDateTime.now());
-        updatedPost.setUpdatedAt(LocalDateTime.now());
+        updatedPost.setCreatedAt(Instant.now());
+        updatedPost.setUpdatedAt(Instant.now());
 
         when(postService.updatePost(any(UUID.class), any(UUID.class), any(PostUpdateRequest.class)))
                 .thenReturn(updatedPost);

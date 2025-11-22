@@ -15,7 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,8 +50,8 @@ class UserServiceImplTest {
         user.setUsername("tester");
         user.setBio("Test bio");
         user.setProfilePictureUrl("https://example.com/pic.jpg");
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
         user.setAppUser(appUser);
     }
 

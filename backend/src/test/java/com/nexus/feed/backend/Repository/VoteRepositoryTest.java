@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -57,8 +57,8 @@ class VoteRepositoryTest {
 
         user1 = new Users();
         user1.setUsername("user1");
-        user1.setCreatedAt(LocalDateTime.now());
-        user1.setUpdatedAt(LocalDateTime.now());
+        user1.setCreatedAt(Instant.now());
+        user1.setUpdatedAt(Instant.now());
         user1.setAppUser(appUser1);
         appUser1.setUserProfile(user1);
 
@@ -68,8 +68,8 @@ class VoteRepositoryTest {
 
         user2 = new Users();
         user2.setUsername("user2");
-        user2.setCreatedAt(LocalDateTime.now());
-        user2.setUpdatedAt(LocalDateTime.now());
+        user2.setCreatedAt(Instant.now());
+        user2.setUpdatedAt(Instant.now());
         user2.setAppUser(appUser2);
         appUser2.setUserProfile(user2);
 
@@ -81,15 +81,15 @@ class VoteRepositoryTest {
         post1.setTitle("Post 1");
         post1.setBody("Body 1");
         post1.setUser(user1);
-        post1.setCreatedAt(LocalDateTime.now());
-        post1.setUpdatedAt(LocalDateTime.now());
+        post1.setCreatedAt(Instant.now());
+        post1.setUpdatedAt(Instant.now());
 
         post2 = new Post();
         post2.setTitle("Post 2");
         post2.setBody("Body 2");
         post2.setUser(user2);
-        post2.setCreatedAt(LocalDateTime.now());
-        post2.setUpdatedAt(LocalDateTime.now());
+        post2.setCreatedAt(Instant.now());
+        post2.setUpdatedAt(Instant.now());
 
         postRepository.save(post1);
         postRepository.save(post2);

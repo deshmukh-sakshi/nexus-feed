@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 @Service
@@ -53,8 +53,8 @@ public class AuthService {
 
         Users userProfile = new Users();
         userProfile.setUsername(request.getUsername());
-        userProfile.setCreatedAt(LocalDateTime.now());
-        userProfile.setUpdatedAt(LocalDateTime.now());
+        userProfile.setCreatedAt(Instant.now());
+        userProfile.setUpdatedAt(Instant.now());
         userProfile.setAppUser(appUser);
         
         appUser.setUserProfile(userProfile);

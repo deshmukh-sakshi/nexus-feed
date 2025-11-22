@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -76,8 +76,8 @@ class UserControllerTest {
         userResponse.setId(userId);
         userResponse.setUsername("tester");
         userResponse.setEmail("test@example.com");
-        userResponse.setCreatedAt(LocalDateTime.now());
-        userResponse.setUpdatedAt(LocalDateTime.now());
+        userResponse.setCreatedAt(Instant.now());
+        userResponse.setUpdatedAt(Instant.now());
     }
 
     @Test
@@ -205,8 +205,8 @@ class UserControllerTest {
         updatedUser.setBio("Updated bio");
         updatedUser.setProfilePictureUrl("https://example.com/profile.jpg");
         updatedUser.setEmail("test@example.com");
-        updatedUser.setCreatedAt(LocalDateTime.now());
-        updatedUser.setUpdatedAt(LocalDateTime.now());
+        updatedUser.setCreatedAt(Instant.now());
+        updatedUser.setUpdatedAt(Instant.now());
 
         when(userService.updateUser(any(UUID.class), any(UserUpdateRequest.class)))
                 .thenReturn(updatedUser);

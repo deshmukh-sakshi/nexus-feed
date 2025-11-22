@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -129,8 +128,8 @@ public class CommentServiceImpl implements CommentService {
         CommentResponse response = CommentResponse.builder()
                 .id(comment.getId())
                 .body(comment.getBody())
-                .createdAt(comment.getCreatedAt().toInstant(java.time.ZoneOffset.UTC))
-                .updatedAt(comment.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC))
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .userId(comment.getUser().getId())
                 .username(comment.getUser().getUsername())
                 .postId(comment.getPost().getId())
@@ -210,8 +209,8 @@ public class CommentServiceImpl implements CommentService {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .body(comment.getBody())
-                .createdAt(comment.getCreatedAt().toInstant(java.time.ZoneOffset.UTC))
-                .updatedAt(comment.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC))
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .userId(comment.getUser().getId())
                 .username(comment.getUser().getUsername())
                 .postId(comment.getPost().getId())

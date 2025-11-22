@@ -22,7 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,8 +79,8 @@ class CommentServiceImplTest {
         comment.setBody("Test Comment");
         comment.setUser(user);
         comment.setPost(post);
-        comment.setCreatedAt(LocalDateTime.now());
-        comment.setUpdatedAt(LocalDateTime.now());
+        comment.setCreatedAt(Instant.now());
+        comment.setUpdatedAt(Instant.now());
     }
 
     @Test
@@ -115,8 +115,8 @@ class CommentServiceImplTest {
         parentComment.setBody("Parent Comment");
         parentComment.setUser(user);
         parentComment.setPost(post);
-        parentComment.setCreatedAt(LocalDateTime.now());
-        parentComment.setUpdatedAt(LocalDateTime.now());
+        parentComment.setCreatedAt(Instant.now());
+        parentComment.setUpdatedAt(Instant.now());
 
         CommentCreateRequest request = new CommentCreateRequest();
         request.setBody("Reply Comment");
@@ -234,8 +234,8 @@ class CommentServiceImplTest {
         reply1.setUser(user);
         reply1.setPost(post);
         reply1.setParentComment(comment);
-        reply1.setCreatedAt(LocalDateTime.now());
-        reply1.setUpdatedAt(LocalDateTime.now());
+        reply1.setCreatedAt(Instant.now());
+        reply1.setUpdatedAt(Instant.now());
 
         Comment reply2 = new Comment();
         reply2.setId(UUID.randomUUID());
@@ -243,8 +243,8 @@ class CommentServiceImplTest {
         reply2.setUser(user);
         reply2.setPost(post);
         reply2.setParentComment(comment);
-        reply2.setCreatedAt(LocalDateTime.now());
-        reply2.setUpdatedAt(LocalDateTime.now());
+        reply2.setCreatedAt(Instant.now());
+        reply2.setUpdatedAt(Instant.now());
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(commentRepository.findByPostAndParentCommentIsNullOrderByCreatedAtDesc(post))

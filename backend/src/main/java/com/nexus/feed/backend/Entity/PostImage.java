@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Getter
@@ -30,10 +29,10 @@ public class PostImage {
     @Size(max = 2048)
     private String imageUrl;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 }

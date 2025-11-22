@@ -1,7 +1,7 @@
 package com.nexus.feed.backend.DTO;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,8 +14,8 @@ public class PostResponse {
     private String title;
     private String url;
     private String body;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     
     
     private UUID userId;
