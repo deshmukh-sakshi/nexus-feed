@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Dialog,
   DialogContent,
@@ -21,15 +21,16 @@ export const AuthModal = ({
   message = 'You need to be logged in to perform this action.',
 }: AuthModalProps) => {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleLoginClick = () => {
     onClose()
-    navigate('/login')
+    navigate('/login', { state: { from: location.pathname } })
   }
 
   const handleRegisterClick = () => {
     onClose()
-    navigate('/register')
+    navigate('/register', { state: { from: location.pathname } })
   }
 
   return (

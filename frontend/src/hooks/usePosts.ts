@@ -25,9 +25,12 @@ export const usePosts = (pageSize = 10) => {
       
       const previousPosts = queryClient.getQueryData(['posts', pageSize])
       
+      // Create temp ID for tracking
+      const tempId = `temp-${Date.now()}-${Math.random()}`
+      
       // Add skeleton post at the top
       const skeletonPost = {
-        id: 'temp-creating',
+        id: tempId,
         title: data.title,
         body: data.body,
         url: data.url,
@@ -58,10 +61,26 @@ export const usePosts = (pageSize = 10) => {
       
       toast.loading('Creating post...', { id: 'create-post' })
       
-      return { previousPosts }
+      return { previousPosts, tempId }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    onSuccess: (newPost, _variables, context) => {
+      // Silently replace skeleton with real post
+      if (context?.tempId) {
+        queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+          if (!old) return old
+          const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+          return {
+            ...typedOld,
+            pages: typedOld.pages.map((page) => ({
+              ...page,
+              content: page.content.map((p) => 
+                p.id === context.tempId ? newPost : p
+              ),
+            })),
+          }
+        })
+      }
+      
       toast.dismiss('create-post')
       toast.success('Post created!')
     },
@@ -77,12 +96,90 @@ export const usePosts = (pageSize = 10) => {
   const updatePostMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: PostUpdateRequest }) =>
       postsApi.updatePost(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
-      queryClient.invalidateQueries({ queryKey: ['post'] })
+    onMutate: async ({ id, data }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      
+      const previousPosts = queryClient.getQueryData(['posts', pageSize])
+      const previousPostDetail = queryClient.getQueryData(['postWithComments', id])
+      
+      const now = new Date().toISOString()
+      
+      // Update post in infinite query
+      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((post: Post) => {
+              if (post.id !== id) return post
+              return {
+                ...post,
+                title: data.title || post.title,
+                body: data.body !== undefined ? data.body : post.body,
+                url: data.url !== undefined ? data.url : post.url,
+                updatedAt: now,
+              }
+            }),
+          })),
+        }
+      })
+      
+      // Update post in detail view
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: Post; comments: unknown[] }
+        return {
+          ...postDetail,
+          post: {
+            ...postDetail.post,
+            title: data.title || postDetail.post.title,
+            body: data.body !== undefined ? data.body : postDetail.post.body,
+            url: data.url !== undefined ? data.url : postDetail.post.url,
+            updatedAt: now,
+          },
+        }
+      })
+      
+      return { previousPosts, previousPostDetail }
+    },
+    onSuccess: (updatedPost, { id }) => {
+      // Silently replace optimistic data with real server response
+      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((post: Post) => 
+              post.id === id ? updatedPost : post
+            ),
+          })),
+        }
+      })
+      
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: Post; comments: unknown[] }
+        return {
+          ...postDetail,
+          post: updatedPost,
+        }
+      })
+      
       toast.success('Post updated successfully!')
     },
-    onError: (error) => {
+    onError: (error, { id }, context) => {
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['posts', pageSize], context.previousPosts)
+      }
+      if (context?.previousPostDetail) {
+        queryClient.setQueryData(['postWithComments', id], context.previousPostDetail)
+      }
       toast.error(getErrorMessage(error))
     },
   })

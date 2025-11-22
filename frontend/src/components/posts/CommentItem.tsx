@@ -52,11 +52,15 @@ export const CommentItem = ({
   const isEdited = comment.createdAt !== comment.updatedAt;
   const canNest = depth < MAX_DEPTH;
   const hasReplies = comment.replies && comment.replies.length > 0;
+  const isTempComment = comment.id.startsWith('temp-'); // Check if comment is still being created
 
   const handleVote = (voteValue: "UPVOTE" | "DOWNVOTE") => {
     if (!isAuthenticated) {
       setShowAuthModal(true);
       return;
+    }
+    if (isTempComment) {
+      return; // Don't allow voting on temp comments
     }
     voteComment(comment.id, voteValue);
   };
@@ -129,7 +133,7 @@ export const CommentItem = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-4 w-4 p-0 hover:bg-transparent"
+                    className="h-4 w-4 p-0 hover:bg-gray-300 hover:border-black"
                     onClick={toggleCollapse}
                   >
                     {isCollapsed ? (
@@ -147,9 +151,12 @@ export const CommentItem = ({
                 </Link>
                 <span>•</span>
                 <span>
-                  {formatDistanceToNow(new Date(comment.createdAt))} ago
+                  {isTempComment 
+                    ? 'posting...' 
+                    : `${formatDistanceToNow(new Date(comment.createdAt))} ago`
+                  }
                 </span>
-                {isEdited && <span className="italic">(edited)</span>}
+                {isEdited && !isTempComment && <span className="italic">(edited)</span>}
                 {hasReplies && (
                   <>
                     <span>•</span>
@@ -200,16 +207,20 @@ export const CommentItem = ({
 
               <div className="flex items-center gap-2 mt-2">
                 {/* Vote Pill */}
-                <div className="flex items-center bg-pink-200 border-2 border-black rounded-full h-8 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                <div className={cn(
+                  "flex items-center bg-pink-200 border-2 border-black rounded-full h-8 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]",
+                  isTempComment && "opacity-50"
+                )}>
                   <Button
                     size="icon"
                     className={cn(
                       "h-6 w-6 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]",
                       comment.userVote === "UPVOTE" 
                         ? "bg-orange-400 text-black hover:bg-orange-500" 
-                        : "bg-white text-black hover:bg-orange-100"
+                        : "bg-white text-black hover:bg-orange-300"
                     )}
                     onClick={() => handleVote("UPVOTE")}
+                    disabled={isTempComment}
                   >
                     <ArrowBigUp className={cn("h-4 w-4", comment.userVote === "UPVOTE" && "fill-current")} />
                   </Button>
@@ -220,9 +231,10 @@ export const CommentItem = ({
                       "h-6 w-6 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]",
                       comment.userVote === "DOWNVOTE" 
                         ? "bg-blue-400 text-black hover:bg-blue-500" 
-                        : "bg-white text-black hover:bg-blue-100"
+                        : "bg-white text-black hover:bg-blue-300"
                     )}
                     onClick={() => handleVote("DOWNVOTE")}
+                    disabled={isTempComment}
                   >
                     <ArrowBigDown className={cn("h-4 w-4", comment.userVote === "DOWNVOTE" && "fill-current")} />
                   </Button>
@@ -231,15 +243,17 @@ export const CommentItem = ({
                 {canNest && (
                   <Button
                     size="sm"
-                    className="h-8 px-3 bg-cyan-300 text-black hover:bg-cyan-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    className="h-8 px-3 bg-cyan-300 text-black hover:bg-cyan-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleReply}
+                    disabled={isTempComment}
+                    title={isTempComment ? "Please wait for comment to be posted..." : "Reply to this comment"}
                   >
                     <MessageSquare className="mr-1 h-3 w-3" />
                     Reply
                   </Button>
                 )}
 
-                {isOwner && !isEditing && (
+                {isOwner && !isEditing && !isTempComment && (
                   <>
                     <Button
                       size="sm"

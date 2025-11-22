@@ -26,9 +26,10 @@ export const useComments = (postId: string) => {
       const previousComments = queryClient.getQueryData(['comments', postId])
       const previousPostDetail = queryClient.getQueryData(['postWithComments', postId])
       
-      // Create optimistic comment
+      // Create optimistic comment with temp ID
+      const tempId = `temp-${Date.now()}-${Math.random()}`
       const optimisticComment: Comment = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         body: data.body,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -91,7 +92,75 @@ export const useComments = (postId: string) => {
         }
       })
       
-      return { previousComments, previousPostDetail }
+      return { previousComments, previousPostDetail, tempId, parentCommentId: data.parentCommentId }
+    },
+    onSuccess: (newComment, _variables, context) => {
+      // Replace temp comment with real comment from server
+      if (!context) return
+      
+      const { tempId, parentCommentId } = context
+      
+      // Update comments query
+      queryClient.setQueryData(['comments', postId], (old: unknown) => {
+        if (!old) return old
+        const comments = old as Comment[]
+        
+        if (parentCommentId) {
+          // Replace temp reply with real reply
+          const replaceReply = (comment: Comment): Comment => {
+            if (comment.id === parentCommentId) {
+              return {
+                ...comment,
+                replies: (comment.replies || []).map(r => 
+                  r.id === tempId ? newComment : r
+                ),
+              }
+            }
+            if (comment.replies && comment.replies.length > 0) {
+              return { ...comment, replies: comment.replies.map(replaceReply) }
+            }
+            return comment
+          }
+          return comments.map(replaceReply)
+        }
+        
+        // Replace temp root comment with real comment
+        return comments.map(c => c.id === tempId ? newComment : c)
+      })
+      
+      // Update postWithComments query
+      queryClient.setQueryData(['postWithComments', postId], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: unknown; comments: Comment[] }
+        
+        if (parentCommentId) {
+          return {
+            ...postDetail,
+            comments: postDetail.comments.map((comment: Comment) => {
+              const replaceReply = (c: Comment): Comment => {
+                if (c.id === parentCommentId) {
+                  return {
+                    ...c,
+                    replies: (c.replies || []).map(r => 
+                      r.id === tempId ? newComment : r
+                    ),
+                  }
+                }
+                if (c.replies && c.replies.length > 0) {
+                  return { ...c, replies: c.replies.map(replaceReply) }
+                }
+                return c
+              }
+              return replaceReply(comment)
+            }),
+          }
+        }
+        
+        return {
+          ...postDetail,
+          comments: postDetail.comments.map(c => c.id === tempId ? newComment : c),
+        }
+      })
     },
     onError: (error, _variables, context) => {
       if (context?.previousComments) {
@@ -145,6 +214,9 @@ export const useComments = (postId: string) => {
       
       return { previousComments, previousPostDetail }
     },
+    onSuccess: () => {
+      toast.success('Comment updated!')
+    },
     onError: (error, _variables, context) => {
       if (context?.previousComments) {
         queryClient.setQueryData(['comments', postId], context.previousComments)
@@ -191,6 +263,9 @@ export const useComments = (postId: string) => {
       })
       
       return { previousComments, previousPostDetail }
+    },
+    onSuccess: () => {
+      toast.success('Comment deleted!')
     },
     onError: (error, _variables, context) => {
       if (context?.previousComments) {

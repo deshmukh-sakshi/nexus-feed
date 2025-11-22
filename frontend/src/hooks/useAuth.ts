@@ -6,9 +6,12 @@ import { useAuthStore } from '@/stores/authStore'
 import { getErrorMessage } from '@/types/errors'
 import type { LoginRequest, RegistrationRequest } from '@/types'
 
-export const useAuth = () => {
+export const useAuth = (redirectTo?: string) => {
   const navigate = useNavigate()
   const { setAuth, logout: logoutStore } = useAuthStore()
+
+  // Use provided redirect path or default to home
+  const from = redirectTo || '/'
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -22,7 +25,7 @@ export const useAuth = () => {
         data.token
       )
       toast.success('Welcome back!')
-      navigate('/')
+      navigate(from, { replace: true })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -41,7 +44,7 @@ export const useAuth = () => {
         data.token
       )
       toast.success('Account created successfully!')
-      navigate('/')
+      navigate(from, { replace: true })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))

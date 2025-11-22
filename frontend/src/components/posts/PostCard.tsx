@@ -114,7 +114,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
                   post.userVote === 'UPVOTE' 
                     ? 'bg-orange-400 text-black hover:bg-orange-500' 
-                    : 'bg-white text-black hover:bg-orange-100'
+                    : 'bg-white text-black hover:bg-orange-300'
                 )}
                 onClick={() => handleVote('UPVOTE')}
               >
@@ -127,7 +127,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
                   post.userVote === 'DOWNVOTE' 
                     ? 'bg-blue-400 text-black hover:bg-blue-500' 
-                    : 'bg-white text-black hover:bg-blue-100'
+                    : 'bg-white text-black hover:bg-blue-300'
                 )}
                 onClick={() => handleVote('DOWNVOTE')}
               >

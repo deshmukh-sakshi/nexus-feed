@@ -53,10 +53,46 @@ export const PostDetail = () => {
   const votePostMutation = useMutation({
     mutationFn: ({ voteValue }: { voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
       votesApi.votePost(id!, voteValue),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
+    onMutate: async ({ voteValue }) => {
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      
+      const previousData = queryClient.getQueryData(['postWithComments', id])
+      
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        if (!postDetail.post) return old
+        
+        const currentPost = postDetail.post
+        const isSameVote = currentPost.userVote === voteValue
+        const newVote = isSameVote ? null : voteValue
+        
+        let upvotes = currentPost.upvotes
+        let downvotes = currentPost.downvotes
+        
+        if (currentPost.userVote === 'UPVOTE') upvotes--
+        if (currentPost.userVote === 'DOWNVOTE') downvotes--
+        
+        if (newVote === 'UPVOTE') upvotes++
+        if (newVote === 'DOWNVOTE') downvotes++
+        
+        return {
+          ...postDetail,
+          post: {
+            ...currentPost,
+            userVote: newVote,
+            upvotes,
+            downvotes,
+          },
+        }
+      })
+      
+      return { previousData }
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['postWithComments', id], context.previousData)
+      }
       toast.error(getErrorMessage(error))
     },
   })
@@ -65,10 +101,14 @@ export const PostDetail = () => {
     mutationFn: (data: PostUpdateRequest) => postsApi.updatePost(id!, data),
     onMutate: async (data) => {
       await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      await queryClient.cancelQueries({ queryKey: ['posts', 10] })
       
       const previousData = queryClient.getQueryData(['postWithComments', id])
+      const previousPosts = queryClient.getQueryData(['posts', 10])
       
-      // Optimistically update the post
+      const now = new Date().toISOString()
+      
+      // Optimistically update the post in detail view
       queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
         if (!old) return old
         const postDetail = old as { post: typeof post; comments: typeof comments }
@@ -79,16 +119,67 @@ export const PostDetail = () => {
             ...postDetail.post,
             title: data.title || postDetail.post.title,
             body: data.body !== undefined ? data.body : postDetail.post.body,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           },
         }
       })
       
-      return { previousData }
+      // Also update in posts list if present
+      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => {
+              if (p.id !== id) return p
+              return {
+                ...p,
+                title: data.title || p.title,
+                body: data.body !== undefined ? data.body : p.body,
+                updatedAt: now,
+              }
+            }),
+          })),
+        }
+      })
+      
+      return { previousData, previousPosts }
+    },
+    onSuccess: (updatedPost) => {
+      // Silently replace optimistic data with real server response
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        return {
+          ...postDetail,
+          post: updatedPost,
+        }
+      })
+      
+      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => 
+              p.id === id ? updatedPost : p
+            ),
+          })),
+        }
+      })
+      
+      toast.success('Post updated!')
     },
     onError: (error, _variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['postWithComments', id], context.previousData)
+      }
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['posts', 10], context.previousPosts)
       }
       toast.error(getErrorMessage(error))
     },
@@ -140,9 +231,6 @@ export const PostDetail = () => {
 
   const createCommentMutation = useMutation({
     mutationFn: (data: CommentCreateRequest) => commentsApi.createComment(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['postWithComments', id] })
-    },
     onError: (error) => {
       toast.error(getErrorMessage(error))
     },
@@ -241,7 +329,7 @@ export const PostDetail = () => {
                   'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
                   post.userVote === 'UPVOTE' 
                     ? 'bg-orange-400 text-black hover:bg-orange-500' 
-                    : 'bg-white text-black hover:bg-orange-100'
+                    : 'bg-white text-black hover:bg-orange-300'
                 )}
                 onClick={() => handleVote('UPVOTE')}
               >
@@ -254,7 +342,7 @@ export const PostDetail = () => {
                   'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
                   post.userVote === 'DOWNVOTE' 
                     ? 'bg-blue-400 text-black hover:bg-blue-500' 
-                    : 'bg-white text-black hover:bg-blue-100'
+                    : 'bg-white text-black hover:bg-blue-300'
                 )}
                 onClick={() => handleVote('DOWNVOTE')}
               >

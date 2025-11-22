@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,7 +17,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export const Register = () => {
-  const { register, isLoading } = useAuth()
+  const location = useLocation()
+  const from = (location.state as { from?: string })?.from || '/'
+  const { register, isLoading } = useAuth(from)
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
