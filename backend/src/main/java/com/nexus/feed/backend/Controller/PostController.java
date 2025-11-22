@@ -16,7 +16,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class PostController {
 
     private final PostService postService;
@@ -38,6 +37,16 @@ public class PostController {
         try {
             PostResponse post = postService.getPostById(id);
             return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/with-comments")
+    public ResponseEntity<PostDetailResponse> getPostWithComments(@PathVariable UUID id) {
+        try {
+            PostDetailResponse postDetail = postService.getPostWithComments(id);
+            return ResponseEntity.ok(postDetail);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

@@ -44,7 +44,10 @@ export const UserProfile = () => {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <p className="text-destructive">User not found.</p>
-        <Button onClick={() => navigate('/')} variant="outline">
+        <Button 
+          onClick={() => navigate('/')}
+          className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+        >
           Go Back Home
         </Button>
       </div>
@@ -54,10 +57,9 @@ export const UserProfile = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
       <Button
-        variant="ghost"
         size="sm"
         onClick={() => navigate(-1)}
-        className="mb-4"
+        className="mb-4 bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
@@ -75,7 +77,10 @@ export const UserProfile = () => {
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold">u/{profile.username}</h1>
                 {isOwnProfile && (
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    size="sm"
+                    className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                  >
                     <Edit2 className="mr-2 h-4 w-4" />
                     Edit Profile
                   </Button>

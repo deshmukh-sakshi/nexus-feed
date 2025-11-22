@@ -2,13 +2,16 @@ package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.DTO.VoteRequest;
 import com.nexus.feed.backend.Entity.*;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -23,17 +26,17 @@ public class VoteServiceImpl implements VoteService {
     public void vote(UUID userId, VoteRequest request) {
         // Verify user exists
         if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User", "id", userId);
         }
 
         // Verify votable entity exists
         if (request.getVotableType() == Vote.VotableType.POST) {
             if (!postRepository.existsById(request.getVotableId())) {
-                throw new RuntimeException("Post not found");
+                throw new ResourceNotFoundException("Post", "id", request.getVotableId());
             }
         } else if (request.getVotableType() == Vote.VotableType.COMMENT) {
             if (!commentRepository.existsById(request.getVotableId())) {
-                throw new RuntimeException("Comment not found");
+                throw new ResourceNotFoundException("Comment", "id", request.getVotableId());
             }
         }
 
@@ -45,10 +48,12 @@ public class VoteServiceImpl implements VoteService {
             if (vote.getVoteValue() == request.getVoteValue()) {
                 // Same vote - remove it (toggle off)
                 voteRepository.delete(vote);
+                log.info("Vote removed: userId={}, votableId={}, type={}", userId, request.getVotableId(), request.getVotableType());
             } else {
                 // Different vote - update it
                 vote.setVoteValue(request.getVoteValue());
                 voteRepository.save(vote);
+                log.info("Vote updated: userId={}, votableId={}, type={}, value={}", userId, request.getVotableId(), request.getVotableType(), request.getVoteValue());
             }
         } else {
             // New vote
@@ -57,6 +62,7 @@ public class VoteServiceImpl implements VoteService {
             newVote.setVotableType(request.getVotableType());
             newVote.setVoteValue(request.getVoteValue());
             voteRepository.save(newVote);
+            log.info("Vote created: userId={}, votableId={}, type={}, value={}", userId, request.getVotableId(), request.getVotableType(), request.getVoteValue());
         }
     }
 

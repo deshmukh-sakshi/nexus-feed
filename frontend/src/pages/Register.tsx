@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,7 +17,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export const Register = () => {
-  const { register, isLoading } = useAuth()
+  const location = useLocation()
+  const from = (location.state as { from?: string })?.from || '/'
+  const { register, isLoading } = useAuth(from)
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -34,7 +36,7 @@ export const Register = () => {
 
   return (
     <div className="flex items-center justify-center w-full min-h-[calc(100vh-8rem)]">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-full max-w-md mx-4 bg-yellow-50">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>Join the Nexus Feed community</CardDescription>
@@ -81,7 +83,11 @@ export const Register = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-500 text-black hover:bg-blue-600 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50" 
+                disabled={isLoading}
+              >
                 {isLoading ? 'Creating account...' : 'Sign up'}
               </Button>
             </form>

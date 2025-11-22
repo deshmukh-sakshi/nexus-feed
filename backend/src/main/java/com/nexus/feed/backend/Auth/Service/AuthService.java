@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 @Service
@@ -26,52 +26,45 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthResponse login(LoginRequest request) {
-        log.info("Authenticating user: {}", request.getEmail());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
                 )
         );
-        log.info("Authentication successful");
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtService.generateToken(userDetails);
-        log.info("Token generated");
 
         AppUserDetails appUserDetails = (AppUserDetails) userDetails;
+        log.info("User logged in: email={}", request.getEmail());
         return createAuthResponse(appUserDetails, token);
     }
 
     public AuthResponse register(RegistrationRequest request) {
-        log.info("Registering user: {}", request.getEmail());
-        
         if (appUserRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.error("User already exists");
+            log.warn("Registration attempt with existing email: {}", request.getEmail());
             throw new com.nexus.feed.backend.Exception.UserAlreadyExistsException("User with email " + request.getEmail() + " already exists");
         }
 
-        log.info("User does not exist, creating new user");
         AppUser appUser = new AppUser();
         appUser.setEmail(request.getEmail());
         appUser.setPassword(passwordEncoder.encode(request.getPassword()));
 
         Users userProfile = new Users();
         userProfile.setUsername(request.getUsername());
-        userProfile.setCreatedAt(LocalDateTime.now());
-        userProfile.setUpdatedAt(LocalDateTime.now());
+        userProfile.setCreatedAt(Instant.now());
+        userProfile.setUpdatedAt(Instant.now());
         userProfile.setAppUser(appUser);
         
         appUser.setUserProfile(userProfile);
 
-        log.info("Saving user");
         AppUser savedUser = appUserRepository.save(appUser);
-        log.info("User saved with ID: {}", savedUser.getId());
 
         AppUserDetails appUserDetails = new AppUserDetails(savedUser);
         String token = jwtService.generateToken(appUserDetails);
-        log.info("Token generated");
         
+        log.info("User registered: email={}, userId={}", request.getEmail(), savedUser.getId());
         return createAuthResponse(appUserDetails, token);
     }
 

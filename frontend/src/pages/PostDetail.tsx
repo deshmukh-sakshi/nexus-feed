@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   ArrowBigUp,
   ArrowBigDown,
   MessageSquare,
   ExternalLink,
-  Loader2,
   Edit2,
   Trash2,
   Save,
@@ -21,40 +22,231 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CommentList } from '@/components/posts/CommentList'
+import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { usePost } from '@/hooks/usePosts'
+import { usePostWithComments } from '@/hooks/usePosts'
 import { useComments } from '@/hooks/useComments'
-import { usePosts } from '@/hooks/usePosts'
+import { postsApi, votesApi } from '@/lib/api-client'
+import { getErrorMessage } from '@/types/errors'
+import type { PostUpdateRequest } from '@/types'
 
 export const PostDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
-  const { data: post, isLoading: postLoading, error: postError } = usePost(id!)
-  const { comments, isLoading: commentsLoading, createComment } = useComments(id!)
-  const { votePost, updatePost, deletePost } = usePosts()
+  const queryClient = useQueryClient()
+  const { data: postDetail, isLoading: postLoading, error: postError } = usePostWithComments(id!)
+  
+  const post = postDetail?.post
+  const comments = postDetail?.comments || []
 
   const [commentBody, setCommentBody] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Mutations
+  const votePostMutation = useMutation({
+    mutationFn: ({ voteValue }: { voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
+      votesApi.votePost(id!, voteValue),
+    onMutate: async ({ voteValue }) => {
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      
+      const previousData = queryClient.getQueryData(['postWithComments', id])
+      
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        if (!postDetail.post) return old
+        
+        const currentPost = postDetail.post
+        const isSameVote = currentPost.userVote === voteValue
+        const newVote = isSameVote ? null : voteValue
+        
+        let upvotes = currentPost.upvotes
+        let downvotes = currentPost.downvotes
+        
+        if (currentPost.userVote === 'UPVOTE') upvotes--
+        if (currentPost.userVote === 'DOWNVOTE') downvotes--
+        
+        if (newVote === 'UPVOTE') upvotes++
+        if (newVote === 'DOWNVOTE') downvotes++
+        
+        return {
+          ...postDetail,
+          post: {
+            ...currentPost,
+            userVote: newVote,
+            upvotes,
+            downvotes,
+          },
+        }
+      })
+      
+      return { previousData }
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['postWithComments', id], context.previousData)
+      }
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const updatePostMutation = useMutation({
+    mutationFn: (data: PostUpdateRequest) => postsApi.updatePost(id!, data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
+      
+      const previousData = queryClient.getQueryData(['postWithComments', id])
+      
+      const now = new Date().toISOString()
+      
+      // Optimistically update the post in detail view
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        if (!postDetail.post) return old
+        return {
+          ...postDetail,
+          post: {
+            ...postDetail.post,
+            title: data.title || postDetail.post.title,
+            body: data.body !== undefined ? data.body : postDetail.post.body,
+            updatedAt: now,
+          },
+        }
+      })
+      
+      // Also update in all posts list queries
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => {
+              if (p.id !== id) return p
+              return {
+                ...p,
+                title: data.title || p.title,
+                body: data.body !== undefined ? data.body : p.body,
+                updatedAt: now,
+              }
+            }),
+          })),
+        }
+      })
+      
+      return { previousData }
+    },
+    onSuccess: (updatedPost) => {
+      // Silently replace optimistic data with real server response
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: typeof post; comments: typeof comments }
+        return {
+          ...postDetail,
+          post: updatedPost,
+        }
+      })
+      
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => 
+              p.id === id ? updatedPost : p
+            ),
+          })),
+        }
+      })
+      
+      toast.success('Post updated!')
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['postWithComments', id], context.previousData)
+      }
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => postsApi.deletePost(id!),
+    onMutate: async () => {
+      // Cancel any outgoing refetches for all page sizes
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
+      
+      // Snapshot previous values for all page sizes
+      const previousPosts4 = queryClient.getQueryData(['posts', 4])
+      const previousPosts10 = queryClient.getQueryData(['posts', 10])
+      
+      // Optimistically remove post from all cached queries
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.filter((p) => p.id !== id),
+          })),
+        }
+      })
+      
+      // Show loading toast immediately
+      toast.loading('Deleting post...', { id: 'delete-post' })
+      
+      // Navigate after optimistic update
+      navigate('/')
+      
+      return { previousPosts4, previousPosts10 }
+    },
+    onSuccess: () => {
+      // Refetch to get fresh data
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      toast.dismiss('delete-post')
+      toast.success('Post deleted!')
+    },
+    onError: (error, _variables, context) => {
+      // Restore previous posts on error
+      if (context?.previousPosts4) {
+        queryClient.setQueryData(['posts', 4], context.previousPosts4)
+      }
+      if (context?.previousPosts10) {
+        queryClient.setQueryData(['posts', 10], context.previousPosts10)
+      }
+      toast.dismiss('delete-post')
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  // Use the useComments hook for optimistic updates
+  const { createComment: createCommentWithOptimisticUpdate } = useComments(id!)
 
   if (postLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PostDetailSkeleton navigate={navigate} />
   }
 
   if (postError || !post) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <p className="text-destructive">Failed to load post. It may not exist.</p>
-        <Button onClick={() => navigate('/')} variant="outline">
+        <Button 
+          onClick={() => navigate('/')} 
+          className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+        >
           Go Back Home
         </Button>
       </div>
@@ -70,7 +262,7 @@ export const PostDetail = () => {
       setShowAuthModal(true)
       return
     }
-    votePost(post.id, voteValue)
+    votePostMutation.mutate({ voteValue })
   }
 
   const handleSubmitComment = () => {
@@ -79,7 +271,7 @@ export const PostDetail = () => {
       return
     }
     if (commentBody.trim()) {
-      createComment({ body: commentBody.trim() })
+      createCommentWithOptimisticUpdate({ body: commentBody.trim() })
       setCommentBody('')
     }
   }
@@ -92,7 +284,7 @@ export const PostDetail = () => {
 
   const handleSaveEdit = () => {
     if (editTitle.trim()) {
-      updatePost(post.id, {
+      updatePostMutation.mutate({
         title: editTitle.trim(),
         body: editBody.trim() || undefined,
       })
@@ -107,73 +299,71 @@ export const PostDetail = () => {
   }
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      deletePost(post.id)
-      navigate('/')
-    }
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = () => {
+    deletePostMutation.mutate()
   }
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
       <Button
-        variant="ghost"
         size="sm"
         onClick={() => navigate(-1)}
-        className="mb-4"
+        className="mb-4 bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
       </Button>
 
-      <Card>
+      <Card className="bg-yellow-50">
         <CardHeader>
           <div className="flex items-start gap-3">
-            <div className="flex flex-col items-center gap-1 pt-1">
+            {/* Vote Bar */}
+            <div className="flex flex-col items-center gap-2 bg-pink-200 border-2 border-black rounded-full px-2 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
               <Button
-                variant="ghost"
-                size="sm"
+                size="icon"
                 className={cn(
-                  'h-8 w-8 p-0',
-                  post.userVote === 'UPVOTE' && 'text-orange-500'
+                  'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
+                  post.userVote === 'UPVOTE' 
+                    ? 'bg-orange-400 text-black hover:bg-orange-500' 
+                    : 'bg-white text-black hover:bg-orange-300'
                 )}
                 onClick={() => handleVote('UPVOTE')}
               >
-                <ArrowBigUp className="h-5 w-5" />
+                <ArrowBigUp className={cn("h-5 w-5", post.userVote === 'UPVOTE' && "fill-current")} />
               </Button>
-              <span className="text-sm font-semibold">{score}</span>
+              <span className="text-sm font-bold">{score}</span>
               <Button
-                variant="ghost"
-                size="sm"
+                size="icon"
                 className={cn(
-                  'h-8 w-8 p-0',
-                  post.userVote === 'DOWNVOTE' && 'text-blue-500'
+                  'h-7 w-7 rounded-full transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]',
+                  post.userVote === 'DOWNVOTE' 
+                    ? 'bg-blue-400 text-black hover:bg-blue-500' 
+                    : 'bg-white text-black hover:bg-blue-300'
                 )}
                 onClick={() => handleVote('DOWNVOTE')}
               >
-                <ArrowBigDown className="h-5 w-5" />
+                <ArrowBigDown className={cn("h-5 w-5", post.userVote === 'DOWNVOTE' && "fill-current")} />
               </Button>
             </div>
 
             <div className="flex-1 space-y-3">
-              <div className="flex items-center gap-2">
-                <Link to={`/user/${post.username}`} className="hover:opacity-80">
+              <div className="flex items-center gap-2 group">
+                <Link to={`/user/${post.username}`} className="group-hover:opacity-80">
                   <UserAvatar username={post.username} size="sm" />
                 </Link>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Link
                     to={`/user/${post.username}`}
-                    className="hover:underline font-medium"
+                    className="group-hover:underline font-medium"
                   >
                     u/{post.username}
                   </Link>
                   <span>•</span>
                   <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
-                  {isEdited && (
-                    <>
-                      <span>•</span>
-                      <span className="italic">edited</span>
-                    </>
-                  )}
+                  {isEdited && <span className="italic">(edited)</span>}
                 </div>
               </div>
 
@@ -193,11 +383,17 @@ export const PostDetail = () => {
                     placeholder="Post body (Markdown supported)"
                   />
                   <div className="flex gap-2">
-                    <Button onClick={handleSaveEdit}>
+                    <Button 
+                      onClick={handleSaveEdit}
+                      className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                    >
                       <Save className="mr-2 h-4 w-4" />
                       Save
                     </Button>
-                    <Button variant="outline" onClick={handleCancelEdit}>
+                    <Button 
+                      onClick={handleCancelEdit}
+                      className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                    >
                       <X className="mr-2 h-4 w-4" />
                       Cancel
                     </Button>
@@ -253,26 +449,21 @@ export const PostDetail = () => {
             <MessageSquare className="h-4 w-4" />
             <span>{post.commentCount} comments</span>
           </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <ArrowBigUp className="h-4 w-4 text-orange-500" />
-            <span>{post.upvotes}</span>
-          </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <ArrowBigDown className="h-4 w-4 text-blue-500" />
-            <span>{post.downvotes}</span>
-          </div>
 
           {isOwner && !isEditing && (
             <div className="ml-auto flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleStartEdit}>
+              <Button 
+                size="sm" 
+                onClick={handleStartEdit}
+                className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+              >
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
               <Button
-                variant="outline"
                 size="sm"
                 onClick={handleDelete}
-                className="text-destructive hover:text-destructive"
+                className="bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -282,7 +473,7 @@ export const PostDetail = () => {
         </CardFooter>
       </Card>
 
-      <Card>
+      <Card className="bg-yellow-50">
         <CardHeader>
           <h2 className="text-xl font-semibold">Comments</h2>
         </CardHeader>
@@ -295,20 +486,18 @@ export const PostDetail = () => {
                 className="min-h-[100px] resize-y"
                 placeholder="What are your thoughts? (Markdown supported)"
               />
-              <Button onClick={handleSubmitComment} disabled={!commentBody.trim()}>
+              <Button 
+                onClick={handleSubmitComment} 
+                disabled={!commentBody.trim()}
+                className="bg-blue-400 text-black hover:bg-blue-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+              >
                 Comment
               </Button>
             </div>
 
             <Separator />
 
-            {commentsLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <CommentList comments={comments} postId={post.id} />
-            )}
+            <CommentList comments={comments} postId={post.id} />
           </div>
         </CardContent>
       </Card>
@@ -317,6 +506,16 @@ export const PostDetail = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         message="You need to be logged in to vote or comment."
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     </div>
   )

@@ -60,11 +60,11 @@ export const UserAvatar = ({
   const gradient = generateAvatarGradient(username)
 
   return (
-    <Avatar className={cn(sizeClasses[size], className)}>
-      {profileImageUrl && <AvatarImage src={profileImageUrl} alt={username} />}
+    <Avatar className={cn(sizeClasses[size], "rounded-none border-2 border-border shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]", className)}>
+      {profileImageUrl && <AvatarImage src={profileImageUrl} alt={username} className="rounded-none" />}
       <AvatarFallback
         style={{ background: gradient }}
-        className="text-white font-semibold"
+        className="text-white font-semibold rounded-none"
       >
         {initials}
       </AvatarFallback>

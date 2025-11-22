@@ -8,6 +8,7 @@ import java.util.UUID;
 public interface PostService {
     PostResponse createPost(UUID userId, PostCreateRequest request);
     PostResponse getPostById(UUID id);
+    PostDetailResponse getPostWithComments(UUID id);
     Page<PostResponse> getAllPosts(Pageable pageable);
     Page<PostResponse> getPostsByUser(UUID userId, Pageable pageable);
     Page<PostResponse> searchPosts(String keyword, Pageable pageable);

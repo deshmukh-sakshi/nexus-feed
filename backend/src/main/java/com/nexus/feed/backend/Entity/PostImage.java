@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Getter
@@ -14,7 +13,9 @@ import java.util.*;
 @ToString(exclude = {"post"})
 @EqualsAndHashCode(exclude = {"post"})
 @Entity
-@Table(name = "post_images")
+@Table(name = "post_images", indexes = {
+    @Index(name = "idx_post_image_post_id", columnList = "post_id")
+})
 public class PostImage {
     @Id
     @GeneratedValue
@@ -28,10 +29,10 @@ public class PostImage {
     @Size(max = 2048)
     private String imageUrl;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 }

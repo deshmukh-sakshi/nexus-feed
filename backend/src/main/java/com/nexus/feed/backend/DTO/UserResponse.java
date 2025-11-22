@@ -1,7 +1,7 @@
 package com.nexus.feed.backend.DTO;
 
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -14,8 +14,8 @@ public class UserResponse {
     private String email;
     private String bio;
     private String profilePictureUrl;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     
     // Note: passwordHash is intentionally excluded for security
 }

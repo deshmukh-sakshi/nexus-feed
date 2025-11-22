@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,8 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,16 +44,16 @@ class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private PostService postService;
 
-    @MockBean
+    @MockitoBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
 
-    @MockBean
+    @MockitoBean
     private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
@@ -71,7 +72,7 @@ class PostControllerTest {
         postCreateRequest.setTitle("Test Post Title");
         postCreateRequest.setBody("Test post body content");
         postCreateRequest.setUrl("https://example.com");
-        postCreateRequest.setImageUrls(Arrays.asList("https://example.com/image1.jpg"));
+        postCreateRequest.setImageUrls(List.of("https://example.com/image1.jpg"));
 
         // Setup update request
         postUpdateRequest = new PostUpdateRequest();
@@ -85,9 +86,9 @@ class PostControllerTest {
         postResponse.setBody("Test post body content");
         postResponse.setUrl("https://example.com");
         postResponse.setUserId(userId);
-        postResponse.setUsername("testuser");
-        postResponse.setCreatedAt(LocalDateTime.now());
-        postResponse.setUpdatedAt(LocalDateTime.now());
+        postResponse.setUsername("tester");
+        postResponse.setCreatedAt(Instant.now());
+        postResponse.setUpdatedAt(Instant.now());
         postResponse.setUpvotes(0);
         postResponse.setDownvotes(0);
     }
@@ -109,7 +110,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Test Post Title"))
                 .andExpect(jsonPath("$.body").value("Test post body content"))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.username").value("tester"));
     }
 
     @Test
@@ -173,7 +174,7 @@ class PostControllerTest {
     @DisplayName("Should get all posts with pagination")
     void shouldGetAllPostsWithPagination() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
 
@@ -185,14 +186,14 @@ class PostControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("Test Post Title"))
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.page.totalElements").value(1));
     }
 
     @Test
     @DisplayName("Should get posts by user with pagination")
     void shouldGetPostsByUserWithPagination() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getPostsByUser(any(UUID.class), any(PageRequest.class)))
                 .thenReturn(postPage);
@@ -211,7 +212,7 @@ class PostControllerTest {
     @DisplayName("Should search posts with keyword")
     void shouldSearchPostsWithKeyword() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.searchPosts(anyString(), any(PageRequest.class)))
                 .thenReturn(postPage);
@@ -236,9 +237,9 @@ class PostControllerTest {
         updatedPost.setTitle("Updated Post Title");
         updatedPost.setBody("Updated post body content");
         updatedPost.setUserId(userId);
-        updatedPost.setUsername("testuser");
-        updatedPost.setCreatedAt(LocalDateTime.now());
-        updatedPost.setUpdatedAt(LocalDateTime.now());
+        updatedPost.setUsername("tester");
+        updatedPost.setCreatedAt(Instant.now());
+        updatedPost.setUpdatedAt(Instant.now());
 
         when(postService.updatePost(any(UUID.class), any(UUID.class), any(PostUpdateRequest.class)))
                 .thenReturn(updatedPost);
@@ -296,7 +297,7 @@ class PostControllerTest {
     @DisplayName("Should use default pagination values")
     void shouldUseDefaultPaginationValues() throws Exception {
         // Given
-        List<PostResponse> posts = Arrays.asList(postResponse);
+        List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
         when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
 
@@ -305,4 +306,68 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
+
+    @Test
+    @DisplayName("Should get post with comments successfully")
+    void shouldGetPostWithCommentsSuccessfully() throws Exception {
+        // Given
+        com.nexus.feed.backend.DTO.CommentResponse comment1 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+                .id(UUID.randomUUID())
+                .body("Test comment 1")
+                .userId(userId)
+                .username("tester")
+                .postId(postId)
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
+                .upvotes(0)
+                .downvotes(0)
+                .build();
+
+        com.nexus.feed.backend.DTO.CommentResponse comment2 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+                .id(UUID.randomUUID())
+                .body("Test comment 2")
+                .userId(userId)
+                .username("tester")
+                .postId(postId)
+                .createdAt(java.time.Instant.now())
+                .updatedAt(java.time.Instant.now())
+                .upvotes(0)
+                .downvotes(0)
+                .build();
+
+        List<com.nexus.feed.backend.DTO.CommentResponse> comments = Arrays.asList(comment1, comment2);
+        
+        com.nexus.feed.backend.DTO.PostDetailResponse postDetailResponse = com.nexus.feed.backend.DTO.PostDetailResponse.builder()
+                .post(postResponse)
+                .comments(comments)
+                .build();
+
+        when(postService.getPostWithComments(postId)).thenReturn(postDetailResponse);
+
+        // When & Then
+        mockMvc.perform(get("/api/posts/{id}/with-comments", postId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.post").exists())
+                .andExpect(jsonPath("$.post.id").value(postId.toString()))
+                .andExpect(jsonPath("$.post.title").value("Test Post Title"))
+                .andExpect(jsonPath("$.comments").isArray())
+                .andExpect(jsonPath("$.comments.length()").value(2))
+                .andExpect(jsonPath("$.comments[0].body").value("Test comment 1"))
+                .andExpect(jsonPath("$.comments[1].body").value("Test comment 2"));
+    }
+
+    @Test
+    @DisplayName("Should return 404 when post with comments not found")
+    void shouldReturn404WhenPostWithCommentsNotFound() throws Exception {
+        // Given
+        UUID nonExistentId = UUID.randomUUID();
+        when(postService.getPostWithComments(nonExistentId))
+                .thenThrow(new RuntimeException("Post not found"));
+
+        // When & Then
+        mockMvc.perform(get("/api/posts/{id}/with-comments", nonExistentId))
+                .andExpect(status().isNotFound());
+    }
 }
+

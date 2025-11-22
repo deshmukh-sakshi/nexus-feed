@@ -2,17 +2,20 @@ package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.DTO.*;
 import com.nexus.feed.backend.Entity.*;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,10 +30,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse createComment(UUID userId, UUID postId, CommentCreateRequest request) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         Comment comment = new Comment();
         comment.setBody(request.getBody());
@@ -40,11 +43,12 @@ public class CommentServiceImpl implements CommentService {
         // Handle parent comment for replies
         if (request.getParentCommentId() != null) {
             Comment parentComment = commentRepository.findById(request.getParentCommentId())
-                    .orElseThrow(() -> new RuntimeException("Parent comment not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", request.getParentCommentId()));
             comment.setParentComment(parentComment);
         }
 
         Comment savedComment = commentRepository.save(comment);
+        log.info("Comment created: id={}, postId={}, userId={}", savedComment.getId(), postId, userId);
         return convertToResponse(savedComment);
     }
 
@@ -52,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public CommentResponse getCommentById(UUID id) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
         return convertToResponse(comment);
     }
 
@@ -60,19 +64,96 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsByPost(UUID postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
         
         List<Comment> topLevelComments = commentRepository.findByPostAndParentCommentIsNullOrderByCreatedAtDesc(post);
+        
+        // Collect all comment IDs (including nested replies)
+        List<UUID> allCommentIds = new java.util.ArrayList<>();
+        collectCommentIds(topLevelComments, allCommentIds);
+        
+        if (allCommentIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        // Batch fetch vote counts
+        List<VoteRepository.VoteCount> voteCounts = voteRepository.countByVotableIdsAndVotableType(
+                allCommentIds, Vote.VotableType.COMMENT);
+        
+        java.util.Map<UUID, Integer> upvotesMap = new java.util.HashMap<>();
+        java.util.Map<UUID, Integer> downvotesMap = new java.util.HashMap<>();
+        
+        for (VoteRepository.VoteCount vc : voteCounts) {
+            if (vc.getVoteValue() == Vote.VoteValue.UPVOTE) {
+                upvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            } else {
+                downvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            }
+        }
+        
+        // Batch fetch user votes
+        java.util.Map<UUID, String> userVotesMap = new java.util.HashMap<>();
+        try {
+            UUID currentUserId = authenticationService.getCurrentUserId();
+            List<Vote> userVotes = voteRepository.findByUserIdAndVotableIdsAndVotableType(
+                    currentUserId, allCommentIds, Vote.VotableType.COMMENT);
+            for (Vote vote : userVotes) {
+                userVotesMap.put(vote.getId().getVotableId(), vote.getVoteValue().name());
+            }
+        } catch (RuntimeException e) {
+            // User not authenticated, userVotesMap remains empty
+        }
+        
         return topLevelComments.stream()
-                .map(this::convertToResponseWithReplies)
+                .map(comment -> convertToResponseWithRepliesBatch(comment, upvotesMap, downvotesMap, userVotesMap))
                 .collect(Collectors.toList());
+    }
+    
+    private void collectCommentIds(List<Comment> comments, List<UUID> allIds) {
+        for (Comment comment : comments) {
+            allIds.add(comment.getId());
+            List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
+            if (!replies.isEmpty()) {
+                collectCommentIds(replies, allIds);
+            }
+        }
+    }
+    
+    private CommentResponse convertToResponseWithRepliesBatch(
+            Comment comment,
+            java.util.Map<UUID, Integer> upvotesMap,
+            java.util.Map<UUID, Integer> downvotesMap,
+            java.util.Map<UUID, String> userVotesMap) {
+        
+        CommentResponse response = CommentResponse.builder()
+                .id(comment.getId())
+                .body(comment.getBody())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .userId(comment.getUser().getId())
+                .username(comment.getUser().getUsername())
+                .postId(comment.getPost().getId())
+                .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
+                .upvotes(upvotesMap.getOrDefault(comment.getId(), 0))
+                .downvotes(downvotesMap.getOrDefault(comment.getId(), 0))
+                .userVote(userVotesMap.get(comment.getId()))
+                .build();
+        
+        // Load replies recursively
+        List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
+        List<CommentResponse> replyResponses = replies.stream()
+                .map(reply -> convertToResponseWithRepliesBatch(reply, upvotesMap, downvotesMap, userVotesMap))
+                .collect(Collectors.toList());
+        
+        response.setReplies(replyResponses);
+        return response;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByUser(UUID userId, Pageable pageable) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         return commentRepository.findByUserOrderByCreatedAtDesc(user, pageable)
                 .map(this::convertToResponse);
     }
@@ -80,28 +161,32 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse updateComment(UUID commentId, UUID userId, CommentUpdateRequest request) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to update this comment");
+            log.warn("Unauthorized update attempt: userId={}, commentId={}, ownerId={}", userId, commentId, comment.getUser().getId());
+            throw new UnauthorizedException("Not authorized to update this comment");
         }
 
         comment.setBody(request.getBody());
 
         Comment updatedComment = commentRepository.save(comment);
+        log.info("Comment updated: id={}, userId={}", commentId, userId);
         return convertToResponse(updatedComment);
     }
 
     @Override
     public void deleteComment(UUID commentId, UUID userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Not authorized to delete this comment");
+            log.warn("Unauthorized delete attempt: userId={}, commentId={}, ownerId={}", userId, commentId, comment.getUser().getId());
+            throw new UnauthorizedException("Not authorized to delete this comment");
         }
 
         commentRepository.delete(comment);
+        log.info("Comment deleted: id={}, userId={}", commentId, userId);
     }
 
     private CommentResponse convertToResponse(Comment comment) {
@@ -124,8 +209,8 @@ public class CommentServiceImpl implements CommentService {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .body(comment.getBody())
-                .createdAt(comment.getCreatedAt().toInstant(java.time.ZoneOffset.UTC))
-                .updatedAt(comment.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC))
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .userId(comment.getUser().getId())
                 .username(comment.getUser().getUsername())
                 .postId(comment.getPost().getId())

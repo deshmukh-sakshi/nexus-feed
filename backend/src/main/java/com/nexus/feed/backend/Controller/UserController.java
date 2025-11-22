@@ -13,7 +13,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // TODO: Configure proper CORS
 public class UserController {
 
     private final UserService userService;
@@ -37,13 +36,9 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserCreateRequest request) {
         try {
-            System.out.println("Registration request received: " + request.getUsername());
             UserResponse user = userService.createUser(request);
-            System.out.println("User created successfully: " + user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (RuntimeException e) {
-            System.out.println("Registration error: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

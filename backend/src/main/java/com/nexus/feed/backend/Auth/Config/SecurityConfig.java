@@ -21,8 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
+import static org.springframework.http.HttpMethod.GET;
 
 @Configuration
 @EnableWebSecurity
@@ -38,9 +38,18 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - no authentication required
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/", "/health").permitAll()
+                        
+                        // Public GET endpoints - allow viewing without authentication
+                        .requestMatchers(GET, "/api/posts/**").permitAll()
+                        .requestMatchers(GET, "/api/comments/**").permitAll()
+                        .requestMatchers(GET, "/api/users/**").permitAll()
+                        .requestMatchers(GET, "/api/badges/**").permitAll()
+                        
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

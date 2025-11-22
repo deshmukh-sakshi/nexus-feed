@@ -11,6 +11,7 @@ import type {
   CommentUpdateRequest,
   PageResponse,
   UserProfile,
+  PostDetail,
 } from '@/types'
 
 // Auth API
@@ -28,15 +29,15 @@ export const authApi = {
 
 // Posts API
 export const postsApi = {
-  getPosts: async (page = 0, size = 10): Promise<PageResponse<Post>> => {
+  getPosts: async (page = 0, size = 4): Promise<PageResponse<Post>> => {
     const response = await api.get<PageResponse<Post>>('/posts', {
       params: { page, size },
     })
     return response.data
   },
 
-  getPost: async (id: string): Promise<Post> => {
-    const response = await api.get<Post>(`/posts/${id}`)
+  getPostWithComments: async (id: string): Promise<PostDetail> => {
+    const response = await api.get<PostDetail>(`/posts/${id}/with-comments`)
     return response.data
   },
 

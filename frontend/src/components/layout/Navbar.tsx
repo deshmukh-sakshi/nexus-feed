@@ -17,12 +17,15 @@ export const Navbar = () => {
   const { logout } = useAuth()
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-yellow-50 backdrop-blur-sm">
       <div className="container mx-auto px-4 flex h-14 items-center">
         <div className="mr-4 flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <Home className="h-6 w-6" />
-            <span className="font-bold">Nexus Feed</span>
+          <Link 
+            to="/" 
+            className="mr-6 flex items-center gap-2 px-4 py-2 bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all rounded-none font-bold"
+          >
+            <Home className="h-5 w-5" />
+            <span>Nexus Feed</span>
           </Link>
         </div>
 
@@ -30,19 +33,21 @@ export const Navbar = () => {
           {isAuthenticated ? (
             <>
               <Link to="/create-post">
-                <Button variant="ghost" size="sm">
-                  <PlusCircle className="mr-2 h-4 w-4" />
+                <Button className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold">
+                  <PlusCircle className="mr-2 h-5 w-5" />
                   Create Post
                 </Button>
               </Link>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                  <Button className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold px-2">
                     <UserAvatar 
                       username={user?.username || 'User'} 
                       size="sm"
+                      className="mr-2 border-2 border-black h-6 w-6"
                     />
+                    <span className="max-w-[100px] truncate">{user?.username}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -72,12 +77,14 @@ export const Navbar = () => {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost" size="sm">
+                <Button className="bg-pink-400 text-black hover:bg-pink-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold">
                   Log in
                 </Button>
               </Link>
               <Link to="/register">
-                <Button size="sm">Sign up</Button>
+                <Button className="bg-blue-500 text-black hover:bg-blue-600 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold">
+                  Sign up
+                </Button>
               </Link>
             </>
           )}
