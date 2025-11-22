@@ -7,6 +7,7 @@ export const Home = () => {
   const {
     posts,
     isLoading,
+    isRefetching,
     error,
     refetch,
     fetchNextPage,
@@ -21,10 +22,20 @@ export const Home = () => {
         <p className="text-destructive">Failed to load posts. Please try again later.</p>
         <Button 
           onClick={() => refetch()} 
-          className="bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+          disabled={isRefetching}
+          className="bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
         >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Reload
+          {isRefetching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Reloading...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reload
+            </>
+          )}
         </Button>
       </div>
     )
@@ -45,7 +56,7 @@ export const Home = () => {
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
               size="lg"
-              className="bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+              className="bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
             >
               {isFetchingNextPage ? (
                 <>

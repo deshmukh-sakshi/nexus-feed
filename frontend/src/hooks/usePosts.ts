@@ -4,15 +4,16 @@ import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
 import type { PostCreateRequest, PostUpdateRequest, Post } from '@/types'
 
-export const usePosts = (pageSize = 10) => {
+export const usePosts = (pageSize = 4) => {
   const queryClient = useQueryClient()
 
   const postsQuery = useInfiniteQuery({
     queryKey: ['posts', pageSize],
     queryFn: ({ pageParam = 0 }) => postsApi.getPosts(pageParam, pageSize),
     getNextPageParam: (lastPage) => {
-      if (lastPage.last) return undefined
-      return lastPage.number + 1
+      const isLastPage = lastPage.page.number >= lastPage.page.totalPages - 1
+      if (isLastPage) return undefined
+      return lastPage.page.number + 1
     },
     initialPageParam: 0,
     retry: false,
@@ -268,11 +269,13 @@ export const usePosts = (pageSize = 10) => {
 
   const posts = postsQuery.data?.pages.flatMap((page) => page.content) ?? []
   const hasNextPage = postsQuery.hasNextPage
-  const isLastPage = postsQuery.data?.pages[postsQuery.data.pages.length - 1]?.last ?? false
+  const lastPageData = postsQuery.data?.pages[postsQuery.data.pages.length - 1]
+  const isLastPage = lastPageData ? lastPageData.page.number >= lastPageData.page.totalPages - 1 : false
 
   return {
     posts,
     isLoading: postsQuery.isLoading,
+    isRefetching: postsQuery.isRefetching,
     error: postsQuery.error,
     refetch: postsQuery.refetch,
     fetchNextPage: postsQuery.fetchNextPage,

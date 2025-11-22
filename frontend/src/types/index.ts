@@ -90,28 +90,20 @@ export interface VoteRequest {
 
 // Pagination types
 export interface PageInfo {
-  page: number
   size: number
+  number: number
   totalElements: number
   totalPages: number
-  last: boolean
-  first: boolean
 }
 
 export interface PageResponse<T> {
   content: T[]
-  pageable: {
-    pageNumber: number
-    pageSize: number
+  page: {
+    size: number
+    number: number
+    totalElements: number
+    totalPages: number
   }
-  totalElements: number
-  totalPages: number
-  last: boolean
-  first: boolean
-  number: number
-  size: number
-  numberOfElements: number
-  empty: boolean
 }
 
 // API Response wrapper
