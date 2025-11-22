@@ -139,4 +139,12 @@ export const usersApi = {
     const response = await api.get<UserProfile>(`/users/id/${userId}`)
     return response.data
   },
+
+  updateUser: async (
+    userId: string,
+    data: { bio?: string; profilePictureUrl?: string }
+  ): Promise<UserProfile> => {
+    const response = await api.put<UserProfile>(`/users/id/${userId}`, data)
+    return response.data
+  },
 }
