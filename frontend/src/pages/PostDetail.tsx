@@ -28,9 +28,10 @@ import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePostWithComments } from '@/hooks/usePosts'
-import { postsApi, commentsApi, votesApi } from '@/lib/api-client'
+import { useComments } from '@/hooks/useComments'
+import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
-import type { PostUpdateRequest, CommentCreateRequest } from '@/types'
+import type { PostUpdateRequest } from '@/types'
 
 export const PostDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -101,10 +102,9 @@ export const PostDetail = () => {
     mutationFn: (data: PostUpdateRequest) => postsApi.updatePost(id!, data),
     onMutate: async (data) => {
       await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
-      await queryClient.cancelQueries({ queryKey: ['posts', 10] })
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
       
       const previousData = queryClient.getQueryData(['postWithComments', id])
-      const previousPosts = queryClient.getQueryData(['posts', 10])
       
       const now = new Date().toISOString()
       
@@ -124,8 +124,8 @@ export const PostDetail = () => {
         }
       })
       
-      // Also update in posts list if present
-      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+      // Also update in all posts list queries
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
         return {
@@ -145,7 +145,7 @@ export const PostDetail = () => {
         }
       })
       
-      return { previousData, previousPosts }
+      return { previousData }
     },
     onSuccess: (updatedPost) => {
       // Silently replace optimistic data with real server response
@@ -158,7 +158,7 @@ export const PostDetail = () => {
         }
       })
       
-      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
         return {
@@ -178,9 +178,6 @@ export const PostDetail = () => {
       if (context?.previousData) {
         queryClient.setQueryData(['postWithComments', id], context.previousData)
       }
-      if (context?.previousPosts) {
-        queryClient.setQueryData(['posts', 10], context.previousPosts)
-      }
       toast.error(getErrorMessage(error))
     },
   })
@@ -188,14 +185,15 @@ export const PostDetail = () => {
   const deletePostMutation = useMutation({
     mutationFn: () => postsApi.deletePost(id!),
     onMutate: async () => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['posts', 10] })
+      // Cancel any outgoing refetches for all page sizes
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
       
-      // Snapshot previous value
-      const previousPosts = queryClient.getQueryData(['posts', 10])
+      // Snapshot previous values for all page sizes
+      const previousPosts4 = queryClient.getQueryData(['posts', 4])
+      const previousPosts10 = queryClient.getQueryData(['posts', 10])
       
-      // Optimistically remove post from list
-      queryClient.setQueryData(['posts', 10], (old: unknown) => {
+      // Optimistically remove post from all cached queries
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
         return {
@@ -207,11 +205,13 @@ export const PostDetail = () => {
         }
       })
       
-      // Navigate and show loading toast
-      navigate('/')
+      // Show loading toast immediately
       toast.loading('Deleting post...', { id: 'delete-post' })
       
-      return { previousPosts }
+      // Navigate after optimistic update
+      navigate('/')
+      
+      return { previousPosts4, previousPosts10 }
     },
     onSuccess: () => {
       // Refetch to get fresh data
@@ -221,20 +221,19 @@ export const PostDetail = () => {
     },
     onError: (error, _variables, context) => {
       // Restore previous posts on error
-      if (context?.previousPosts) {
-        queryClient.setQueryData(['posts', 10], context.previousPosts)
+      if (context?.previousPosts4) {
+        queryClient.setQueryData(['posts', 4], context.previousPosts4)
+      }
+      if (context?.previousPosts10) {
+        queryClient.setQueryData(['posts', 10], context.previousPosts10)
       }
       toast.dismiss('delete-post')
       toast.error(getErrorMessage(error))
     },
   })
 
-  const createCommentMutation = useMutation({
-    mutationFn: (data: CommentCreateRequest) => commentsApi.createComment(id!, data),
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
-    },
-  })
+  // Use the useComments hook for optimistic updates
+  const { createComment: createCommentWithOptimisticUpdate } = useComments(id!)
 
   if (postLoading) {
     return <PostDetailSkeleton navigate={navigate} />
@@ -272,7 +271,7 @@ export const PostDetail = () => {
       return
     }
     if (commentBody.trim()) {
-      createCommentMutation.mutate({ body: commentBody.trim() })
+      createCommentWithOptimisticUpdate({ body: commentBody.trim() })
       setCommentBody('')
     }
   }

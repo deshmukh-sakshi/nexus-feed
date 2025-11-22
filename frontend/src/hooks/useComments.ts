@@ -92,6 +92,25 @@ export const useComments = (postId: string) => {
         }
       })
       
+      // Also update comment count in posts list
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; commentCount: number; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => {
+              if (p.id !== postId) return p
+              return {
+                ...p,
+                commentCount: p.commentCount + 1,
+              }
+            }),
+          })),
+        }
+      })
+      
       return { previousComments, previousPostDetail, tempId, parentCommentId: data.parentCommentId }
     },
     onSuccess: (newComment, _variables, context) => {
@@ -237,6 +256,35 @@ export const useComments = (postId: string) => {
       const previousComments = queryClient.getQueryData(['comments', postId])
       const previousPostDetail = queryClient.getQueryData(['postWithComments', postId])
       
+      // Count total comments being deleted (parent + all descendants)
+      const countComments = (comment: Comment): number => {
+        let count = 1 // Count the comment itself
+        if (comment.replies && comment.replies.length > 0) {
+          count += comment.replies.reduce((sum, reply) => sum + countComments(reply), 0)
+        }
+        return count
+      }
+      
+      // Find the comment being deleted to count it and its children
+      let deletedCount = 0
+      const findAndCountComment = (comments: Comment[]): void => {
+        for (const comment of comments) {
+          if (comment.id === id) {
+            deletedCount = countComments(comment)
+            return
+          }
+          if (comment.replies && comment.replies.length > 0) {
+            findAndCountComment(comment.replies)
+          }
+        }
+      }
+      
+      // Count before removing
+      const postDetail = previousPostDetail as { post: { commentCount: number }; comments: Comment[] } | undefined
+      if (postDetail?.comments) {
+        findAndCountComment(postDetail.comments)
+      }
+      
       const removeComment = (comments: Comment[]): Comment[] => {
         return comments
           .filter((comment) => comment.id !== id)
@@ -257,8 +305,27 @@ export const useComments = (postId: string) => {
         const postDetail = old as { post: { commentCount: number; [key: string]: unknown }; comments: Comment[] }
         return {
           ...postDetail,
-          post: { ...postDetail.post, commentCount: Math.max(0, postDetail.post.commentCount - 1) },
+          post: { ...postDetail.post, commentCount: Math.max(0, postDetail.post.commentCount - deletedCount) },
           comments: removeComment(postDetail.comments),
+        }
+      })
+      
+      // Also update comment count in posts list
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
+        if (!old) return old
+        const typedOld = old as { pages: { content: { id: string; commentCount: number; [key: string]: unknown }[]; [key: string]: unknown }[] }
+        return {
+          ...typedOld,
+          pages: typedOld.pages.map((page) => ({
+            ...page,
+            content: page.content.map((p) => {
+              if (p.id !== postId) return p
+              return {
+                ...p,
+                commentCount: Math.max(0, p.commentCount - deletedCount),
+              }
+            }),
+          })),
         }
       })
       
