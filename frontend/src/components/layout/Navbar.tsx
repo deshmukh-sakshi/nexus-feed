@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Home, LogOut, User, PlusCircle } from 'lucide-react'
+import { LogOut, User, PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import {
@@ -24,7 +24,7 @@ export const Navbar = () => {
             to="/" 
             className="mr-6 flex items-center gap-2 px-4 py-2 bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all rounded-none font-bold"
           >
-            <Home className="h-5 w-5" />
+            <img src="/logo.svg" alt="Nexus Feed" className="h-6 w-6" />
             <span>Nexus Feed</span>
           </Link>
         </div>
