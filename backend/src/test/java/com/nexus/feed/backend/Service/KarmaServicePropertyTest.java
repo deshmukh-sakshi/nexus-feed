@@ -140,4 +140,30 @@ class KarmaServicePropertyTest {
     Arbitrary<Integer> karmaImpacts() {
         return Arbitraries.integers().between(-10, 10);
     }
+
+    @Property(tries = 100)
+    void calculateKarmaShouldEqualPostPlusCommentKarma(
+            @ForAll("karmaValues") long postKarma,
+            @ForAll("karmaValues") long commentKarma) {
+        // Given
+        UserRepository userRepository = Mockito.mock(UserRepository.class);
+        com.nexus.feed.backend.Repository.VoteRepository voteRepository = 
+                Mockito.mock(com.nexus.feed.backend.Repository.VoteRepository.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, voteRepository);
+        UUID userId = UUID.randomUUID();
+
+        when(voteRepository.calculatePostKarma(userId)).thenReturn(postKarma);
+        when(voteRepository.calculateCommentKarma(userId)).thenReturn(commentKarma);
+
+        // When
+        long totalKarma = karmaService.calculateKarma(userId);
+
+        // Then
+        assert totalKarma == postKarma + commentKarma;
+    }
+
+    @Provide
+    Arbitrary<Long> karmaValues() {
+        return Arbitraries.longs().between(-100, 100);
+    }
 }
