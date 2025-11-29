@@ -28,6 +28,7 @@ public class PostServiceImpl implements PostService {
     private final CommentRepository commentRepository;
     private final AuthenticationService authenticationService;
     private final CommentService commentService;
+    private final KarmaService karmaService;
 
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
@@ -154,7 +155,10 @@ public class PostServiceImpl implements PostService {
             throw new UnauthorizedException("Not authorized to delete this post");
         }
 
+        UUID authorId = post.getUser().getId();
+
         postRepository.delete(post);
+        karmaService.recalculateKarma(authorId);
         log.info("Post deleted: id={}, userId={}", postId, userId);
     }
 

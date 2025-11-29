@@ -49,6 +49,9 @@ class CommentServiceImplTest {
     @Mock
     private AuthenticationService authenticationService;
 
+    @Mock
+    private KarmaService karmaService;
+
     @InjectMocks
     private CommentServiceImpl commentService;
 

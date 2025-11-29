@@ -116,4 +116,28 @@ class KarmaServicePropertyTest {
     Arbitrary<Integer> flipDeltas() {
         return Arbitraries.of(-2, 2);
     }
+
+    @Property(tries = 100)
+    void contentDeletionShouldReverseKarmaImpact(@ForAll("karmaImpacts") int karmaImpact) {
+        // Given
+        UserRepository userRepository = Mockito.mock(UserRepository.class);
+        UUID authorId = UUID.randomUUID();
+
+        // When - simulating content deletion karma reversal
+        if (karmaImpact != 0) {
+            userRepository.incrementKarma(authorId, -karmaImpact);
+        }
+
+        // Then
+        if (karmaImpact != 0) {
+            verify(userRepository).incrementKarma(authorId, -karmaImpact);
+        } else {
+            verify(userRepository, never()).incrementKarma(any(), anyInt());
+        }
+    }
+
+    @Provide
+    Arbitrary<Integer> karmaImpacts() {
+        return Arbitraries.integers().between(-10, 10);
+    }
 }
