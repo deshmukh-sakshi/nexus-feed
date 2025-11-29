@@ -21,6 +21,7 @@ public class VoteServiceImpl implements VoteService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final KarmaService karmaService;
 
     @Override
     public void vote(UUID userId, VoteRequest request) {
@@ -40,6 +41,8 @@ public class VoteServiceImpl implements VoteService {
             }
         }
 
+        UUID contentAuthorId = getContentAuthorId(request.getVotableId(), request.getVotableType());
+
         Vote.VoteId voteId = new Vote.VoteId(userId, request.getVotableId());
         Optional<Vote> existingVote = voteRepository.findById(voteId);
 
@@ -47,22 +50,40 @@ public class VoteServiceImpl implements VoteService {
             Vote vote = existingVote.get();
             if (vote.getVoteValue() == request.getVoteValue()) {
                 // Same vote - remove it (toggle off)
+                int delta = vote.getVoteValue() == Vote.VoteValue.UPVOTE ? -1 : 1;
                 voteRepository.delete(vote);
+                karmaService.updateKarmaForVote(contentAuthorId, userId, delta);
                 log.info("Vote removed: userId={}, votableId={}, type={}", userId, request.getVotableId(), request.getVotableType());
             } else {
-                // Different vote - update it
+                // Different vote - update it (flip: +2 or -2)
+                int delta = request.getVoteValue() == Vote.VoteValue.UPVOTE ? 2 : -2;
                 vote.setVoteValue(request.getVoteValue());
                 voteRepository.save(vote);
+                karmaService.updateKarmaForVote(contentAuthorId, userId, delta);
                 log.info("Vote updated: userId={}, votableId={}, type={}, value={}", userId, request.getVotableId(), request.getVotableType(), request.getVoteValue());
             }
         } else {
             // New vote
+            int delta = request.getVoteValue() == Vote.VoteValue.UPVOTE ? 1 : -1;
             Vote newVote = new Vote();
             newVote.setId(voteId);
             newVote.setVotableType(request.getVotableType());
             newVote.setVoteValue(request.getVoteValue());
             voteRepository.save(newVote);
+            karmaService.updateKarmaForVote(contentAuthorId, userId, delta);
             log.info("Vote created: userId={}, votableId={}, type={}, value={}", userId, request.getVotableId(), request.getVotableType(), request.getVoteValue());
+        }
+    }
+
+    private UUID getContentAuthorId(UUID votableId, Vote.VotableType votableType) {
+        if (votableType == Vote.VotableType.POST) {
+            return postRepository.findById(votableId)
+                    .map(post -> post.getUser().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Post", "id", votableId));
+        } else {
+            return commentRepository.findById(votableId)
+                    .map(comment -> comment.getUser().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", votableId));
         }
     }
 
