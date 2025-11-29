@@ -16,6 +16,7 @@ public class UserResponse {
     private String profilePictureUrl;
     private Instant createdAt;
     private Instant updatedAt;
+    private Long karma;
     
     // Note: passwordHash is intentionally excluded for security
 }
