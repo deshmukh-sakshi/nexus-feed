@@ -26,6 +26,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final AuthenticationService authenticationService;
+    private final KarmaService karmaService;
 
     @Override
     public CommentResponse createComment(UUID userId, UUID postId, CommentCreateRequest request) {
@@ -185,7 +186,10 @@ public class CommentServiceImpl implements CommentService {
             throw new UnauthorizedException("Not authorized to delete this comment");
         }
 
+        UUID authorId = comment.getUser().getId();
+
         commentRepository.delete(comment);
+        karmaService.recalculateKarma(authorId);
         log.info("Comment deleted: id={}, userId={}", commentId, userId);
     }
 

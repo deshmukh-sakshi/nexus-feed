@@ -52,6 +52,9 @@ public class Users {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserBadge> userBadges = new ArrayList<>();
 
+    @Column(nullable = false)
+    private Long karma = 0L;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();

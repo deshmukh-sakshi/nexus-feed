@@ -25,7 +25,7 @@ import { AuthModal } from '@/components/ui/auth-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
-import { cn } from '@/lib/utils'
+import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePostWithComments } from '@/hooks/usePosts'
 import { useComments } from '@/hooks/useComments'
@@ -334,7 +334,7 @@ export const PostDetail = () => {
               >
                 <ArrowBigUp className={cn("h-5 w-5", post.userVote === 'UPVOTE' && "fill-current")} />
               </Button>
-              <span className="text-sm font-bold">{score}</span>
+              <span className="text-sm font-bold">{formatNumber(score)}</span>
               <Button
                 size="icon"
                 className={cn(
@@ -447,7 +447,7 @@ export const PostDetail = () => {
         <CardFooter className="flex gap-2 flex-wrap">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <MessageSquare className="h-4 w-4" />
-            <span>{post.commentCount} comments</span>
+            <span>{formatNumber(post.commentCount)} comments</span>
           </div>
 
           {isOwner && !isEditing && (

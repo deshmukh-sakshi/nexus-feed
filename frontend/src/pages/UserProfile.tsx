@@ -12,6 +12,7 @@ import { postsApi } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/authStore'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { formatDistanceToNow } from 'date-fns'
+import { formatNumber } from '@/lib/utils'
 
 export const UserProfile = () => {
   const { username } = useParams<{ username: string }>()
@@ -114,10 +115,14 @@ export const UserProfile = () => {
         <Separator />
 
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold">{posts.length}</div>
-              <div className="text-sm text-muted-foreground">Posts (showing last 20)</div>
+              <div className="text-2xl font-bold">{formatNumber(profile.karma)}</div>
+              <div className="text-sm text-muted-foreground">Karma</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold">{formatNumber(posts.length)}</div>
+              <div className="text-sm text-muted-foreground">Posts</div>
             </div>
           </div>
         </CardContent>

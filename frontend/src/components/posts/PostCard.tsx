@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
 import { PostSkeleton } from '@/components/posts/PostSkeleton'
-import { cn } from '@/lib/utils'
+import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePosts } from '@/hooks/usePosts'
 import type { Post } from '@/types'
@@ -120,7 +120,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               >
                 <ArrowBigUp className={cn("h-5 w-5", post.userVote === 'UPVOTE' && "fill-current")} />
               </Button>
-              <span className="text-sm font-bold mx-2 min-w-[1.5rem] text-center">{score}</span>
+              <span className="text-sm font-bold mx-2 min-w-[1.5rem] text-center">{formatNumber(score)}</span>
               <Button
                 size="icon"
                 className={cn(
@@ -142,7 +142,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 className="h-10 px-3 text-xs font-bold border-2 border-black bg-cyan-300 text-black hover:bg-cyan-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full gap-2 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             >
               <MessageSquare className="h-4 w-4" />
-              {post.commentCount} Comments
+              {formatNumber(post.commentCount)} Comments
             </Button>
           </Link>
           

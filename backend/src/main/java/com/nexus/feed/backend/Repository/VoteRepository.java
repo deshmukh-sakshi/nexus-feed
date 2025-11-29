@@ -47,4 +47,14 @@ public interface VoteRepository extends JpaRepository<Vote, Vote.VoteId> {
         Vote.VoteValue getVoteValue();
         Long getCount();
     }
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN v.voteValue = 'UPVOTE' THEN 1 ELSE -1 END), 0) " +
+           "FROM Vote v JOIN Post p ON v.id.votableId = p.id " +
+           "WHERE p.user.id = :userId AND v.votableType = 'POST' AND v.id.userId != :userId")
+    long calculatePostKarma(@Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN v.voteValue = 'UPVOTE' THEN 1 ELSE -1 END), 0) " +
+           "FROM Vote v JOIN Comment c ON v.id.votableId = c.id " +
+           "WHERE c.user.id = :userId AND v.votableType = 'COMMENT' AND v.id.userId != :userId")
+    long calculateCommentKarma(@Param("userId") UUID userId);
 }

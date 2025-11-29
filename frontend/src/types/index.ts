@@ -122,6 +122,7 @@ export interface UserProfile {
   profilePictureUrl?: string
   createdAt: string
   updatedAt?: string
+  karma: number
 }
 
 // Post Detail with Comments

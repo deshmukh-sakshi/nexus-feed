@@ -79,6 +79,7 @@ public class UserServiceImpl implements UserService {
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .karma(user.getKarma())
                 .build();
     }
 }
