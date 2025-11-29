@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { useComments } from "@/hooks/useComments";
 import type { Comment } from "@/types";
@@ -165,8 +165,8 @@ export const CommentItem = ({
                       className="hover:underline text-blue-500"
                     >
                       {isCollapsed
-                        ? `[+] ${comment.replies?.length || 0} replies`
-                        : `[-] ${comment.replies?.length || 0} replies`}
+                        ? `[+] ${formatNumber(comment.replies?.length || 0)} replies`
+                        : `[-] ${formatNumber(comment.replies?.length || 0)} replies`}
                     </button>
                   </>
                 )}
@@ -224,7 +224,7 @@ export const CommentItem = ({
                   >
                     <ArrowBigUp className={cn("h-4 w-4", comment.userVote === "UPVOTE" && "fill-current")} />
                   </Button>
-                  <span className="text-xs font-bold mx-2 min-w-[1rem] text-center">{score}</span>
+                  <span className="text-xs font-bold mx-2 min-w-[1rem] text-center">{formatNumber(score)}</span>
                   <Button
                     size="icon"
                     className={cn(
