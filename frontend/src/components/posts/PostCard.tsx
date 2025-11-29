@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2 } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const { isAuthenticated } = useAuthStore()
   const { votePost } = usePosts()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // Show skeleton if post is loading
   if (post.isLoading) {
@@ -92,12 +93,72 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
         
         {post.imageUrls && post.imageUrls.length > 0 && (
-          <div className="mb-1 mt-2">
-            <img
-              src={post.imageUrls[0]}
-              alt={post.title}
-              className="w-full max-h-[500px] object-cover border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-            />
+          <div className="mt-3 mb-2 relative">
+            {/* Fixed height container with blurred background like Reddit */}
+            <div className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
+              {/* Blurred background image */}
+              <img
+                src={post.imageUrls[currentImageIndex]}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 dark:opacity-30 scale-110"
+              />
+              {/* Main image centered and contained */}
+              <img
+                src={post.imageUrls[currentImageIndex]}
+                alt={post.title}
+                className="relative w-full h-full object-contain drop-shadow-md"
+              />
+              
+              {/* Navigation arrows for multiple images */}
+              {post.imageUrls.length > 1 && (
+                <>
+                  {/* Left arrow */}
+                  {currentImageIndex > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setCurrentImageIndex(prev => prev - 1)
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                  )}
+                  
+                  {/* Right arrow */}
+                  {currentImageIndex < post.imageUrls.length - 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setCurrentImageIndex(prev => prev + 1)
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  )}
+                  
+                  {/* Dot indicators */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-full">
+                    {post.imageUrls.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setCurrentImageIndex(index)
+                        }}
+                        className={cn(
+                          "w-2 h-2 rounded-full transition-all",
+                          index === currentImageIndex 
+                            ? "bg-white w-2.5 h-2.5" 
+                            : "bg-white/50 hover:bg-white/70"
+                        )}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
