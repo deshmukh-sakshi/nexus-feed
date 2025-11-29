@@ -41,12 +41,12 @@ export const PostCard = ({ post }: PostCardProps) => {
   return (
     <>
     <Card 
-        className="flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50"
+        className="flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50 py-0 gap-0"
     >
       {/* Content Area */}
       <div className="post-content px-4 py-3 pb-0">
         {/* Header */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 group">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 group">
            <Link 
               to={`/user/${post.username}`} 
               className="group-hover:opacity-80"
@@ -55,7 +55,7 @@ export const PostCard = ({ post }: PostCardProps) => {
            </Link>
            <Link 
               to={`/user/${post.username}`} 
-              className="font-bold text-foreground group-hover:underline"
+              className="font-medium hover:underline hover:text-foreground transition-colors"
            >
               u/{post.username}
            </Link>
@@ -65,7 +65,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
 
         {/* Body */}
-        <h3 className="text-lg font-bold mb-0.5 leading-none">{post.title}</h3>
+        <h3 className="text-2xl font-bold mb-1 leading-tight">{post.title}</h3>
 
         {post.url && (
             <a
@@ -103,7 +103,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 flex items-center gap-2">
+      <div className="px-4 py-2 flex items-center gap-2">
           {/* Vote Pill */}
           <div 
             className="flex items-center bg-pink-200 border-2 border-black rounded-full h-10 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"

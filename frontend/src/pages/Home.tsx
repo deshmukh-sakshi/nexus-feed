@@ -44,7 +44,7 @@ export const Home = () => {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Home Feed</h1>
+        <h1 className="text-4xl font-bold">Home Feed</h1>
         <p className="text-muted-foreground">Latest posts from the community</p>
       </div>
       <PostList posts={posts} isLoading={isLoading} />
