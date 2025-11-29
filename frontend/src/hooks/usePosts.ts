@@ -192,10 +192,14 @@ export const usePosts = (pageSize = 4) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: ['posts'] })
       await queryClient.cancelQueries({ queryKey: ['post', id] })
+      await queryClient.cancelQueries({ queryKey: ['userPosts'] })
+      await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
 
-      // Snapshot the previous value
+      // Snapshot the previous values
       const previousPosts = queryClient.getQueryData(['posts'])
       const previousPost = queryClient.getQueryData(['post', id])
+      const previousUserPosts = new Map()
+      const previousPostDetail = queryClient.getQueryData(['postWithComments', id])
 
       // Helper to update a single post based on its CURRENT cache state
       // This ensures that if multiple votes happen rapidly, we calculate based on the *latest* optimistic state
@@ -224,7 +228,7 @@ export const usePosts = (pageSize = 4) => {
         }
       }
 
-      // Update Infinite Query Cache
+      // Update Infinite Query Cache (main feed)
       queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
@@ -243,7 +247,32 @@ export const usePosts = (pageSize = 4) => {
         return updatePostOptimistically(old as Post)
       })
 
-      return { previousPosts, previousPost }
+      // Update User Posts Cache (profile page)
+      queryClient.getQueriesData({ queryKey: ['userPosts'] }).forEach(([key, data]) => {
+        if (data) {
+          previousUserPosts.set(JSON.stringify(key), data)
+          queryClient.setQueryData(key, (old: unknown) => {
+            if (!old) return old
+            const typedOld = old as { content: Post[]; [key: string]: unknown }
+            return {
+              ...typedOld,
+              content: typedOld.content.map(updatePostOptimistically),
+            }
+          })
+        }
+      })
+
+      // Update Post Detail Cache (post detail page)
+      queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
+        if (!old) return old
+        const postDetail = old as { post: Post; comments: unknown[] }
+        return {
+          ...postDetail,
+          post: updatePostOptimistically(postDetail.post),
+        }
+      })
+
+      return { previousPosts, previousPost, previousUserPosts, previousPostDetail }
     },
     onError: (err, newTodo, context) => {
       if (context?.previousPosts) {
@@ -251,6 +280,14 @@ export const usePosts = (pageSize = 4) => {
       }
       if (context?.previousPost) {
         queryClient.setQueryData(['post', newTodo.id], context.previousPost)
+      }
+      if (context?.previousUserPosts) {
+        context.previousUserPosts.forEach((data: unknown, key: string) => {
+          queryClient.setQueryData(JSON.parse(key), data)
+        })
+      }
+      if (context?.previousPostDetail) {
+        queryClient.setQueryData(['postWithComments', newTodo.id], context.previousPostDetail)
       }
       toast.error(getErrorMessage(err))
     },

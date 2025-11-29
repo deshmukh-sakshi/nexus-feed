@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Loader2, ArrowLeft, Edit2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -6,21 +7,25 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { PostList } from '@/components/posts/PostList'
-import { usersApi, postsApi } from '@/lib/api-client'
+import { EditProfileDialog } from '@/components/profile/EditProfileDialog'
+import { postsApi } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/authStore'
+import { useUserProfile } from '@/hooks/useUserProfile'
 import { formatDistanceToNow } from 'date-fns'
 
 export const UserProfile = () => {
   const { username } = useParams<{ username: string }>()
   const navigate = useNavigate()
   const { user: currentUser } = useAuthStore()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
-  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
-    queryKey: ['user', username],
-    queryFn: () => usersApi.getUserByUsername(username!),
-    enabled: !!username,
-    retry: false,
-  })
+  const {
+    profile,
+    isLoading: profileLoading,
+    error: profileError,
+    updateProfile,
+    isUpdating,
+  } = useUserProfile(username)
 
   const { data: postsData, isLoading: postsLoading } = useQuery({
     queryKey: ['userPosts', profile?.id],
@@ -31,6 +36,12 @@ export const UserProfile = () => {
 
   const posts = postsData?.content ?? []
   const isOwnProfile = currentUser?.userId === profile?.id
+
+  const handleSaveProfile = (data: { bio?: string; profilePictureUrl?: string }) => {
+    if (profile) {
+      updateProfile(profile.id, data)
+    }
+  }
 
   if (profileLoading) {
     return (
@@ -77,8 +88,12 @@ export const UserProfile = () => {
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold">u/{profile.username}</h1>
                 {isOwnProfile && (
-                  <Button 
+                  <Button
+                    
+                   
                     size="sm"
+                    onClick={() => setIsEditDialogOpen(true)}
+                  
                     className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
                   >
                     <Edit2 className="mr-2 h-4 w-4" />
@@ -118,6 +133,16 @@ export const UserProfile = () => {
           <PostList posts={posts} />
         )}
       </div>
+
+      {isOwnProfile && profile && (
+        <EditProfileDialog
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          profile={profile}
+          onSave={handleSaveProfile}
+          isUpdating={isUpdating}
+        />
+      )}
     </div>
   )
 }
