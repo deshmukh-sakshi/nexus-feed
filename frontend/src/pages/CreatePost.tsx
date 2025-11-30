@@ -18,6 +18,7 @@ export const CreatePost = () => {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -117,6 +118,7 @@ export const CreatePost = () => {
                 onChange={setImageUrls}
                 maxSizeMB={5}
                 disabled={isCreating}
+                onUploadingChange={setIsUploadingImages}
               />
             </div>
 
@@ -124,11 +126,11 @@ export const CreatePost = () => {
             <div className="flex gap-3 pt-3 border-t-2 border-dashed border-black/20">
               <Button 
                 type="submit" 
-                disabled={!title.trim() || isCreating}
+                disabled={!title.trim() || isCreating || isUploadingImages}
                 className="flex-1 bg-lime-300 text-black hover:bg-lime-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                {isCreating ? 'Creating...' : 'Create Post'}
+                {isCreating ? 'Creating...' : isUploadingImages ? 'Uploading Images...' : 'Create Post'}
               </Button>
               <Button
                 type="button"

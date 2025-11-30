@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
@@ -23,6 +24,12 @@ export const PostCard = ({ post }: PostCardProps) => {
   const { votePost } = usePosts()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  // Reset loading state when image index changes
+  useEffect(() => {
+    setImageLoading(true)
+  }, [currentImageIndex])
 
   // Show skeleton if post is loading
   if (post.isLoading) {
@@ -106,6 +113,12 @@ export const PostCard = ({ post }: PostCardProps) => {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 dark:opacity-30 scale-110"
               />
+              {/* Loading spinner */}
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-black/60" />
+                </div>
+              )}
               {/* Main image centered and contained - high quality */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
@@ -115,7 +128,11 @@ export const PostCard = ({ post }: PostCardProps) => {
                   dpr: 2,
                 })}
                 alt={post.title}
-                className="relative w-full h-full object-contain drop-shadow-md"
+                className={cn(
+                  "relative w-full h-full object-contain drop-shadow-md transition-opacity duration-200",
+                  imageLoading ? "opacity-0" : "opacity-100"
+                )}
+                onLoad={() => setImageLoading(false)}
               />
               
               {/* Navigation arrows for multiple images */}

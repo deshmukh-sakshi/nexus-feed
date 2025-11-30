@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -53,6 +54,12 @@ export const PostDetail = () => {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  // Reset loading state when image index changes
+  useEffect(() => {
+    setImageLoading(true)
+  }, [currentImageIndex])
 
   // Mutations
   const votePostMutation = useMutation({
@@ -450,6 +457,12 @@ export const PostDetail = () => {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 dark:opacity-30 scale-110"
               />
+              {/* Loading spinner */}
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-black/60" />
+                </div>
+              )}
               {/* Main image - high quality */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
@@ -459,7 +472,11 @@ export const PostDetail = () => {
                   crop: 'limit',
                 })}
                 alt={post.title}
-                className="relative w-full h-full object-contain drop-shadow-md"
+                className={cn(
+                  "relative w-full h-full object-contain drop-shadow-md transition-opacity duration-200",
+                  imageLoading ? "opacity-0" : "opacity-100"
+                )}
+                onLoad={() => setImageLoading(false)}
               />
               
               {/* Navigation arrows for multiple images */}
@@ -483,26 +500,57 @@ export const PostDetail = () => {
                     </button>
                   )}
                   
-                  {/* Dot indicators */}
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-full">
-                    {post.imageUrls.length <= 5 ? (
-                      post.imageUrls.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentImageIndex(index)}
-                          className={cn(
-                            "w-2 h-2 rounded-full transition-all",
-                            index === currentImageIndex 
-                              ? "bg-white w-2.5 h-2.5" 
-                              : "bg-white/50 hover:bg-white/70"
-                          )}
-                        />
-                      ))
-                    ) : (
-                      <span className="text-white text-xs font-medium px-1">
-                        {currentImageIndex + 1} / {post.imageUrls.length}
-                      </span>
-                    )}
+                  {/* Reddit-style dot indicators with sliding window */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 px-2.5 py-1.5 rounded-full">
+                    {(() => {
+                      const total = post.imageUrls.length
+                      const current = currentImageIndex
+                      const maxDots = 5
+                      
+                      let startIdx = Math.max(0, current - Math.floor(maxDots / 2))
+                      let endIdx = startIdx + maxDots
+                      
+                      if (endIdx > total) {
+                        endIdx = total
+                        startIdx = Math.max(0, endIdx - maxDots)
+                      }
+                      
+                      const dots = []
+                      
+                      if (startIdx > 0) {
+                        dots.push(
+                          <span key="left-ellipsis" className="w-1 h-1 rounded-full bg-white/40" />
+                        )
+                      }
+                      
+                      for (let i = startIdx; i < endIdx; i++) {
+                        const isActive = i === current
+                        const distanceFromCurrent = Math.abs(i - current)
+                        
+                        dots.push(
+                          <button
+                            key={i}
+                            onClick={() => setCurrentImageIndex(i)}
+                            className={cn(
+                              "rounded-full transition-all",
+                              isActive 
+                                ? "w-2 h-2 bg-white" 
+                                : distanceFromCurrent === 1
+                                  ? "w-1.5 h-1.5 bg-white/60 hover:bg-white/80"
+                                  : "w-1 h-1 bg-white/40 hover:bg-white/60"
+                            )}
+                          />
+                        )
+                      }
+                      
+                      if (endIdx < total) {
+                        dots.push(
+                          <span key="right-ellipsis" className="w-1 h-1 rounded-full bg-white/40" />
+                        )
+                      }
+                      
+                      return dots
+                    })()}
                   </div>
                 </>
               )}
