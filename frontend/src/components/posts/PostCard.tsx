@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -11,7 +11,7 @@ import { AuthModal } from '@/components/ui/auth-modal'
 import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { usePosts } from '@/hooks/usePosts'
+import { useVotePost } from '@/hooks/useVotePost'
 import { getOptimizedImageUrl } from '@/lib/cloudinary'
 import type { Post } from '@/types'
 
@@ -20,8 +20,9 @@ interface PostCardProps {
 }
 
 export const PostCard = ({ post }: PostCardProps) => {
+  const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const { votePost } = usePosts()
+  const { votePost } = useVotePost()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageLoading, setImageLoading] = useState(true)
@@ -30,6 +31,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   useEffect(() => {
     setImageLoading(true)
   }, [currentImageIndex])
+  const [isCardPressed, setIsCardPressed] = useState(false)
 
   // Show skeleton if post is loading
   if (post.isLoading) {
@@ -47,10 +49,42 @@ export const PostCard = ({ post }: PostCardProps) => {
     votePost(post.id, voteValue)
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('a, button, [role="button"]')) {
+      return
+    }
+    navigate(`/post/${post.id}`)
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    // Only set pressed if not clicking on interactive elements
+    if (!target.closest('a, button, [role="button"]')) {
+      setIsCardPressed(true)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsCardPressed(false)
+  }
+
+  const handleMouseLeave = () => {
+    setIsCardPressed(false)
+  }
+
   return (
     <>
     <Card 
-        className="flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50 py-0 gap-0"
+        onClick={handleCardClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        className={cn(
+          "flex flex-col overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50 py-0 gap-0 cursor-pointer transition-all hover:bg-yellow-100",
+          isCardPressed && "translate-x-[4px] translate-y-[4px] shadow-none"
+        )}
     >
       {/* Content Area */}
       <div className="post-content px-4 py-3 pb-0">
@@ -146,7 +180,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         e.preventDefault()
                         setCurrentImageIndex(prev => prev - 1)
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronLeft className="h-6 w-6" />
                     </button>
@@ -159,7 +193,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         e.preventDefault()
                         setCurrentImageIndex(prev => prev + 1)
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronRight className="h-6 w-6" />
                     </button>
@@ -203,7 +237,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                               setCurrentImageIndex(i)
                             }}
                             className={cn(
-                              "rounded-full transition-all",
+                              "rounded-full transition-all cursor-pointer",
                               isActive 
                                 ? "w-2 h-2 bg-white" 
                                 : distanceFromCurrent === 1

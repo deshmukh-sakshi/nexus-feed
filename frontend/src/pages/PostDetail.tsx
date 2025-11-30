@@ -486,7 +486,7 @@ export const PostDetail = () => {
                   {currentImageIndex > 0 && (
                     <button
                       onClick={() => setCurrentImageIndex(prev => prev - 1)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronLeft className="h-6 w-6" />
                     </button>
@@ -495,7 +495,7 @@ export const PostDetail = () => {
                   {currentImageIndex < post.imageUrls.length - 1 && (
                     <button
                       onClick={() => setCurrentImageIndex(prev => prev + 1)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronRight className="h-6 w-6" />
                     </button>
@@ -533,7 +533,7 @@ export const PostDetail = () => {
                             key={i}
                             onClick={() => setCurrentImageIndex(i)}
                             className={cn(
-                              "rounded-full transition-all",
+                              "rounded-full transition-all cursor-pointer",
                               isActive 
                                 ? "w-2 h-2 bg-white" 
                                 : distanceFromCurrent === 1
