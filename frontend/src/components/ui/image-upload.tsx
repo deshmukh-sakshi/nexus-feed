@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { X, Upload, Loader2, ImageIcon } from 'lucide-react'
 import { Button } from './button'
-import { uploadToCloudinary, type UploadProgress } from '@/lib/cloudinary'
+import { uploadToCloudinary, getOptimizedImageUrl, type UploadProgress } from '@/lib/cloudinary'
 import { toast } from 'sonner'
 
 interface ImageUploadProps {
@@ -22,7 +22,7 @@ interface UploadingFile {
 export const ImageUpload = ({
   value = [],
   onChange,
-  maxFiles = 4,
+  maxFiles = 20,
   maxSizeMB = 5,
   disabled = false,
 }: ImageUploadProps) => {
@@ -113,7 +113,7 @@ export const ImageUpload = ({
               className="relative aspect-video rounded-md overflow-hidden border-2 border-black bg-muted"
             >
               <img
-                src={url}
+                src={getOptimizedImageUrl(url, { width: 400, quality: 'auto:good' })}
                 alt={`Upload ${index + 1}`}
                 className="w-full h-full object-cover"
               />

@@ -115,7 +115,6 @@ export const CreatePost = () => {
               <ImageUpload
                 value={imageUrls}
                 onChange={setImageUrls}
-                maxFiles={4}
                 maxSizeMB={5}
                 disabled={isCreating}
               />

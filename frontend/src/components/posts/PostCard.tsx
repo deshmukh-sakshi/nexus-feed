@@ -11,6 +11,7 @@ import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { usePosts } from '@/hooks/usePosts'
+import { getOptimizedImageUrl } from '@/lib/cloudinary'
 import type { Post } from '@/types'
 
 interface PostCardProps {
@@ -96,15 +97,23 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="mt-3 mb-2 relative">
             {/* Fixed height container with blurred background like Reddit */}
             <div className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
-              {/* Blurred background image */}
+              {/* Blurred background image - low quality for blur effect */}
               <img
-                src={post.imageUrls[currentImageIndex]}
+                src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+                  width: 100,
+                  quality: 'auto:low',
+                })}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 dark:opacity-30 scale-110"
               />
-              {/* Main image centered and contained */}
+              {/* Main image centered and contained - high quality */}
               <img
-                src={post.imageUrls[currentImageIndex]}
+                src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+                  width: 1920,
+                  quality: 'auto:best',
+                  crop: 'limit',
+                  dpr: 2,
+                })}
                 alt={post.title}
                 className="relative w-full h-full object-contain drop-shadow-md"
               />
@@ -138,23 +147,29 @@ export const PostCard = ({ post }: PostCardProps) => {
                     </button>
                   )}
                   
-                  {/* Dot indicators */}
+                  {/* Dot indicators - show max 5 dots with counter for more */}
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-full">
-                    {post.imageUrls.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          setCurrentImageIndex(index)
-                        }}
-                        className={cn(
-                          "w-2 h-2 rounded-full transition-all",
-                          index === currentImageIndex 
-                            ? "bg-white w-2.5 h-2.5" 
-                            : "bg-white/50 hover:bg-white/70"
-                        )}
-                      />
-                    ))}
+                    {post.imageUrls.length <= 5 ? (
+                      post.imageUrls.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setCurrentImageIndex(index)
+                          }}
+                          className={cn(
+                            "w-2 h-2 rounded-full transition-all",
+                            index === currentImageIndex 
+                              ? "bg-white w-2.5 h-2.5" 
+                              : "bg-white/50 hover:bg-white/70"
+                          )}
+                        />
+                      ))
+                    ) : (
+                      <span className="text-white text-xs font-medium px-1">
+                        {currentImageIndex + 1} / {post.imageUrls.length}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
