@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
@@ -26,6 +27,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageLoading, setImageLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   // Reset only main image loading state when image index changes
   useEffect(() => {
@@ -137,15 +139,22 @@ export const PostCard = ({ post }: PostCardProps) => {
         {post.imageUrls && post.imageUrls.length > 0 && (
           <div className="mt-3 mb-2 relative">
             {/* Fixed height container with blurred background like Reddit */}
-            <div className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
-              {/* Blurred background image - always visible, loads quickly */}
+            <div 
+              className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden cursor-zoom-in"
+              onClick={(e) => {
+                e.stopPropagation()
+                setLightboxOpen(true)
+              }}
+            >
+              {/* Blurred background - uses same URL as main image for cache hit */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
-                  width: 50,
-                  quality: 'auto:low',
+                  width: 1920,
+                  quality: 'auto:best',
+                  crop: 'limit',
+                  dpr: 2,
                 })}
                 alt=""
-                loading="eager"
                 className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 dark:opacity-30"
               />
               {/* Loading spinner */}
@@ -178,6 +187,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     <button
                       onClick={(e) => {
                         e.preventDefault()
+                        e.stopPropagation()
                         setCurrentImageIndex(prev => prev - 1)
                       }}
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
@@ -191,6 +201,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     <button
                       onClick={(e) => {
                         e.preventDefault()
+                        e.stopPropagation()
                         setCurrentImageIndex(prev => prev + 1)
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
@@ -234,6 +245,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                             key={i}
                             onClick={(e) => {
                               e.preventDefault()
+                              e.stopPropagation()
                               setCurrentImageIndex(i)
                             }}
                             className={cn(
@@ -334,6 +346,16 @@ export const PostCard = ({ post }: PostCardProps) => {
       onClose={() => setShowAuthModal(false)}
       message="You need to be logged in to vote on posts."
     />
+
+    {post.imageUrls && post.imageUrls.length > 0 && (
+      <ImageLightbox
+        images={post.imageUrls}
+        initialIndex={currentImageIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        title={post.title}
+      />
+    )}
   </>
   )
 }

@@ -54,12 +54,27 @@ export const PostDetail = () => {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [imageLoading, setImageLoading] = useState(true)
+  const [imageLoading, setImageLoading] = useState(false)
 
-  // Reset only main image loading state when image index changes
+  // Helper to check if image is cached
+  const isImageCached = (src: string): boolean => {
+    const img = new Image()
+    img.src = src
+    return img.complete
+  }
+
+  // Check cache when image index changes - use same URL params as PostCard for cache hit
   useEffect(() => {
-    setImageLoading(true)
-  }, [currentImageIndex])
+    if (post?.imageUrls?.[currentImageIndex]) {
+      const url = getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+        width: 1920,
+        quality: 'auto:best',
+        crop: 'limit',
+        dpr: 2,
+      })
+      setImageLoading(!isImageCached(url))
+    }
+  }, [currentImageIndex, post?.imageUrls])
 
   // Mutations
   const votePostMutation = useMutation({
@@ -448,14 +463,15 @@ export const PostDetail = () => {
         {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
           <CardContent>
             <div className="relative h-[500px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
-              {/* Blurred background image - always visible, loads quickly */}
+              {/* Blurred background - uses same URL as main image for cache hit */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
-                  width: 50,
-                  quality: 'auto:low',
+                  width: 1920,
+                  quality: 'auto:best',
+                  crop: 'limit',
+                  dpr: 2,
                 })}
                 alt=""
-                loading="eager"
                 className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 dark:opacity-30"
               />
               {/* Loading spinner */}
@@ -464,13 +480,13 @@ export const PostDetail = () => {
                   <Loader2 className="h-10 w-10 animate-spin text-black/60" />
                 </div>
               )}
-              {/* Main image - high quality */}
+              {/* Main image - high quality, same URL as PostCard for cache hit */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
-                  width: 1600,
-                  height: 1000,
+                  width: 1920,
                   quality: 'auto:best',
                   crop: 'limit',
+                  dpr: 2,
                 })}
                 alt={post.title}
                 className={cn(
