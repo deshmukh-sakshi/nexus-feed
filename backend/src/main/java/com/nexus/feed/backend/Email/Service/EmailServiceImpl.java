@@ -1,0 +1,111 @@
+package com.nexus.feed.backend.Email.Service;
+
+import com.nexus.feed.backend.Email.Exception.EmailSendException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class EmailServiceImpl implements EmailService {
+
+    private static final String FROM_ADDRESS = "nexus.feed.help@gmail.com";
+
+    private final JavaMailSender mailSender;
+    private final boolean enabled;
+
+    public EmailServiceImpl(
+            JavaMailSender mailSender,
+            @Value("${spring.mail.username:}") String mailUsername,
+            @Value("${spring.mail.password:}") String mailPassword) {
+        this.mailSender = mailSender;
+        this.enabled = isConfigured(mailUsername, mailPassword);
+        
+        if (!enabled) {
+            log.warn("Email service is disabled - MAIL_USERNAME or MAIL_PASSWORD not configured");
+        } else {
+            log.info("Email service initialized with sender: {}", FROM_ADDRESS);
+        }
+    }
+
+    private boolean isConfigured(String username, String password) {
+        return username != null && !username.isBlank() 
+            && password != null && !password.isBlank();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Async
+    @Override
+    public void sendEmail(String to, String subject, String body) {
+        if (!enabled) {
+            log.debug("Email not sent (service disabled): to={}, subject={}", to, subject);
+            return;
+        }
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(FROM_ADDRESS);
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+
+            mailSender.send(message);
+            log.info("Email sent successfully: to={}, subject={}", to, subject);
+        } catch (MailException e) {
+            log.error("Failed to send email: to={}, subject={}, error={}", to, subject, e.getMessage());
+            throw new EmailSendException("Failed to send email to " + to, e);
+        }
+    }
+
+    @Async
+    @Override
+    public void sendWelcomeEmail(String to, String username) {
+        String subject = "Welcome to Nexus Feed!";
+        String body = composeWelcomeEmail(username);
+        sendEmailInternal(to, subject, body);
+    }
+
+    private void sendEmailInternal(String to, String subject, String body) {
+        if (!enabled) {
+            log.debug("Email not sent (service disabled): to={}, subject={}", to, subject);
+            return;
+        }
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(FROM_ADDRESS);
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+
+            mailSender.send(message);
+            log.info("Email sent successfully: to={}, subject={}", to, subject);
+        } catch (MailException e) {
+            log.error("Failed to send email: to={}, subject={}, error={}", to, subject, e.getMessage());
+            throw new EmailSendException("Failed to send email to " + to, e);
+        }
+    }
+
+    String composeWelcomeEmail(String username) {
+        return String.format(
+            "Hey %s,\n\n" +
+            "Welcome to Nexus Feed! We're excited to have you join our community.\n\n" +
+            "You can now:\n" +
+            "- Create and share posts\n" +
+            "- Comment on discussions\n" +
+            "- Upvote content you like\n" +
+            "- Earn karma and badges\n\n" +
+            "Happy posting!\n\n" +
+            "The Nexus Feed Team",
+            username
+        );
+    }
+}
