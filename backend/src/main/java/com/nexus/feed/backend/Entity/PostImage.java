@@ -14,7 +14,8 @@ import java.util.*;
 @EqualsAndHashCode(exclude = {"post"})
 @Entity
 @Table(name = "post_images", indexes = {
-    @Index(name = "idx_post_image_post_id", columnList = "post_id")
+    @Index(name = "idx_post_image_post_id", columnList = "post_id"),
+    @Index(name = "idx_post_image_order", columnList = "post_id, order_index")
 })
 public class PostImage {
     @Id
@@ -28,6 +29,9 @@ public class PostImage {
     @NotBlank
     @Size(max = 2048)
     private String imageUrl;
+
+    @Column(name = "order_index")
+    private Integer orderIndex = 0;
 
     private Instant createdAt;
 

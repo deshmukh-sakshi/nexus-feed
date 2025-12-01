@@ -56,7 +56,7 @@ export const PostDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageLoading, setImageLoading] = useState(true)
 
-  // Reset loading state when image index changes
+  // Reset only main image loading state when image index changes
   useEffect(() => {
     setImageLoading(true)
   }, [currentImageIndex])
@@ -448,14 +448,15 @@ export const PostDetail = () => {
         {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
           <CardContent>
             <div className="relative h-[500px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
-              {/* Blurred background image */}
+              {/* Blurred background image - always visible, loads quickly */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
-                  width: 100,
+                  width: 50,
                   quality: 'auto:low',
                 })}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 dark:opacity-30 scale-110"
+                loading="eager"
+                className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 dark:opacity-30"
               />
               {/* Loading spinner */}
               {imageLoading && (

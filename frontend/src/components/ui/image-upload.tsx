@@ -185,8 +185,9 @@ export const ImageUpload = ({
       
       setUploading((prev) => [...prev, ...newUploading])
 
-      // Track successfully uploaded URLs to accumulate them properly
-      const uploadedUrls: string[] = []
+      // Use array with fixed positions to preserve order
+      const uploadedUrls: (string | null)[] = new Array(filesToUpload.length).fill(null)
+      let completedCount = 0
 
       // Upload all files in parallel
       const uploadPromises = filesToUpload.map(async (file, i) => {
@@ -201,16 +202,30 @@ export const ImageUpload = ({
             )
           })
 
-          uploadedUrls.push(result.secure_url)
+          // Store URL at the correct index to preserve order
+          uploadedUrls[i] = result.secure_url
+          completedCount++
           setUploading((prev) => prev.filter((u) => u.id !== uploadId))
           URL.revokeObjectURL(newUploading[i].preview)
           
-          // Update with all uploaded URLs so far (including from this batch)
-          onChange([...value, ...uploadedUrls])
+          // Only update when all uploads are complete to preserve order
+          if (completedCount === filesToUpload.length) {
+            const successfulUrls = uploadedUrls.filter((url): url is string => url !== null)
+            onChange([...value, ...successfulUrls])
+          }
         } catch (error) {
           toast.error(error instanceof Error ? error.message : 'Upload failed')
+          completedCount++
           setUploading((prev) => prev.filter((u) => u.id !== uploadId))
           URL.revokeObjectURL(newUploading[i].preview)
+          
+          // Still update when all uploads are complete (including failed ones)
+          if (completedCount === filesToUpload.length) {
+            const successfulUrls = uploadedUrls.filter((url): url is string => url !== null)
+            if (successfulUrls.length > 0) {
+              onChange([...value, ...successfulUrls])
+            }
+          }
         }
       })
 

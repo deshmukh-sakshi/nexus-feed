@@ -44,16 +44,17 @@ public class PostServiceImpl implements PostService {
         Post savedPost = postRepository.save(post);
         log.info("Post created: id={}, userId={}", savedPost.getId(), userId);
 
-        // Handle images
+        // Handle images with order preservation
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            List<PostImage> images = request.getImageUrls().stream()
-                    .map(url -> {
-                        PostImage image = new PostImage();
-                        image.setPost(savedPost);
-                        image.setImageUrl(url);
-                        return image;
-                    })
-                    .collect(Collectors.toList());
+            List<String> urls = request.getImageUrls();
+            List<PostImage> images = new java.util.ArrayList<>();
+            for (int i = 0; i < urls.size(); i++) {
+                PostImage image = new PostImage();
+                image.setPost(savedPost);
+                image.setImageUrl(urls.get(i));
+                image.setOrderIndex(i);
+                images.add(image);
+            }
             postImageRepository.saveAll(images);
             savedPost.setImages(images);
         }
@@ -124,18 +125,19 @@ public class PostServiceImpl implements PostService {
             post.setBody(request.getBody());
         }
 
-        // Handle image updates
+        // Handle image updates with order preservation
         if (request.getImageUrls() != null) {
             postImageRepository.deleteByPost(post);
             if (!request.getImageUrls().isEmpty()) {
-                List<PostImage> images = request.getImageUrls().stream()
-                        .map(url -> {
-                            PostImage image = new PostImage();
-                            image.setPost(post);
-                            image.setImageUrl(url);
-                            return image;
-                        })
-                        .collect(Collectors.toList());
+                List<String> urls = request.getImageUrls();
+                List<PostImage> images = new java.util.ArrayList<>();
+                for (int i = 0; i < urls.size(); i++) {
+                    PostImage image = new PostImage();
+                    image.setPost(post);
+                    image.setImageUrl(urls.get(i));
+                    image.setOrderIndex(i);
+                    images.add(image);
+                }
                 postImageRepository.saveAll(images);
             }
         }
