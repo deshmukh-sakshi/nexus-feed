@@ -3,6 +3,7 @@ package com.nexus.feed.backend.Auth.Service;
 import com.nexus.feed.backend.Auth.DTO.*;
 import com.nexus.feed.backend.Auth.Entity.AppUser;
 import com.nexus.feed.backend.Auth.Repository.AppUserRepository;
+import com.nexus.feed.backend.Email.Service.EmailService;
 import com.nexus.feed.backend.Entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -65,7 +67,22 @@ public class AuthService {
         String token = jwtService.generateToken(appUserDetails);
         
         log.info("User registered: email={}, userId={}", request.getEmail(), savedUser.getId());
+        
+        // Send welcome email asynchronously (non-blocking)
+        sendWelcomeEmailSafely(request.getEmail(), request.getUsername());
+        
         return createAuthResponse(appUserDetails, token);
+    }
+    
+    /**
+     * Send welcome email without blocking registration or propagating errors.
+     */
+    private void sendWelcomeEmailSafely(String email, String username) {
+        try {
+            emailService.sendWelcomeEmail(email, username);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", email, e.getMessage());
+        }
     }
 
     private AuthResponse createAuthResponse(AppUserDetails userDetails, String token) {
