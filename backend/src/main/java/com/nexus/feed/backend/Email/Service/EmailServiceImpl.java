@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    private static final String FROM_ADDRESS = "nexus.feed.help@gmail.com";
+    private static final String FROM_ADDRESS = "Nexus Feed <nexus.feed.help@gmail.com>";
 
     private final JavaMailSender mailSender;
     private final boolean enabled;

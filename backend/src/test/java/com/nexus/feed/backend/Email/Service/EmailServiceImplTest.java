@@ -83,7 +83,7 @@ class EmailServiceImplTest {
         verify(mailSender).send(captor.capture());
 
         SimpleMailMessage message = captor.getValue();
-        assertThat(message.getFrom()).isEqualTo("nexus.feed.help@gmail.com");
+        assertThat(message.getFrom()).isEqualTo("Nexus Feed <nexus.feed.help@gmail.com>");
         assertThat(message.getTo()).containsExactly(to);
         assertThat(message.getSubject()).isEqualTo(subject);
         assertThat(message.getText()).isEqualTo(body);
