@@ -281,7 +281,8 @@ export const PostDetail = () => {
 
   const score = post.upvotes - post.downvotes
   const isOwner = user?.userId === post.userId
-  const isEdited = post.createdAt !== post.updatedAt
+  // Only show edited if there's more than 1 second difference (to handle timestamp precision issues)
+  const isEdited = Math.abs(new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime()) > 1000
 
   const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) {

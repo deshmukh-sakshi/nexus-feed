@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Sparkles, PenLine, Image } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +20,7 @@ export const CreatePost = () => {
   const [body, setBody] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -69,7 +71,7 @@ export const CreatePost = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 pb-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             {/* Title Field */}
             <div className="space-y-1">
               <Label htmlFor="title" className="flex items-center gap-2 text-sm font-bold">
@@ -119,6 +121,17 @@ export const CreatePost = () => {
                 maxSizeMB={5}
                 disabled={isCreating}
                 onUploadingChange={setIsUploadingImages}
+                onEnterPress={() => {
+                  if (!title.trim()) {
+                    toast.error('Please enter a title first')
+                    return
+                  }
+                  if (isUploadingImages) {
+                    toast.error('Please wait for images to finish uploading')
+                    return
+                  }
+                  formRef.current?.requestSubmit()
+                }}
               />
             </div>
 

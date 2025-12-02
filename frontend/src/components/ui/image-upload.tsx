@@ -31,6 +31,7 @@ interface ImageUploadProps {
   maxSizeMB?: number
   disabled?: boolean
   onUploadingChange?: (isUploading: boolean) => void
+  onEnterPress?: () => void
 }
 
 interface UploadingFile {
@@ -124,6 +125,7 @@ export const ImageUpload = ({
   maxSizeMB = 5,
   disabled = false,
   onUploadingChange,
+  onEnterPress,
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState<UploadingFile[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -284,14 +286,14 @@ export const ImageUpload = ({
       {/* Image slider with navigation */}
       {totalItems > 0 && (
         <div className="relative">
-          {/* Navigation arrows */}
+          {/* Navigation arrows - positioned at center of image height (150px / 2 = 75px) */}
           {totalItems > maxVisibleItems && (
             <>
               {canScrollLeft && (
                 <button
                   type="button"
                   onClick={scrollLeft}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all shadow-lg"
+                  className="absolute left-0 top-[75px] -translate-y-1/2 -translate-x-3 z-10 w-8 h-8 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all shadow-lg"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -300,7 +302,7 @@ export const ImageUpload = ({
                 <button
                   type="button"
                   onClick={scrollRight}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all shadow-lg"
+                  className="absolute right-0 top-[75px] -translate-y-1/2 translate-x-3 z-10 w-8 h-8 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all shadow-lg"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -387,14 +389,21 @@ export const ImageUpload = ({
       {canAddMore && (
         <div
           {...getRootProps()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey && onEnterPress) {
+              e.preventDefault()
+              onEnterPress()
+            }
+          }}
+          tabIndex={0}
           className={cn(
-            "border-2 border-dashed border-black rounded-md p-4 text-center cursor-pointer transition-colors hover:bg-muted/50",
+            "border-2 border-dashed border-black rounded-md p-4 text-center cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-orange-400 min-h-[100px]",
             isDragActive && "bg-muted border-primary",
             disabled && "opacity-50 cursor-not-allowed"
           )}
         >
           <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground h-full min-h-[68px]">
             {isDragActive ? (
               <>
                 <ImageIcon className="h-8 w-8" />
