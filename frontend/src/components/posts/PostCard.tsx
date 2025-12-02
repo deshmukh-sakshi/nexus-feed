@@ -141,7 +141,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="mt-3 mb-2 relative">
             {/* Fixed height container with blurred background like Reddit */}
             <div 
-              className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden cursor-zoom-in"
+              className="relative h-[400px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation()
                 setLightboxOpen(true)

@@ -28,6 +28,7 @@ export const ImageLightbox = ({
 }: ImageLightboxProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [imageLoading, setImageLoading] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
 
   // Get the current image URL
   const currentImageUrl = getOptimizedImageUrl(images[currentIndex] || '', {
@@ -41,6 +42,7 @@ export const ImageLightbox = ({
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(initialIndex)
+      setIsZoomed(false)
       const url = getOptimizedImageUrl(images[initialIndex] || '', {
         width: 1920,
         quality: 'auto:best',
@@ -52,10 +54,11 @@ export const ImageLightbox = ({
     }
   }, [isOpen, initialIndex, images])
 
-  // Check cache when changing images
+  // Check cache when changing images and reset zoom
   useEffect(() => {
     if (isOpen && images[currentIndex]) {
       setImageLoading(!isImageCached(currentImageUrl))
+      setIsZoomed(false)
     }
   }, [currentIndex, currentImageUrl, isOpen, images])
 
@@ -108,7 +111,6 @@ export const ImageLightbox = ({
   return (
     <div 
       className="fixed inset-0 z-[100] bg-gray-500/70 backdrop-blur-sm flex items-center justify-center"
-      onClick={onClose}
     >
       {/* Close button */}
       <button
@@ -140,7 +142,12 @@ export const ImageLightbox = ({
 
       {/* Image container */}
       <div 
-        className="relative max-w-[90vw] max-h-[85vh] flex items-center justify-center"
+        className={cn(
+          "relative flex items-center justify-center",
+          isZoomed 
+            ? "fixed inset-0 overflow-auto p-4" 
+            : "max-w-[90vw] max-h-[85vh]"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Loading spinner */}
@@ -154,9 +161,13 @@ export const ImageLightbox = ({
           src={currentImageUrl}
           alt={title || 'Image'}
           className={cn(
-            "max-w-full max-h-[85vh] object-contain transition-opacity duration-200",
-            imageLoading ? "opacity-0" : "opacity-100"
+            "object-contain transition-all duration-300",
+            imageLoading ? "opacity-0" : "opacity-100",
+            isZoomed 
+              ? "w-auto h-auto max-w-none max-h-none min-w-[100vw] min-h-[100vh] object-contain cursor-zoom-out" 
+              : "max-w-full max-h-[85vh] cursor-zoom-in"
           )}
+          onClick={() => setIsZoomed(!isZoomed)}
           onLoad={() => setImageLoading(false)}
         />
       </div>
