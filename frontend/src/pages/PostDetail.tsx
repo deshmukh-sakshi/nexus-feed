@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
@@ -55,6 +56,7 @@ export const PostDetail = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageLoading, setImageLoading] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   // Helper to check if image is cached
   const isImageCached = (src: string): boolean => {
@@ -463,7 +465,10 @@ export const PostDetail = () => {
 
         {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
           <CardContent>
-            <div className="relative h-[500px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden">
+            <div 
+              className="relative h-[500px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden cursor-pointer"
+              onClick={() => setLightboxOpen(true)}
+            >
               {/* Blurred background - uses same URL as main image for cache hit */}
               <img
                 src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
@@ -649,6 +654,16 @@ export const PostDetail = () => {
         confirmText="Delete"
         cancelText="Cancel"
       />
+
+      {post.imageUrls && post.imageUrls.length > 0 && (
+        <ImageLightbox
+          images={post.imageUrls}
+          initialIndex={currentImageIndex}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          title={post.title}
+        />
+      )}
     </div>
   )
 }
