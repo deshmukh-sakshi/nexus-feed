@@ -67,7 +67,19 @@ public class CommentServiceImpl implements CommentService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
         
-        List<Comment> topLevelComments = commentRepository.findByPostAndParentCommentIsNullOrderByCreatedAtDesc(post);
+        // Get top-level comment IDs sorted by hot score
+        List<UUID> topLevelCommentIds = commentRepository.findTopLevelCommentIdsByPostOrderByHotScore(postId);
+        
+        if (topLevelCommentIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        // Fetch full comment objects
+        List<Comment> topLevelComments = topLevelCommentIds.stream()
+                .map(id -> commentRepository.findById(id))
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .collect(Collectors.toList());
         
         // Collect all comment IDs (including nested replies)
         List<UUID> allCommentIds = new java.util.ArrayList<>();
@@ -141,8 +153,14 @@ public class CommentServiceImpl implements CommentService {
                 .userVote(userVotesMap.get(comment.getId()))
                 .build();
         
-        // Load replies recursively
-        List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
+        // Load replies sorted by hot score
+        List<UUID> replyIds = commentRepository.findReplyIdsByParentCommentOrderByHotScore(comment.getId());
+        List<Comment> replies = replyIds.stream()
+                .map(id -> commentRepository.findById(id))
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .collect(Collectors.toList());
+        
         List<CommentResponse> replyResponses = replies.stream()
                 .map(reply -> convertToResponseWithRepliesBatch(reply, upvotesMap, downvotesMap, userVotesMap))
                 .collect(Collectors.toList());

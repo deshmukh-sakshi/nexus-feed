@@ -85,8 +85,26 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public Page<PostResponse> getAllPosts(Pageable pageable) {
-        Page<Post> posts = postRepository.findAllOrderByCreatedAtDesc(pageable);
-        return convertToResponseBatch(posts);
+        // Get post IDs sorted by hot score
+        int limit = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+        List<UUID> postIds = postRepository.findPostIdsByHotScore(limit, offset);
+        
+        if (postIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        
+        // Fetch full post objects with user and images
+        List<Post> posts = postIds.stream()
+                .map(id -> postRepository.findByIdWithUserAndImages(id))
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .collect(Collectors.toList());
+        
+        // Get total count for pagination
+        long total = postRepository.count();
+        
+        return convertToResponseBatchOrdered(posts, postIds, pageable, total);
     }
 
     @Override
@@ -272,5 +290,84 @@ public class PostServiceImpl implements PostService {
                     .userVote(userVotesMap.get(post.getId()))
                     .build();
         });
+    }
+    
+    private Page<PostResponse> convertToResponseBatchOrdered(List<Post> posts, List<UUID> orderedIds, Pageable pageable, long total) {
+        if (posts.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        
+        List<UUID> postIds = posts.stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+        
+        // Batch fetch vote counts
+        List<VoteRepository.VoteCount> voteCounts = voteRepository.countByVotableIdsAndVotableType(
+                postIds, Vote.VotableType.POST);
+        
+        java.util.Map<UUID, Integer> upvotesMap = new java.util.HashMap<>();
+        java.util.Map<UUID, Integer> downvotesMap = new java.util.HashMap<>();
+        
+        for (VoteRepository.VoteCount vc : voteCounts) {
+            if (vc.getVoteValue() == Vote.VoteValue.UPVOTE) {
+                upvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            } else {
+                downvotesMap.put(vc.getVotableId(), vc.getCount().intValue());
+            }
+        }
+        
+        // Batch fetch user votes
+        java.util.Map<UUID, String> userVotesMap = new java.util.HashMap<>();
+        try {
+            UUID currentUserId = authenticationService.getCurrentUserId();
+            List<Vote> userVotes = voteRepository.findByUserIdAndVotableIdsAndVotableType(
+                    currentUserId, postIds, Vote.VotableType.POST);
+            for (Vote vote : userVotes) {
+                userVotesMap.put(vote.getId().getVotableId(), vote.getVoteValue().name());
+            }
+        } catch (RuntimeException e) {
+            // User not authenticated, userVotesMap remains empty
+        }
+        
+        // Batch fetch comment counts
+        List<CommentRepository.CommentCount> commentCounts = commentRepository.countByPostIds(postIds);
+        java.util.Map<UUID, Integer> commentCountMap = commentCounts.stream()
+                .collect(Collectors.toMap(
+                        CommentRepository.CommentCount::getPostId,
+                        cc -> cc.getCount().intValue()
+                ));
+        
+        // Create a map for quick lookup
+        java.util.Map<UUID, Post> postMap = posts.stream()
+                .collect(Collectors.toMap(Post::getId, p -> p));
+        
+        // Build responses in the correct order
+        List<PostResponse> responses = orderedIds.stream()
+                .map(postMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(post -> {
+                    List<String> imageUrls = post.getImages().stream()
+                            .map(PostImage::getImageUrl)
+                            .collect(Collectors.toList());
+                    
+                    return PostResponse.builder()
+                            .id(post.getId())
+                            .title(post.getTitle())
+                            .url(post.getUrl())
+                            .body(post.getBody())
+                            .createdAt(post.getCreatedAt())
+                            .updatedAt(post.getUpdatedAt())
+                            .userId(post.getUser().getId())
+                            .username(post.getUser().getUsername())
+                            .imageUrls(imageUrls)
+                            .commentCount(commentCountMap.getOrDefault(post.getId(), 0))
+                            .upvotes(upvotesMap.getOrDefault(post.getId(), 0))
+                            .downvotes(downvotesMap.getOrDefault(post.getId(), 0))
+                            .userVote(userVotesMap.get(post.getId()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+        
+        return new org.springframework.data.domain.PageImpl<>(responses, pageable, total);
     }
 }
