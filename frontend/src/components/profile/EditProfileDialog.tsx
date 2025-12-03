@@ -8,9 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ProfilePictureUpload } from './ProfilePictureUpload'
 import type { UserProfile } from '@/types'
 
 interface EditProfileDialogProps {
@@ -29,28 +29,28 @@ export const EditProfileDialog = ({
   isUpdating,
 }: EditProfileDialogProps) => {
   const [bio, setBio] = useState(profile.bio || '')
-  const [profilePictureUrl, setProfilePictureUrl] = useState(
-    profile.profilePictureUrl || ''
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | undefined>(
+    profile.profilePictureUrl
   )
 
   useEffect(() => {
     if (isOpen) {
       setBio(profile.bio || '')
-      setProfilePictureUrl(profile.profilePictureUrl || '')
+      setProfilePictureUrl(profile.profilePictureUrl)
     }
   }, [isOpen, profile])
 
   const handleSave = () => {
     onSave({
       bio: bio.trim() || undefined,
-      profilePictureUrl: profilePictureUrl.trim() || undefined,
+      profilePictureUrl: profilePictureUrl,
     })
     onClose()
   }
 
   const handleCancel = () => {
     setBio(profile.bio || '')
-    setProfilePictureUrl(profile.profilePictureUrl || '')
+    setProfilePictureUrl(profile.profilePictureUrl)
     onClose()
   }
 
@@ -63,7 +63,16 @@ export const EditProfileDialog = ({
             Make changes to your profile here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-6 py-4">
+          <div className="flex flex-col items-center gap-2">
+            <Label>Profile Picture</Label>
+            <ProfilePictureUpload
+              username={profile.username}
+              value={profilePictureUrl}
+              onChange={setProfilePictureUrl}
+              disabled={isUpdating}
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea
@@ -76,19 +85,6 @@ export const EditProfileDialog = ({
             />
             <p className="text-xs text-muted-foreground">
               {bio.length}/500 characters
-            </p>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="profilePictureUrl">Profile Picture URL</Label>
-            <Input
-              id="profilePictureUrl"
-              value={profilePictureUrl}
-              onChange={(e) => setProfilePictureUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              maxLength={255}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter a URL to your profile picture
             </p>
           </div>
         </div>

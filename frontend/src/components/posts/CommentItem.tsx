@@ -125,7 +125,7 @@ export const CommentItem = ({
         <div className="space-y-2">
           <div className="flex items-start gap-2 group">
             <Link to={`/user/${comment.username}`} className="group-hover:opacity-80">
-              <UserAvatar username={comment.username} size="sm" />
+              <UserAvatar username={comment.username} profileImageUrl={comment.userProfilePictureUrl} size="sm" />
             </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">

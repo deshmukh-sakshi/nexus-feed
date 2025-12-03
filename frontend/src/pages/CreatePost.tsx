@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles, PenLine, Image } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { usePosts } from '@/hooks/usePosts'
 import { useAuthStore } from '@/stores/authStore'
-import { useEffect } from 'react'
 
 export const CreatePost = () => {
   const navigate = useNavigate()
@@ -16,8 +17,10 @@ export const CreatePost = () => {
   const { createPost, isCreating } = usePosts()
 
   const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
   const [body, setBody] = useState('')
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -34,14 +37,14 @@ export const CreatePost = () => {
 
     createPost({
       title: title.trim(),
-      url: url.trim() || undefined,
       body: body.trim() || undefined,
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
     })
 
     // Reset form and navigate immediately
     setTitle('')
-    setUrl('')
     setBody('')
+    setImageUrls([])
     navigate('/')
   }
 
@@ -50,24 +53,29 @@ export const CreatePost = () => {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-3xl mx-auto space-y-3">
       <Button
         size="sm"
         onClick={() => navigate(-1)}
-        className="mb-4 bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+        className="bg-pink-200 text-black hover:bg-pink-300 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
       </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create a Post</CardTitle>
+      <Card className="border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-yellow-50 dark:bg-neutral-900 overflow-hidden">
+        <CardHeader className="border-b-2 border-black py-3">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            Create a Post
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">
+        <CardContent className="pt-4 pb-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+            {/* Title Field */}
+            <div className="space-y-1">
+              <Label htmlFor="title" className="flex items-center gap-2 text-sm font-bold">
+                <PenLine className="h-4 w-4 text-orange-500" />
                 Title <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -77,53 +85,71 @@ export const CreatePost = () => {
                 placeholder="An interesting title for your post"
                 required
                 maxLength={300}
+                className="border-2 border-black bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-orange-400"
               />
-              <p className="text-xs text-muted-foreground">
-                {title.length}/300 characters
-              </p>
+              <div className="flex justify-end">
+                <span className={`text-xs font-medium ${title.length > 250 ? 'text-orange-500' : 'text-muted-foreground'}`}>
+                  {title.length}/300
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="url">URL (optional)</Label>
-              <Input
-                id="url"
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-              <p className="text-xs text-muted-foreground">
-                Add a link to share relevant content
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="body">Body (optional)</Label>
+            {/* Body Field */}
+            <div className="space-y-1">
+              <Label htmlFor="body" className="flex items-center gap-2 text-sm font-bold">
+                <PenLine className="h-4 w-4 text-cyan-500" />
+                Body <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
               <Textarea
                 id="body"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your thoughts here... (Markdown supported)"
-                className="min-h-[200px]"
+                placeholder="Write your thoughts here..."
+                className="min-h-[100px] border-2 border-black bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-orange-400 resize-none"
               />
-              <p className="text-xs text-muted-foreground">
-                Supports Markdown formatting
-              </p>
             </div>
 
-            <div className="flex gap-2">
+            {/* Images Field */}
+            <div className="space-y-1">
+              <Label className="flex items-center gap-2 text-sm font-bold">
+                <Image className="h-4 w-4 text-lime-500" />
+                Images <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <ImageUpload
+                value={imageUrls}
+                onChange={setImageUrls}
+                maxSizeMB={5}
+                disabled={isCreating}
+                onUploadingChange={setIsUploadingImages}
+                onEnterPress={() => {
+                  if (!title.trim()) {
+                    toast.error('Please enter a title first')
+                    return
+                  }
+                  if (isUploadingImages) {
+                    toast.error('Please wait for images to finish uploading')
+                    return
+                  }
+                  formRef.current?.requestSubmit()
+                }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-3 border-t-2 border-dashed border-black/20">
               <Button 
                 type="submit" 
-                disabled={!title.trim() || isCreating}
-                className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+                disabled={!title.trim() || isCreating || isUploadingImages}
+                className="flex-1 bg-lime-300 text-black hover:bg-lime-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreating ? 'Creating...' : 'Create Post'}
+                <Sparkles className="mr-2 h-4 w-4" />
+                {isCreating ? 'Creating...' : isUploadingImages ? 'Uploading Images...' : 'Create Post'}
               </Button>
               <Button
                 type="button"
                 onClick={() => navigate(-1)}
                 disabled={isCreating}
-                className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+                className="bg-gray-200 text-black hover:bg-gray-300 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold px-6 transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50"
               >
                 Cancel
               </Button>

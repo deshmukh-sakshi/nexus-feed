@@ -18,6 +18,7 @@ public class CommentResponse {
     // User info
     private UUID userId;
     private String username;
+    private String userProfilePictureUrl;
     
     // Post info
     private UUID postId;

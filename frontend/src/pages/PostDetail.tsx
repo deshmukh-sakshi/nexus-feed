@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
@@ -14,6 +14,9 @@ import {
   Save,
   X,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -23,6 +26,8 @@ import { Input } from '@/components/ui/input'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
@@ -31,6 +36,7 @@ import { usePostWithComments } from '@/hooks/usePosts'
 import { useComments } from '@/hooks/useComments'
 import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
+import { getOptimizedImageUrl } from '@/lib/cloudinary'
 import type { PostUpdateRequest } from '@/types'
 
 export const PostDetail = () => {
@@ -47,8 +53,33 @@ export const PostDetail = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
+  const [editImageUrls, setEditImageUrls] = useState<string[]>([])
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  // Helper to check if image is cached
+  const isImageCached = (src: string): boolean => {
+    const img = new Image()
+    img.src = src
+    return img.complete
+  }
+
+  // Check cache when image index changes - use same URL params as PostCard for cache hit
+  useEffect(() => {
+    if (post?.imageUrls?.[currentImageIndex]) {
+      const url = getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+        width: 1920,
+        quality: 'auto:best',
+        crop: 'limit',
+        dpr: 2,
+      })
+      setImageLoading(!isImageCached(url))
+    }
+  }, [currentImageIndex, post?.imageUrls])
 
   // Mutations
   const votePostMutation = useMutation({
@@ -119,6 +150,7 @@ export const PostDetail = () => {
             ...postDetail.post,
             title: data.title || postDetail.post.title,
             body: data.body !== undefined ? data.body : postDetail.post.body,
+            imageUrls: data.imageUrls !== undefined ? data.imageUrls : postDetail.post.imageUrls,
             updatedAt: now,
           },
         }
@@ -138,6 +170,7 @@ export const PostDetail = () => {
                 ...p,
                 title: data.title || p.title,
                 body: data.body !== undefined ? data.body : p.body,
+                imageUrls: data.imageUrls !== undefined ? data.imageUrls : p.imageUrls,
                 updatedAt: now,
               }
             }),
@@ -255,7 +288,8 @@ export const PostDetail = () => {
 
   const score = post.upvotes - post.downvotes
   const isOwner = user?.userId === post.userId
-  const isEdited = post.createdAt !== post.updatedAt
+  // Only show edited if there's more than 1 second difference (to handle timestamp precision issues)
+  const isEdited = Math.abs(new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime()) > 1000
 
   const handleVote = (voteValue: 'UPVOTE' | 'DOWNVOTE') => {
     if (!isAuthenticated) {
@@ -279,14 +313,16 @@ export const PostDetail = () => {
   const handleStartEdit = () => {
     setEditTitle(post.title)
     setEditBody(post.body || '')
+    setEditImageUrls(post.imageUrls || [])
     setIsEditing(true)
   }
 
   const handleSaveEdit = () => {
-    if (editTitle.trim()) {
+    if (editTitle.trim() && !isUploadingImages) {
       updatePostMutation.mutate({
         title: editTitle.trim(),
         body: editBody.trim() || undefined,
+        imageUrls: editImageUrls,
       })
       setIsEditing(false)
     }
@@ -296,6 +332,7 @@ export const PostDetail = () => {
     setIsEditing(false)
     setEditTitle('')
     setEditBody('')
+    setEditImageUrls([])
   }
 
   const handleDelete = () => {
@@ -352,7 +389,7 @@ export const PostDetail = () => {
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2 group">
                 <Link to={`/user/${post.username}`} className="group-hover:opacity-80">
-                  <UserAvatar username={post.username} size="sm" />
+                  <UserAvatar username={post.username} profileImageUrl={post.profilePictureUrl} size="sm" />
                 </Link>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Link
@@ -382,22 +419,6 @@ export const PostDetail = () => {
                     className="min-h-[200px] resize-y"
                     placeholder="Post body (Markdown supported)"
                   />
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSaveEdit}
-                      className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save
-                    </Button>
-                    <Button 
-                      onClick={handleCancelEdit}
-                      className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      Cancel
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <>
@@ -426,6 +447,37 @@ export const PostDetail = () => {
           </div>
         </CardHeader>
 
+        {isEditing && (
+          <CardContent>
+            <div className="space-y-3">
+              <ImageUpload
+                value={editImageUrls}
+                onChange={setEditImageUrls}
+                maxSizeMB={5}
+                disabled={updatePostMutation.isPending}
+                onUploadingChange={setIsUploadingImages}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSaveEdit}
+                  disabled={!editTitle.trim() || isUploadingImages}
+                  className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {isUploadingImages ? 'Uploading...' : 'Save'}
+                </Button>
+                <Button 
+                  onClick={handleCancelEdit}
+                  className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        )}
+
         {!isEditing && post.body && (
           <CardContent>
             <div className="prose dark:prose-invert max-w-none">
@@ -436,11 +488,119 @@ export const PostDetail = () => {
 
         {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
           <CardContent>
-            <img
-              src={post.imageUrls[0]}
-              alt={post.title}
-              className="rounded-md w-full max-h-[600px] object-contain"
-            />
+            <div 
+              className="relative h-[500px] w-full bg-neutral-200 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-black overflow-hidden cursor-pointer"
+              onClick={() => setLightboxOpen(true)}
+            >
+              {/* Blurred background - uses same URL as main image for cache hit */}
+              <img
+                src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+                  width: 1920,
+                  quality: 'auto:best',
+                  crop: 'limit',
+                  dpr: 2,
+                })}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 dark:opacity-30"
+              />
+              {/* Loading spinner */}
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-black/60" />
+                </div>
+              )}
+              {/* Main image - high quality, same URL as PostCard for cache hit */}
+              <img
+                src={getOptimizedImageUrl(post.imageUrls[currentImageIndex], {
+                  width: 1920,
+                  quality: 'auto:best',
+                  crop: 'limit',
+                  dpr: 2,
+                })}
+                alt={post.title}
+                className={cn(
+                  "relative w-full h-full object-contain drop-shadow-md transition-opacity duration-200",
+                  imageLoading ? "opacity-0" : "opacity-100"
+                )}
+                onLoad={() => setImageLoading(false)}
+              />
+              
+              {/* Navigation arrows for multiple images */}
+              {post.imageUrls.length > 1 && (
+                <>
+                  {currentImageIndex > 0 && (
+                    <button
+                      onClick={() => setCurrentImageIndex(prev => prev - 1)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                  )}
+                  
+                  {currentImageIndex < post.imageUrls.length - 1 && (
+                    <button
+                      onClick={() => setCurrentImageIndex(prev => prev + 1)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  )}
+                  
+                  {/* Reddit-style dot indicators with sliding window */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/50 px-2.5 py-1.5 rounded-full">
+                    {(() => {
+                      const total = post.imageUrls.length
+                      const current = currentImageIndex
+                      const maxDots = 5
+                      
+                      let startIdx = Math.max(0, current - Math.floor(maxDots / 2))
+                      let endIdx = startIdx + maxDots
+                      
+                      if (endIdx > total) {
+                        endIdx = total
+                        startIdx = Math.max(0, endIdx - maxDots)
+                      }
+                      
+                      const dots = []
+                      
+                      if (startIdx > 0) {
+                        dots.push(
+                          <span key="left-ellipsis" className="w-1 h-1 rounded-full bg-white/40" />
+                        )
+                      }
+                      
+                      for (let i = startIdx; i < endIdx; i++) {
+                        const isActive = i === current
+                        const distanceFromCurrent = Math.abs(i - current)
+                        
+                        dots.push(
+                          <button
+                            key={i}
+                            onClick={() => setCurrentImageIndex(i)}
+                            className={cn(
+                              "rounded-full transition-all cursor-pointer",
+                              isActive 
+                                ? "w-2 h-2 bg-white" 
+                                : distanceFromCurrent === 1
+                                  ? "w-1.5 h-1.5 bg-white/60 hover:bg-white/80"
+                                  : "w-1 h-1 bg-white/40 hover:bg-white/60"
+                            )}
+                          />
+                        )
+                      }
+                      
+                      if (endIdx < total) {
+                        dots.push(
+                          <span key="right-ellipsis" className="w-1 h-1 rounded-full bg-white/40" />
+                        )
+                      }
+                      
+                      return dots
+                    })()}
+                  </div>
+                </>
+              )}
+            </div>
           </CardContent>
         )}
 
@@ -517,6 +677,16 @@ export const PostDetail = () => {
         confirmText="Delete"
         cancelText="Cancel"
       />
+
+      {post.imageUrls && post.imageUrls.length > 0 && (
+        <ImageLightbox
+          images={post.imageUrls}
+          initialIndex={currentImageIndex}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          title={post.title}
+        />
+      )}
     </div>
   )
 }
