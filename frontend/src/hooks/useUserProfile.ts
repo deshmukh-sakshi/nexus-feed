@@ -50,7 +50,7 @@ export const useUserProfile = (username?: string) => {
       }
       toast.error(getErrorMessage(error))
     },
-    onSuccess: (updatedProfile, { id, data }) => {
+    onSuccess: (_updatedProfile, { id, data }) => {
       // Update auth store if this is the current user's profile
       if (currentUser?.userId === id && data.profilePictureUrl !== undefined) {
         updateProfilePicture(data.profilePictureUrl)

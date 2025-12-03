@@ -147,10 +147,9 @@ export const ProfilePictureUpload = ({
         <Button
           type="button"
           size="sm"
-          variant="outline"
           onClick={handleRemove}
           disabled={disabled}
-          className="text-xs border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
+          className="text-xs bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
         >
           <X className="h-3 w-3 mr-1" />
           Remove
