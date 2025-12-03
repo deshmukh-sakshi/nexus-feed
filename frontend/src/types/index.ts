@@ -34,6 +34,7 @@ export interface Post {
   updatedAt: string
   userId: string
   username: string
+  profilePictureUrl?: string
   imageUrls?: string[]
   commentCount: number
   upvotes: number

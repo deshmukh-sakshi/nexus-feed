@@ -97,7 +97,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               to={`/user/${post.username}`} 
               className="group-hover:opacity-80"
            >
-              <UserAvatar username={post.username} size="sm" className="h-5 w-5 border border-black" />
+              <UserAvatar username={post.username} profileImageUrl={post.profilePictureUrl} size="sm" className="h-5 w-5 border border-black" />
            </Link>
            <Link 
               to={`/user/${post.username}`} 

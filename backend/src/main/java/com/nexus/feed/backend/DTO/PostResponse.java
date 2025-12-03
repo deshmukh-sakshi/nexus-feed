@@ -20,6 +20,7 @@ public class PostResponse {
     
     private UUID userId;
     private String username;
+    private String profilePictureUrl;
     
     // Images
     private List<String> imageUrls;
