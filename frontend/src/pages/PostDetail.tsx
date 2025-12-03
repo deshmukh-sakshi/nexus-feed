@@ -27,6 +27,7 @@ import { UserAvatar } from '@/components/ui/user-avatar'
 import { AuthModal } from '@/components/ui/auth-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ImageLightbox } from '@/components/ui/image-lightbox'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
@@ -52,6 +53,8 @@ export const PostDetail = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
+  const [editImageUrls, setEditImageUrls] = useState<string[]>([])
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -147,6 +150,7 @@ export const PostDetail = () => {
             ...postDetail.post,
             title: data.title || postDetail.post.title,
             body: data.body !== undefined ? data.body : postDetail.post.body,
+            imageUrls: data.imageUrls !== undefined ? data.imageUrls : postDetail.post.imageUrls,
             updatedAt: now,
           },
         }
@@ -166,6 +170,7 @@ export const PostDetail = () => {
                 ...p,
                 title: data.title || p.title,
                 body: data.body !== undefined ? data.body : p.body,
+                imageUrls: data.imageUrls !== undefined ? data.imageUrls : p.imageUrls,
                 updatedAt: now,
               }
             }),
@@ -308,14 +313,16 @@ export const PostDetail = () => {
   const handleStartEdit = () => {
     setEditTitle(post.title)
     setEditBody(post.body || '')
+    setEditImageUrls(post.imageUrls || [])
     setIsEditing(true)
   }
 
   const handleSaveEdit = () => {
-    if (editTitle.trim()) {
+    if (editTitle.trim() && !isUploadingImages) {
       updatePostMutation.mutate({
         title: editTitle.trim(),
         body: editBody.trim() || undefined,
+        imageUrls: editImageUrls,
       })
       setIsEditing(false)
     }
@@ -325,6 +332,7 @@ export const PostDetail = () => {
     setIsEditing(false)
     setEditTitle('')
     setEditBody('')
+    setEditImageUrls([])
   }
 
   const handleDelete = () => {
@@ -411,22 +419,6 @@ export const PostDetail = () => {
                     className="min-h-[200px] resize-y"
                     placeholder="Post body (Markdown supported)"
                   />
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSaveEdit}
-                      className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save
-                    </Button>
-                    <Button 
-                      onClick={handleCancelEdit}
-                      className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      Cancel
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <>
@@ -454,6 +446,37 @@ export const PostDetail = () => {
             </div>
           </div>
         </CardHeader>
+
+        {isEditing && (
+          <CardContent>
+            <div className="space-y-3">
+              <ImageUpload
+                value={editImageUrls}
+                onChange={setEditImageUrls}
+                maxSizeMB={5}
+                disabled={updatePostMutation.isPending}
+                onUploadingChange={setIsUploadingImages}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSaveEdit}
+                  disabled={!editTitle.trim() || isUploadingImages}
+                  className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {isUploadingImages ? 'Uploading...' : 'Save'}
+                </Button>
+                <Button 
+                  onClick={handleCancelEdit}
+                  className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        )}
 
         {!isEditing && post.body && (
           <CardContent>

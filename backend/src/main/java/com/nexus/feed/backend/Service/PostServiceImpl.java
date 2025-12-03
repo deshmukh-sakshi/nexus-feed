@@ -127,18 +127,18 @@ public class PostServiceImpl implements PostService {
 
         // Handle image updates with order preservation
         if (request.getImageUrls() != null) {
-            postImageRepository.deleteByPost(post);
+            // Clear existing images from the entity (orphanRemoval will delete them)
+            post.getImages().clear();
+            
             if (!request.getImageUrls().isEmpty()) {
                 List<String> urls = request.getImageUrls();
-                List<PostImage> images = new java.util.ArrayList<>();
                 for (int i = 0; i < urls.size(); i++) {
                     PostImage image = new PostImage();
                     image.setPost(post);
                     image.setImageUrl(urls.get(i));
                     image.setOrderIndex(i);
-                    images.add(image);
+                    post.getImages().add(image);
                 }
-                postImageRepository.saveAll(images);
             }
         }
 
