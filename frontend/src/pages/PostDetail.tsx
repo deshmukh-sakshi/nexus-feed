@@ -389,7 +389,7 @@ export const PostDetail = () => {
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2 group">
                 <Link to={`/user/${post.username}`} className="group-hover:opacity-80">
-                  <UserAvatar username={post.username} size="sm" />
+                  <UserAvatar username={post.username} profileImageUrl={post.profilePictureUrl} size="sm" />
                 </Link>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Link

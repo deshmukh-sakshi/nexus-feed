@@ -101,7 +101,7 @@ export const ProfilePictureUpload = ({
         {/* Avatar display */}
         <div className="relative">
           {displayUrl ? (
-            <div className="relative h-24 w-24 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] overflow-hidden">
+            <div className="relative h-32 w-32 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] overflow-hidden">
               <img
                 src={preview || getOptimizedImageUrl(value!, { width: 200, height: 200, crop: 'fill' })}
                 alt={username}
@@ -112,7 +112,7 @@ export const ProfilePictureUpload = ({
               />
             </div>
           ) : (
-            <UserAvatar username={username} size="lg" className="h-24 w-24 text-2xl" />
+            <UserAvatar username={username} size="lg" className="h-32 w-32 text-3xl" />
           )}
 
           {/* Upload overlay */}
@@ -150,7 +150,7 @@ export const ProfilePictureUpload = ({
           variant="outline"
           onClick={handleRemove}
           disabled={disabled}
-          className="text-xs"
+          className="text-xs border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
         >
           <X className="h-3 w-3 mr-1" />
           Remove
