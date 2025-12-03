@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { usersApi } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/authStore'
 import { getErrorMessage } from '@/types/errors'
 import type { UserProfile } from '@/types'
 
@@ -11,6 +12,7 @@ interface UserUpdateRequest {
 
 export const useUserProfile = (username?: string) => {
   const queryClient = useQueryClient()
+  const { user: currentUser, updateProfilePicture } = useAuthStore()
 
   const profileQuery = useQuery({
     queryKey: ['user', username],
@@ -48,7 +50,11 @@ export const useUserProfile = (username?: string) => {
       }
       toast.error(getErrorMessage(error))
     },
-    onSuccess: () => {
+    onSuccess: (updatedProfile, { id, data }) => {
+      // Update auth store if this is the current user's profile
+      if (currentUser?.userId === id && data.profilePictureUrl !== undefined) {
+        updateProfilePicture(data.profilePictureUrl)
+      }
       toast.success('Profile updated successfully!')
     },
     onSettled: () => {

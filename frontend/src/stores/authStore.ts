@@ -7,6 +7,7 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   setAuth: (user: User, token: string) => void
+  updateProfilePicture: (profilePictureUrl: string | undefined) => void
   logout: () => void
 }
 
@@ -19,6 +20,11 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) => {
         localStorage.setItem('token', token)
         set({ user, token, isAuthenticated: true })
+      },
+      updateProfilePicture: (profilePictureUrl) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, profilePictureUrl } : null,
+        }))
       },
       logout: () => {
         localStorage.removeItem('token')

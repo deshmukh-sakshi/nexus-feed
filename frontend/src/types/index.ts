@@ -3,6 +3,7 @@ export interface User {
   userId: string
   username: string
   email: string
+  profilePictureUrl?: string
 }
 
 // Auth types
@@ -57,6 +58,7 @@ export interface Comment {
   updatedAt: string
   userId: string
   username: string
+  userProfilePictureUrl?: string
   postId: string
   parentCommentId?: string
   replies?: Comment[]

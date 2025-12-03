@@ -44,6 +44,7 @@ export const Navbar = () => {
                   <Button className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold px-2">
                     <UserAvatar 
                       username={user?.username || 'User'} 
+                      profileImageUrl={user?.profilePictureUrl}
                       size="sm"
                       className="mr-2 border-2 border-black h-6 w-6"
                     />
