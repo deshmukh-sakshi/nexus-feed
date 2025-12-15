@@ -27,6 +27,7 @@ public class CommentServiceImpl implements CommentService {
     private final VoteRepository voteRepository;
     private final AuthenticationService authenticationService;
     private final KarmaService karmaService;
+    private final BadgeAwardingService badgeAwardingService;
 
     @Override
     public CommentResponse createComment(UUID userId, UUID postId, CommentCreateRequest request) {
@@ -50,6 +51,10 @@ public class CommentServiceImpl implements CommentService {
 
         Comment savedComment = commentRepository.save(comment);
         log.info("Comment created: id={}, postId={}, userId={}", savedComment.getId(), postId, userId);
+
+        // Check for comment-related badges
+        badgeAwardingService.checkCommentBadges(userId);
+
         return convertToResponse(savedComment);
     }
 

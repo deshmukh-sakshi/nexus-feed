@@ -85,6 +85,26 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/tag/{tagName}")
+    public ResponseEntity<Page<PostResponse>> getPostsByTag(
+            @PathVariable String tagName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PostResponse> posts = postService.searchByTag(tagName, pageable);
+        return ResponseEntity.ok(posts);
+    }
+
+    @GetMapping("/tags")
+    public ResponseEntity<Page<PostResponse>> getPostsByTags(
+            @RequestParam java.util.List<String> tags,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PostResponse> posts = postService.searchByTags(tags, pageable);
+        return ResponseEntity.ok(posts);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PostResponse> updatePost(
             @PathVariable UUID id,

@@ -57,6 +57,7 @@ public class BadgeServiceImpl implements BadgeService {
         badge.setName(name);
         badge.setDescription(description);
         badge.setIconUrl(iconUrl);
+        badge.setIsActive(true);
         
         Badge savedBadge = badgeRepository.save(badge);
         log.info("Badge created: id={}, name={}", savedBadge.getId(), name);

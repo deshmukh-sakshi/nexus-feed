@@ -52,6 +52,9 @@ class CommentServiceImplTest {
     @Mock
     private KarmaService karmaService;
 
+    @Mock
+    private BadgeAwardingService badgeAwardingService;
+
     @InjectMocks
     private CommentServiceImpl commentService;
 

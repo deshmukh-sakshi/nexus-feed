@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Sparkles, PenLine, Image } from 'lucide-react'
+import { ArrowLeft, Sparkles, PenLine, Image, Hash } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { ImageUpload } from '@/components/ui/image-upload'
+import { TagInput } from '@/components/ui/tag-input'
 import { usePosts } from '@/hooks/usePosts'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -19,6 +20,7 @@ export const CreatePost = () => {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>([])
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -39,12 +41,14 @@ export const CreatePost = () => {
       title: title.trim(),
       body: body.trim() || undefined,
       imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+      tags: tags.length > 0 ? tags : undefined,
     })
 
     // Reset form and navigate immediately
     setTitle('')
     setBody('')
     setImageUrls([])
+    setTags([])
     navigate('/')
   }
 
@@ -106,6 +110,20 @@ export const CreatePost = () => {
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write your thoughts here..."
                 className="min-h-[100px] border-2 border-black bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-orange-400 resize-none"
+              />
+            </div>
+
+            {/* Tags Field */}
+            <div className="space-y-1">
+              <Label className="flex items-center gap-2 text-sm font-bold">
+                <Hash className="h-4 w-4 text-teal-500" />
+                Tags <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <TagInput
+                value={tags}
+                onChange={setTags}
+                maxTags={5}
+                placeholder="Add tags to help others find your post..."
               />
             </div>
 

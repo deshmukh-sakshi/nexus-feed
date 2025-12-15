@@ -37,6 +37,7 @@ export interface Post {
   username: string
   profilePictureUrl?: string
   imageUrls?: string[]
+  tags?: string[]
   commentCount: number
   upvotes: number
   downvotes: number
@@ -48,6 +49,14 @@ export interface PostCreateRequest {
   url?: string
   body?: string
   imageUrls?: string[]
+  tags?: string[]
+}
+
+// Tag types
+export interface Tag {
+  id: number
+  name: string
+  postCount: number
 }
 
 // Comment types
@@ -82,6 +91,7 @@ export interface PostUpdateRequest {
   url?: string
   body?: string
   imageUrls?: string[]
+  tags?: string[]
 }
 
 // Vote types
@@ -114,6 +124,14 @@ export interface ApiResponse<T> {
   data: T
   message?: string
   success: boolean
+}
+
+// Badge types
+export interface Badge {
+  id: number
+  name: string
+  description: string
+  iconUrl?: string
 }
 
 // User Profile types
