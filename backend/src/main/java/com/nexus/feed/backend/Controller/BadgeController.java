@@ -1,6 +1,7 @@
 package com.nexus.feed.backend.Controller;
 
 import com.nexus.feed.backend.DTO.BadgeResponse;
+import com.nexus.feed.backend.Service.BadgeAwardingService;
 import com.nexus.feed.backend.Service.BadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.util.UUID;
 public class BadgeController {
 
     private final BadgeService badgeService;
+    private final BadgeAwardingService badgeAwardingService;
 
     @GetMapping
     public ResponseEntity<List<BadgeResponse>> getAllBadges() {
@@ -44,6 +46,8 @@ public class BadgeController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<BadgeResponse>> getUserBadges(@PathVariable UUID userId) {
         try {
+            // Automatically check and award any earned badges before returning
+            badgeAwardingService.checkAllBadges(userId);
             List<BadgeResponse> badges = badgeService.getUserBadges(userId);
             return ResponseEntity.ok(badges);
         } catch (RuntimeException e) {
@@ -60,6 +64,17 @@ public class BadgeController {
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/check/{userId}")
+    public ResponseEntity<List<BadgeResponse>> checkAndAwardBadges(@PathVariable UUID userId) {
+        try {
+            badgeAwardingService.checkAllBadges(userId);
+            List<BadgeResponse> badges = badgeService.getUserBadges(userId);
+            return ResponseEntity.ok(badges);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.Repository.UserRepository;
+import com.nexus.feed.backend.Repository.VoteRepository;
 import net.jqwik.api.*;
 import org.mockito.Mockito;
 
@@ -14,7 +15,8 @@ class KarmaServicePropertyTest {
     void selfVoteShouldNotChangeKarma(@ForAll("deltas") int delta) {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID userId = UUID.randomUUID();
 
         // When
@@ -28,7 +30,8 @@ class KarmaServicePropertyTest {
     void nonSelfVoteShouldChangeKarma(@ForAll("deltas") int delta) {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID authorId = UUID.randomUUID();
         UUID voterId = UUID.randomUUID();
 
@@ -43,7 +46,8 @@ class KarmaServicePropertyTest {
     void upvoteShouldIncreaseKarmaByOne() {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID authorId = UUID.randomUUID();
         UUID voterId = UUID.randomUUID();
 
@@ -58,7 +62,8 @@ class KarmaServicePropertyTest {
     void downvoteShouldDecreaseKarmaByOne() {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID authorId = UUID.randomUUID();
         UUID voterId = UUID.randomUUID();
 
@@ -73,7 +78,8 @@ class KarmaServicePropertyTest {
     void voteRemovalShouldReturnKarmaToOriginal(@ForAll("voteDeltas") int voteDelta) {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID authorId = UUID.randomUUID();
         UUID voterId = UUID.randomUUID();
         int removalDelta = -voteDelta;
@@ -91,7 +97,8 @@ class KarmaServicePropertyTest {
     void voteFlipShouldChangeKarmaByTwo(@ForAll("flipDeltas") int flipDelta) {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, null, badgeAwardingService);
         UUID authorId = UUID.randomUUID();
         UUID voterId = UUID.randomUUID();
 
@@ -147,9 +154,9 @@ class KarmaServicePropertyTest {
             @ForAll("karmaValues") long commentKarma) {
         // Given
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        com.nexus.feed.backend.Repository.VoteRepository voteRepository = 
-                Mockito.mock(com.nexus.feed.backend.Repository.VoteRepository.class);
-        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, voteRepository);
+        VoteRepository voteRepository = Mockito.mock(VoteRepository.class);
+        BadgeAwardingService badgeAwardingService = Mockito.mock(BadgeAwardingService.class);
+        KarmaServiceImpl karmaService = new KarmaServiceImpl(userRepository, voteRepository, badgeAwardingService);
         UUID userId = UUID.randomUUID();
 
         when(voteRepository.calculatePostKarma(userId)).thenReturn(postKarma);

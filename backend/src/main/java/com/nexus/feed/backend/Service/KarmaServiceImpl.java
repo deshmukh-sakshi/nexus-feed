@@ -17,6 +17,7 @@ public class KarmaServiceImpl implements KarmaService {
 
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
+    private final BadgeAwardingService badgeAwardingService;
 
     @Override
     public void updateKarmaForVote(UUID contentAuthorId, UUID voterId, int delta) {
@@ -28,6 +29,11 @@ public class KarmaServiceImpl implements KarmaService {
 
         userRepository.incrementKarma(contentAuthorId, delta);
         log.debug("Updated karma for user {} by {}", contentAuthorId, delta);
+
+        // Check for karma-based badges (only on positive karma changes)
+        if (delta > 0) {
+            badgeAwardingService.checkKarmaBadges(contentAuthorId);
+        }
     }
 
     @Override

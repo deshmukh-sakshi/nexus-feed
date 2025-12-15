@@ -9,6 +9,7 @@ import { Register } from '@/pages/Register'
 import { PostDetail } from '@/pages/PostDetail'
 import { UserProfile } from '@/pages/UserProfile'
 import { CreatePost } from '@/pages/CreatePost'
+import { Search } from '@/pages/Search'
 import { useSessionExpiry } from '@/hooks/useSessionExpiry'
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ const AppRoutes = () => {
         <Route path="/post/:id" element={<PostDetail />} />
         <Route path="/user/:username" element={<UserProfile />} />
         <Route path="/create-post" element={<CreatePost />} />
+        <Route path="/search" element={<Search />} />
       </Route>
     </Routes>
   )

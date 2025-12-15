@@ -56,7 +56,7 @@ public class Comment {
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
-        updatedAt = Instant.now();
+        updatedAt = createdAt;
     }
 
     @PreUpdate

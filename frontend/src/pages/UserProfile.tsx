@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { PostList } from '@/components/posts/PostList'
 import { EditProfileDialog } from '@/components/profile/EditProfileDialog'
+import { BadgeList } from '@/components/profile/BadgeList'
 import { postsApi } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/authStore'
 import { useUserProfile } from '@/hooks/useUserProfile'
@@ -105,6 +106,7 @@ export const UserProfile = () => {
               <p className="text-sm text-muted-foreground mt-1">
                 Member since {formatDistanceToNow(new Date(profile.createdAt))} ago
               </p>
+              <BadgeList userId={profile.id} />
               {profile.bio && (
                 <p className="mt-3 text-muted-foreground">{profile.bio}</p>
               )}

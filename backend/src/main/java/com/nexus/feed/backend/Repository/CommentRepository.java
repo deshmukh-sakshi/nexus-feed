@@ -28,6 +28,8 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     
     void deleteByPost(Post post);
     
+    long countByUser(Users user);
+    
     interface CommentCount {
         UUID getPostId();
         Long getCount();

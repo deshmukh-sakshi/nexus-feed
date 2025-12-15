@@ -12,6 +12,7 @@ import type {
   PageResponse,
   UserProfile,
   PostDetail,
+  Badge,
 } from '@/types'
 
 // Auth API
@@ -145,6 +146,63 @@ export const usersApi = {
     data: { bio?: string; profilePictureUrl?: string }
   ): Promise<UserProfile> => {
     const response = await api.put<UserProfile>(`/users/id/${userId}`, data)
+    return response.data
+  },
+}
+
+// Badges API
+export const badgesApi = {
+  getUserBadges: async (userId: string): Promise<Badge[]> => {
+    const response = await api.get<Badge[]>(`/badges/user/${userId}`)
+    return response.data
+  },
+
+  getAllBadges: async (): Promise<Badge[]> => {
+    const response = await api.get<Badge[]>('/badges')
+    return response.data
+  },
+}
+
+// Tags API
+export const tagsApi = {
+  searchTags: async (query?: string): Promise<import('@/types').Tag[]> => {
+    const response = await api.get<import('@/types').Tag[]>('/tags/search', {
+      params: query ? { query } : {},
+    })
+    return response.data
+  },
+
+  getTrendingTags: async (limit = 10): Promise<import('@/types').Tag[]> => {
+    const response = await api.get<import('@/types').Tag[]>('/tags/trending', {
+      params: { limit },
+    })
+    return response.data
+  },
+
+  getAllTags: async (): Promise<import('@/types').Tag[]> => {
+    const response = await api.get<import('@/types').Tag[]>('/tags')
+    return response.data
+  },
+
+  getPostsByTag: async (
+    tagName: string,
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<Post>> => {
+    const response = await api.get<PageResponse<Post>>(`/posts/tag/${tagName}`, {
+      params: { page, size },
+    })
+    return response.data
+  },
+
+  getPostsByTags: async (
+    tags: string[],
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<Post>> => {
+    const response = await api.get<PageResponse<Post>>('/posts/tags', {
+      params: { tags, page, size },
+    })
     return response.data
   },
 }

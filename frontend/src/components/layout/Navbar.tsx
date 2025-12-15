@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { LogOut, User, PlusCircle } from 'lucide-react'
+import { LogOut, User, PlusCircle, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import {
@@ -30,6 +30,13 @@ export const Navbar = () => {
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
+          <Link to="/search">
+            <Button className="bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold">
+              <Search className="mr-2 h-5 w-5" />
+              Search
+            </Button>
+          </Link>
+
           {isAuthenticated ? (
             <>
               <Link to="/create-post">

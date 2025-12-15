@@ -25,6 +25,9 @@ public class PostResponse {
     // Images
     private List<String> imageUrls;
     
+    // Tags
+    private List<String> tags;
+    
     // Engagement metrics (can be calculated)
     private int commentCount;
     private int upvotes;

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,8 @@ public class PostServiceImpl implements PostService {
     private final AuthenticationService authenticationService;
     private final CommentService commentService;
     private final KarmaService karmaService;
+    private final BadgeAwardingService badgeAwardingService;
+    private final TagService tagService;
 
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
@@ -40,6 +43,12 @@ public class PostServiceImpl implements PostService {
         post.setUrl(request.getUrl());
         post.setBody(request.getBody());
         post.setUser(user);
+
+        // Handle tags
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            Set<Tag> tags = tagService.getOrCreateTags(request.getTags());
+            post.setTags(tags);
+        }
 
         Post savedPost = postRepository.save(post);
         log.info("Post created: id={}, userId={}", savedPost.getId(), userId);
@@ -58,6 +67,9 @@ public class PostServiceImpl implements PostService {
             postImageRepository.saveAll(images);
             savedPost.setImages(images);
         }
+
+        // Check for post-related badges
+        badgeAwardingService.checkPostBadges(userId);
 
         return convertToResponse(savedPost);
     }
@@ -106,6 +118,23 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByTag(String tagName, Pageable pageable) {
+        Page<Post> posts = postRepository.findByTagName(tagName.toLowerCase(), pageable);
+        return convertToResponseBatch(posts);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByTags(List<String> tagNames, Pageable pageable) {
+        List<String> normalizedTags = tagNames.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
+        Page<Post> posts = postRepository.findByTagNames(normalizedTags, pageable);
+        return convertToResponseBatch(posts);
+    }
+
+    @Override
     public PostResponse updatePost(UUID postId, UUID userId, PostUpdateRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
@@ -142,6 +171,15 @@ public class PostServiceImpl implements PostService {
             }
         }
 
+        // Handle tag updates
+        if (request.getTags() != null) {
+            post.getTags().clear();
+            if (!request.getTags().isEmpty()) {
+                Set<Tag> tags = tagService.getOrCreateTags(request.getTags());
+                post.setTags(tags);
+            }
+        }
+
         Post updatedPost = postRepository.save(post);
         log.info("Post updated: id={}, userId={}", postId, userId);
         return convertToResponse(updatedPost);
@@ -167,6 +205,10 @@ public class PostServiceImpl implements PostService {
     private PostResponse convertToResponse(Post post) {
         List<String> imageUrls = post.getImages().stream()
                 .map(PostImage::getImageUrl)
+                .collect(Collectors.toList());
+
+        List<String> tags = post.getTags().stream()
+                .map(Tag::getName)
                 .collect(Collectors.toList());
 
         long upvotes = voteRepository.countByVotableIdAndVotableTypeAndVoteValue(
@@ -198,6 +240,7 @@ public class PostServiceImpl implements PostService {
                 .username(post.getUser().getUsername())
                 .profilePictureUrl(post.getUser().getProfilePictureUrl())
                 .imageUrls(imageUrls)
+                .tags(tags)
                 .commentCount((int) commentCount)
                 .upvotes((int) upvotes)
                 .downvotes((int) downvotes)
@@ -255,6 +298,10 @@ public class PostServiceImpl implements PostService {
                     .map(PostImage::getImageUrl)
                     .collect(Collectors.toList());
             
+            List<String> tags = post.getTags().stream()
+                    .map(Tag::getName)
+                    .collect(Collectors.toList());
+            
             return PostResponse.builder()
                     .id(post.getId())
                     .title(post.getTitle())
@@ -266,6 +313,7 @@ public class PostServiceImpl implements PostService {
                     .username(post.getUser().getUsername())
                     .profilePictureUrl(post.getUser().getProfilePictureUrl())
                     .imageUrls(imageUrls)
+                    .tags(tags)
                     .commentCount(commentCountMap.getOrDefault(post.getId(), 0))
                     .upvotes(upvotesMap.getOrDefault(post.getId(), 0))
                     .downvotes(downvotesMap.getOrDefault(post.getId(), 0))

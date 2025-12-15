@@ -27,6 +27,12 @@ public class Badge {
     @Size(max = 255)
     private String iconUrl;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "criteria")
+    private String criteria;
+
     @OneToMany(mappedBy = "badge", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserBadge> userBadges = new ArrayList<>();
 }

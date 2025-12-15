@@ -12,15 +12,23 @@ import java.util.UUID;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.user = :user ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN FETCH p.tags WHERE p.user = :user ORDER BY p.createdAt DESC")
     Page<Post> findByUserOrderByCreatedAtDesc(@Param("user") Users user, Pageable pageable);
     
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN FETCH p.tags ORDER BY p.createdAt DESC")
     Page<Post> findAllOrderByCreatedAtDesc(Pageable pageable);
     
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.title LIKE %:keyword% OR p.body LIKE %:keyword% ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN FETCH p.tags WHERE p.title LIKE %:keyword% OR p.body LIKE %:keyword% ORDER BY p.createdAt DESC")
     Page<Post> findByTitleContainingOrBodyContainingOrderByCreatedAtDesc(@Param("keyword") String keyword, Pageable pageable);
     
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images WHERE p.id = :id")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN FETCH p.tags WHERE p.id = :id")
     java.util.Optional<Post> findByIdWithUserAndImages(@Param("id") UUID id);
+    
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName) ORDER BY p.createdAt DESC")
+    Page<Post> findByTagName(@Param("tagName") String tagName, Pageable pageable);
+    
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.images LEFT JOIN p.tags t WHERE LOWER(t.name) IN :tagNames ORDER BY p.createdAt DESC")
+    Page<Post> findByTagNames(@Param("tagNames") java.util.List<String> tagNames, Pageable pageable);
+    
+    long countByUser(Users user);
 }

@@ -18,4 +18,7 @@ public class PostCreateRequest {
     private String body;
 
     private List<String> imageUrls;
+
+    @Size(max = 5, message = "Maximum 5 tags allowed")
+    private List<@Size(max = 50, message = "Tag must not exceed 50 characters") String> tags;
 }

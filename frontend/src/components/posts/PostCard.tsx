@@ -136,6 +136,21 @@ export const PostCard = ({ post }: PostCardProps) => {
             <p className="text-sm text-foreground/90 line-clamp-3 font-medium leading-tight">{post.body}</p>
           </div>
         )}
+
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {post.tags.map((tag) => (
+              <Link
+                key={tag}
+                to={`/search?tag=${encodeURIComponent(tag)}`}
+                className="px-2 py-0.5 text-xs font-medium bg-teal-200 border border-black hover:bg-teal-300 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        )}
         
         {post.imageUrls && post.imageUrls.length > 0 && (
           <div className="mt-3 mb-2 relative">

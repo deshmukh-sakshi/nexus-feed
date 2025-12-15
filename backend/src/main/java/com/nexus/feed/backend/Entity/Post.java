@@ -12,8 +12,8 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"images", "comments"})
-@EqualsAndHashCode(exclude = {"images", "comments"})
+@ToString(exclude = {"images", "comments", "tags"})
+@EqualsAndHashCode(exclude = {"images", "comments", "tags"})
 @Entity
 @Table(name = "posts", indexes = {
     @Index(name = "idx_post_user_id", columnList = "user_id"),
@@ -52,6 +52,15 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 10)
     private List<Comment> comments = new ArrayList<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "post_tags",
+        joinColumns = @JoinColumn(name = "post_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @BatchSize(size = 10)
+    private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
