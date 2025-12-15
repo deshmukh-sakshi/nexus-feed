@@ -1,6 +1,7 @@
 package com.nexus.feed.backend.Controller;
 
 import com.nexus.feed.backend.DTO.BadgeResponse;
+import com.nexus.feed.backend.Service.BadgeAwardingService;
 import com.nexus.feed.backend.Service.BadgeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,9 @@ class BadgeControllerTest {
 
     @MockitoBean
     private BadgeService badgeService;
+
+    @MockitoBean
+    private BadgeAwardingService badgeAwardingService;
 
     @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
