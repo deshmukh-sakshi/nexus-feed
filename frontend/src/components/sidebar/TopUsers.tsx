@@ -5,6 +5,7 @@ import { usersApi } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { formatNumber } from '@/lib/utils'
+import { RankBadge } from './RankBadge'
 
 interface TopUsersProps {
   limit?: number
@@ -48,21 +49,29 @@ export const TopUsers = ({ limit = 5 }: TopUsersProps) => {
             <Link
               key={user.id}
               to={`/user/${user.username}`}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold border-2 border-black bg-white dark:bg-gray-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-100 dark:hover:bg-gray-700 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+              className="group w-full flex items-center gap-3 px-3 py-3 text-sm font-bold border-2 border-black bg-white dark:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-lime-50 dark:hover:bg-gray-700 active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all cursor-pointer"
             >
-              <span className="text-xs font-black text-black/50 w-4 flex-shrink-0">
-                {index + 1}
-              </span>
+              <RankBadge rank={index + 1} />
+              
               <UserAvatar
                 username={user.username}
                 profileImageUrl={user.profilePictureUrl}
                 size="sm"
-                className="h-7 w-7 border border-black flex-shrink-0"
+                className="h-9 w-9 border-2 border-black flex-shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:rotate-6 transition-transform"
               />
-              <span className="font-bold truncate">{user.username}</span>
-              <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
-                {formatNumber(user.karma ?? 0)} karma
-              </span>
+              
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="font-black truncate text-base">{user.username}</span>
+              </div>
+              
+              <div className="flex flex-col items-end flex-shrink-0 ml-auto">
+                <span className="text-xs font-bold text-black dark:text-white">
+                  {formatNumber(user.karma ?? 0)}
+                </span>
+                <span className="text-[10px] uppercase font-black text-black/40 dark:text-white/40">
+                  KARMA
+                </span>
+              </div>
             </Link>
           ))}
         </div>
