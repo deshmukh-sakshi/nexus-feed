@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/api/comments/**").permitAll()
                         .requestMatchers(GET, "/api/users/**").permitAll()
                         .requestMatchers(GET, "/api/badges/**").permitAll()
+                        .requestMatchers(GET, "/api/tags/**").permitAll()
                         
                         // All other requests require authentication
                         .anyRequest().authenticated()

@@ -1,6 +1,7 @@
 package com.nexus.feed.backend.Controller;
 
 import com.nexus.feed.backend.DTO.TagResponse;
+import com.nexus.feed.backend.DTO.TrendingTagResponse;
 import com.nexus.feed.backend.Service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,5 +30,11 @@ public class TagController {
     public ResponseEntity<List<TagResponse>> getTrendingTags(
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(tagService.getTrendingTags(limit));
+    }
+
+    @GetMapping("/trending-scored")
+    public ResponseEntity<List<TrendingTagResponse>> getTrendingTagsWithScore(
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(tagService.getTrendingTagsWithScore(limit));
     }
 }

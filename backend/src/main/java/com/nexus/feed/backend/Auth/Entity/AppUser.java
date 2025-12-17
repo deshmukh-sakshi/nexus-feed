@@ -2,10 +2,15 @@ package com.nexus.feed.backend.Auth.Entity;
 
 import com.nexus.feed.backend.Entity.Users;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"userProfile"})
+@EqualsAndHashCode(exclude = {"userProfile"})
 @Table(name = "app_users")
 public class AppUser {
 
