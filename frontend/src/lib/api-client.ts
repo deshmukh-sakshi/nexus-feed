@@ -148,6 +148,13 @@ export const usersApi = {
     const response = await api.put<UserProfile>(`/users/id/${userId}`, data)
     return response.data
   },
+
+  getTopUsers: async (limit = 5): Promise<UserProfile[]> => {
+    const response = await api.get<UserProfile[]>('/users/top', {
+      params: { limit },
+    })
+    return response.data
+  },
 }
 
 // Badges API
@@ -174,6 +181,13 @@ export const tagsApi = {
 
   getTrendingTags: async (limit = 10): Promise<import('@/types').Tag[]> => {
     const response = await api.get<import('@/types').Tag[]>('/tags/trending', {
+      params: { limit },
+    })
+    return response.data
+  },
+
+  getTrendingTagsScored: async (limit = 5): Promise<import('@/types').TrendingTag[]> => {
+    const response = await api.get<import('@/types').TrendingTag[]>('/tags/trending-scored', {
       params: { limit },
     })
     return response.data

@@ -59,6 +59,13 @@ export interface Tag {
   postCount: number
 }
 
+export interface TrendingTag {
+  id: number
+  name: string
+  postCount: number
+  trendingScore: number
+}
+
 // Comment types
 export interface Comment {
   id: string

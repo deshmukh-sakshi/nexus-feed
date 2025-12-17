@@ -12,6 +12,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"posts"})
+@EqualsAndHashCode(exclude = {"posts"})
 @Entity
 @Table(name = "tags", indexes = {
     @Index(name = "idx_tag_name", columnList = "name", unique = true)
