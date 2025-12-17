@@ -179,6 +179,13 @@ export const tagsApi = {
     return response.data
   },
 
+  getTrendingTagsScored: async (limit = 5): Promise<import('@/types').TrendingTag[]> => {
+    const response = await api.get<import('@/types').TrendingTag[]>('/tags/trending-scored', {
+      params: { limit },
+    })
+    return response.data
+  },
+
   getAllTags: async (): Promise<import('@/types').Tag[]> => {
     const response = await api.get<import('@/types').Tag[]>('/tags')
     return response.data

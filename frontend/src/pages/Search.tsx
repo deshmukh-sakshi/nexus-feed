@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search as SearchIcon, Hash, TrendingUp, Loader2 } from 'lucide-react'
@@ -6,13 +6,19 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { PostList } from '@/components/posts/PostList'
 import { tagsApi } from '@/lib/api-client'
-import { cn } from '@/lib/utils'
+import { cn, formatNumber } from '@/lib/utils'
 
 export const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialTag = searchParams.get('tag') || ''
-  const [selectedTag, setSelectedTag] = useState(initialTag)
-  const [searchInput, setSearchInput] = useState(initialTag)
+  const tagFromUrl = searchParams.get('tag') || ''
+  const [selectedTag, setSelectedTag] = useState(tagFromUrl)
+  const [searchInput, setSearchInput] = useState(tagFromUrl)
+
+  // Sync state with URL params when they change (e.g., clicking tag on a post)
+  useEffect(() => {
+    setSelectedTag(tagFromUrl)
+    setSearchInput(tagFromUrl)
+  }, [tagFromUrl])
 
   const { data: trendingTags = [], isLoading: tagsLoading } = useQuery({
     queryKey: ['trendingTags'],
@@ -103,7 +109,7 @@ export const Search = () => {
                 key={tag.id}
                 onClick={() => handleTagClick(tag.name)}
                 className={cn(
-                  'px-3 py-1.5 text-sm font-medium border-2 border-black transition-all',
+                  'px-3 py-1.5 text-sm font-medium border-2 border-black transition-all cursor-pointer',
                   'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
                   'active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
                   selectedTag === tag.name
@@ -112,7 +118,7 @@ export const Search = () => {
                 )}
               >
                 #{tag.name}
-                <span className="ml-1 text-xs opacity-70">({tag.postCount})</span>
+                <span className="ml-1 text-xs opacity-70">({formatNumber(tag.postCount)})</span>
               </button>
             ))}
           </div>

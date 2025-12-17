@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import { generateTagColor, getTagTextColor } from '@/lib/tag-colors'
 import { formatDistanceToNow } from 'date-fns'
 import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
@@ -143,7 +144,11 @@ export const PostCard = ({ post }: PostCardProps) => {
               <Link
                 key={tag}
                 to={`/search?tag=${encodeURIComponent(tag)}`}
-                className="px-2 py-0.5 text-xs font-medium bg-teal-200 border border-black hover:bg-teal-300 transition-colors"
+                className="px-2 py-0.5 text-xs font-bold border border-black hover:opacity-80 transition-opacity cursor-pointer"
+                style={{ 
+                  backgroundColor: generateTagColor(tag),
+                  color: getTagTextColor(tag)
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 #{tag}
