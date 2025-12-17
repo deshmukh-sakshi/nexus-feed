@@ -10,8 +10,8 @@ export const SiteBranding = () => {
           />
         </div>
         <h1 className="text-xl font-black mb-2">Nexus Feed</h1>
-        <p className="text-sm font-medium text-black/70 dark:text-white/70">
-          A community for sharing ideas, links, and discussions. Join the conversation.
+        <p className="text-sm font-medium text-black/80 dark:text-white/80">
+          A Community-Driven News Hub. Discover and discuss the most relevant news and information, as curated by the users themselves.
         </p>
       </div>
     </div>
