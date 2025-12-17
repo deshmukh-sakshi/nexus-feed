@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -83,5 +84,11 @@ public class UserController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<List<UserResponse>> getTopUsers(
+            @RequestParam(defaultValue = "5") int limit) {
+        return ResponseEntity.ok(userService.getTopUsersByKarma(limit));
     }
 }

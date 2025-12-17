@@ -6,10 +6,13 @@ import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,6 +68,15 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(id);
         log.info("User deleted: id={}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> getTopUsersByKarma(int limit) {
+        return userRepository.findTopByKarma(PageRequest.of(0, limit))
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     private UserResponse convertToResponse(Users user) {

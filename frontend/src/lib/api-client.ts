@@ -148,6 +148,13 @@ export const usersApi = {
     const response = await api.put<UserProfile>(`/users/id/${userId}`, data)
     return response.data
   },
+
+  getTopUsers: async (limit = 5): Promise<UserProfile[]> => {
+    const response = await api.get<UserProfile[]>('/users/top', {
+      params: { limit },
+    })
+    return response.data
+  },
 }
 
 // Badges API
