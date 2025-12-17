@@ -31,6 +31,7 @@ import { ImageUpload } from '@/components/ui/image-upload'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
+import { generateTagColor, getTagTextColor } from '@/lib/tag-colors'
 import { useAuthStore } from '@/stores/authStore'
 import { usePostWithComments } from '@/hooks/usePosts'
 import { useComments } from '@/hooks/useComments'
@@ -482,6 +483,26 @@ export const PostDetail = () => {
           <CardContent>
             <div className="prose dark:prose-invert max-w-none">
               <ReactMarkdown>{post.body}</ReactMarkdown>
+            </div>
+          </CardContent>
+        )}
+
+        {!isEditing && post.tags && post.tags.length > 0 && (
+          <CardContent className="pt-0">
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/search?tag=${encodeURIComponent(tag)}`}
+                  className="px-3 py-1 text-sm font-bold border border-black hover:opacity-80 transition-opacity cursor-pointer"
+                  style={{
+                    backgroundColor: generateTagColor(tag),
+                    color: getTagTextColor(tag),
+                  }}
+                >
+                  #{tag}
+                </Link>
+              ))}
             </div>
           </CardContent>
         )}

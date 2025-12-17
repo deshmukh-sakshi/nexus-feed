@@ -55,7 +55,9 @@ export const TrendingTags = ({ limit = 5 }: TrendingTagsProps) => {
               onClick={() => handleTagClick(tag.name)}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold border-2 border-black bg-white dark:bg-gray-800 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-100 dark:hover:bg-gray-700 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
             >
-              <span className="text-xs font-black text-black/40 w-4">{index + 1}</span>
+              <span className="text-xs font-black text-black/50 w-4 flex-shrink-0">
+                {index + 1}
+              </span>
               <span
                 className="px-2 py-0.5 text-xs font-bold border border-black truncate max-w-[120px]"
                 style={{
