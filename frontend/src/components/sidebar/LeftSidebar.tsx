@@ -1,13 +1,14 @@
 import { SiteBranding } from './SiteBranding'
 import { UserAchievements } from './UserAchievements'
 import { SidebarFooter } from './SidebarFooter'
+import { StickySidebarWrapper } from './StickySidebarWrapper'
 
 export const LeftSidebar = () => {
   return (
-    <aside className="sticky top-20 space-y-4 h-fit">
+    <StickySidebarWrapper className="space-y-4">
       <SiteBranding />
       <UserAchievements />
       <SidebarFooter />
-    </aside>
+    </StickySidebarWrapper>
   )
 }
