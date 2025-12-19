@@ -114,9 +114,6 @@ export const useAuth = (redirectTo?: string) => {
       toast.success('Account created successfully!')
       navigate(from, { replace: true })
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
-    },
   })
 
   const login = (data: LoginRequest) => loginMutation.mutate(data)
@@ -127,7 +124,11 @@ export const useAuth = (redirectTo?: string) => {
       completeGoogleMutation.mutate({ tempToken: pendingGoogleUser.tempToken, username })
     }
   }
-  const cancelGoogleRegistration = () => setPendingGoogleUser(null)
+  const clearGoogleError = () => completeGoogleMutation.reset()
+  const cancelGoogleRegistration = () => {
+    setPendingGoogleUser(null)
+    completeGoogleMutation.reset()
+  }
   const logout = () => {
     logoutStore()
     toast.success('Logged out successfully')
@@ -140,9 +141,11 @@ export const useAuth = (redirectTo?: string) => {
     googleLogin,
     completeGoogleRegistration,
     cancelGoogleRegistration,
+    clearGoogleError,
     logout,
     isLoading: loginMutation.isPending || registerMutation.isPending,
     isGoogleLoading: googleLoginMutation.isPending || completeGoogleMutation.isPending,
     pendingGoogleUser,
+    googleRegistrationError: completeGoogleMutation.error ? getErrorMessage(completeGoogleMutation.error) : null,
   }
 }

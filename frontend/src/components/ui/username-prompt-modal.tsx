@@ -17,6 +17,7 @@ interface UsernamePromptModalProps {
   onOpenChange: (open: boolean) => void
   googleData: GoogleAuthResponse | null
   onSubmit: (username: string) => void
+  onUsernameChange?: () => void
   isLoading?: boolean
   error?: string | null
 }
@@ -26,10 +27,16 @@ export function UsernamePromptModal({
   onOpenChange,
   googleData,
   onSubmit,
+  onUsernameChange,
   isLoading,
   error,
 }: UsernamePromptModalProps) {
   const [username, setUsername] = useState('')
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value)
+    onUsernameChange?.()
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,6 +64,7 @@ export function UsernamePromptModal({
               <img
                 src={googleData.pictureUrl}
                 alt=""
+                referrerPolicy="no-referrer"
                 className="w-10 h-10 rounded-full border-2 border-border"
               />
             )}
@@ -73,7 +81,7 @@ export function UsernamePromptModal({
             <Input
               id="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => handleUsernameChange(e.target.value)}
               placeholder="Enter username"
               maxLength={50}
               disabled={isLoading}
