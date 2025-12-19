@@ -4,6 +4,7 @@ export interface User {
   username: string
   email: string
   profilePictureUrl?: string
+  role?: 'USER' | 'ADMIN'
 }
 
 // Auth types
@@ -12,6 +13,58 @@ export interface AuthResponse {
   username: string
   email: string
   token: string
+  role: 'USER' | 'ADMIN'
+}
+
+// Admin types
+export interface AdminStats {
+  totalUsers: number
+  totalPosts: number
+  totalComments: number
+  totalVotes: number
+  newUsersToday: number
+  newPostsToday: number
+}
+
+export interface AdminUser {
+  id: string
+  username: string
+  email: string
+  role: 'USER' | 'ADMIN'
+  karma: number
+  profilePictureUrl?: string
+  createdAt: string
+  postCount: number
+  commentCount: number
+}
+
+export interface AdminPost {
+  id: string
+  title: string
+  url?: string
+  body?: string
+  userId: string
+  username: string
+  imageUrls: string[]
+  tags: string[]
+  upvotes: number
+  downvotes: number
+  commentCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminComment {
+  id: string
+  body: string
+  userId: string
+  username: string
+  postId: string
+  postTitle: string
+  upvotes: number
+  downvotes: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface LoginRequest {

@@ -10,6 +10,7 @@ import { PostDetail } from '@/pages/PostDetail'
 import { UserProfile } from '@/pages/UserProfile'
 import { CreatePost } from '@/pages/CreatePost'
 import { Search } from '@/pages/Search'
+import { AdminLayout, AdminDashboard, AdminUsers, AdminPosts, AdminComments } from '@/pages/admin'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
 import { Guidelines } from '@/pages/Guidelines'
@@ -31,6 +32,15 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      {/* Admin routes - standalone layout without sidebars */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="posts" element={<AdminPosts />} />
+        <Route path="comments" element={<AdminComments />} />
+      </Route>
+      
+      {/* Main app routes */}
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

@@ -90,7 +90,8 @@ public class AuthService {
                 userDetails.getUserId(),
                 userDetails.getDisplayUsername(),
                 userDetails.getEmail(),
-                token
+                token,
+                userDetails.getRole().name()
         );
     }
 }

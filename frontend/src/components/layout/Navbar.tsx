@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { LogOut, User, PlusCircle, Search } from 'lucide-react'
+import { LogOut, User, PlusCircle, Search, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import {
@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useAuth } from '@/hooks/useAuth'
 
 export const Navbar = () => {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, isAdmin } = useAuthStore()
   const { logout } = useAuth()
 
   return (
@@ -74,6 +74,14 @@ export const Navbar = () => {
                       Profile
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
