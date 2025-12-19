@@ -66,7 +66,30 @@ public class AdminServiceImpl implements AdminService {
     public void deleteUser(UUID userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        // Delete all votes by this user
+        voteRepository.deleteByIdUserId(userId);
+        
+        // Delete votes on user's posts and comments
+        for (Post post : user.getPosts()) {
+            voteRepository.deleteByIdVotableId(post.getId());
+        }
+        for (Comment comment : user.getComments()) {
+            voteRepository.deleteByIdVotableId(comment.getId());
+        }
+        
+        // Delete the AppUser (auth record) - must be done before deleting Users due to FK constraint
+        AppUser appUser = user.getAppUser();
+        user.setAppUser(null);
+        userRepository.save(user);
+        
+        // Now delete the user (cascades to posts, comments, badges)
         userRepository.delete(user);
+        
+        // Finally delete the app_user record
+        if (appUser != null) {
+            appUserRepository.delete(appUser);
+        }
     }
 
     @Override
@@ -80,6 +103,15 @@ public class AdminServiceImpl implements AdminService {
     public void deletePost(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        
+        // Delete votes on this post
+        voteRepository.deleteByIdVotableId(postId);
+        
+        // Delete votes on all comments of this post
+        for (Comment comment : post.getComments()) {
+            voteRepository.deleteByIdVotableId(comment.getId());
+        }
+        
         postRepository.delete(post);
     }
 
@@ -94,7 +126,20 @@ public class AdminServiceImpl implements AdminService {
     public void deleteComment(UUID commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        
+        // Delete votes on this comment and all its replies recursively
+        deleteCommentVotesRecursively(comment);
+        
         commentRepository.delete(comment);
+    }
+    
+    private void deleteCommentVotesRecursively(Comment comment) {
+        // Delete votes on replies first
+        for (Comment reply : comment.getReplies()) {
+            deleteCommentVotesRecursively(reply);
+        }
+        // Delete votes on this comment
+        voteRepository.deleteByIdVotableId(comment.getId());
     }
 
     private AdminUserResponse toAdminUserResponse(Users user) {
