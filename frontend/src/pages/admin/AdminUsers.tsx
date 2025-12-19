@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
 import { Trash2, ArrowUpDown, Search } from 'lucide-react'
 import type { AdminUser } from '@/types'
@@ -8,14 +8,20 @@ type SortField = 'username' | 'email' | 'role' | 'karma' | 'postCount' | 'commen
 type SortOrder = 'asc' | 'desc'
 
 export const AdminUsers = () => {
+  const [searchParams] = useSearchParams()
   const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminUsers(page, 100)
   const deleteUser = useDeleteUser()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+
+  useEffect(() => {
+    const search = searchParams.get('search')
+    if (search) setSearchTerm(search)
+  }, [searchParams])
 
   const handleDelete = (userId: string) => {
     deleteUser.mutate(userId)

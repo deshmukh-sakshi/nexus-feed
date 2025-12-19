@@ -150,7 +150,7 @@ export const AdminPosts = () => {
                 <tr key={post.id} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                   <td className="px-4 py-3 font-bold max-w-xs truncate">{post.title}</td>
                   <td className="px-4 py-3">
-                    <Link to={`/user/${post.username}`} className="text-blue-600 hover:underline font-semibold">
+                    <Link to={`/admin/users?search=${post.username}`} className="text-blue-600 hover:underline font-semibold">
                       {post.username}
                     </Link>
                   </td>
