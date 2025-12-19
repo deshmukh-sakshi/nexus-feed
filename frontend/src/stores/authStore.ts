@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
+  isAdmin: boolean
   setAuth: (user: User, token: string) => void
   updateProfilePicture: (profilePictureUrl: string | undefined) => void
   logout: () => void
@@ -17,9 +18,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      isAdmin: false,
       setAuth: (user, token) => {
         localStorage.setItem('token', token)
-        set({ user, token, isAuthenticated: true })
+        set({ user, token, isAuthenticated: true, isAdmin: user.role === 'ADMIN' })
       },
       updateProfilePicture: (profilePictureUrl) => {
         set((state) => ({
@@ -28,7 +30,7 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => {
         localStorage.removeItem('token')
-        set({ user: null, token: null, isAuthenticated: false })
+        set({ user: null, token: null, isAuthenticated: false, isAdmin: false })
       },
     }),
     {

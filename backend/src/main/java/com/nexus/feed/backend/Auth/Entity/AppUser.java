@@ -31,6 +31,9 @@ public class AppUser {
 
     @Column(name = "provider_id")
     private String providerId;
+    
+    @Column(nullable = true)
+    private Role role = Role.USER;
 
     @OneToOne(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private Users userProfile;

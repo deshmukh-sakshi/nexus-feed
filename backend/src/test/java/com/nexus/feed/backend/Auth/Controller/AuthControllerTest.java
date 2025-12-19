@@ -76,7 +76,8 @@ class AuthControllerTest {
                 UUID.randomUUID(),
                 "tester",
                 "test@example.com",
-                "mock-jwt-token"
+                "mock-jwt-token",
+                "USER"
         );
     }
 

@@ -1,6 +1,7 @@
 package com.nexus.feed.backend.Auth.DTO;
 
 import com.nexus.feed.backend.Auth.Entity.AppUser;
+import com.nexus.feed.backend.Auth.Entity.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +18,7 @@ public class AppUserDetails implements UserDetails {
     private final String displayUsername;
     private final String email;
     private final String password;
+    private final Role role;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public AppUserDetails(AppUser appUser) {
@@ -24,7 +26,10 @@ public class AppUserDetails implements UserDetails {
         this.password = appUser.getPassword();
         this.userId = appUser.getUserProfile() != null ? appUser.getUserProfile().getId() : null;
         this.displayUsername = appUser.getUserProfile() != null ? appUser.getUserProfile().getUsername() : null;
-        this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        // Default to USER role if null (for existing users before role was added)
+        Role userRole = appUser.getRole() != null ? appUser.getRole() : Role.USER;
+        this.role = userRole;
+        this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
     }
 
     @Override

@@ -231,3 +231,50 @@ export const tagsApi = {
     return response.data
   },
 }
+
+
+// Admin API
+export const adminApi = {
+  getStats: async (): Promise<import('@/types').AdminStats> => {
+    const response = await api.get<import('@/types').AdminStats>('/admin/stats')
+    return response.data
+  },
+
+  getUsers: async (page = 0, size = 10): Promise<PageResponse<import('@/types').AdminUser>> => {
+    const response = await api.get<PageResponse<import('@/types').AdminUser>>('/admin/users', {
+      params: { page, size },
+    })
+    return response.data
+  },
+
+  updateUserRole: async (userId: string, role: string): Promise<import('@/types').AdminUser> => {
+    const response = await api.put<import('@/types').AdminUser>(`/admin/users/${userId}/role`, { role })
+    return response.data
+  },
+
+  deleteUser: async (userId: string): Promise<void> => {
+    await api.delete(`/admin/users/${userId}`)
+  },
+
+  getPosts: async (page = 0, size = 10): Promise<PageResponse<import('@/types').AdminPost>> => {
+    const response = await api.get<PageResponse<import('@/types').AdminPost>>('/admin/posts', {
+      params: { page, size },
+    })
+    return response.data
+  },
+
+  deletePost: async (postId: string): Promise<void> => {
+    await api.delete(`/admin/posts/${postId}`)
+  },
+
+  getComments: async (page = 0, size = 10): Promise<PageResponse<import('@/types').AdminComment>> => {
+    const response = await api.get<PageResponse<import('@/types').AdminComment>>('/admin/comments', {
+      params: { page, size },
+    })
+    return response.data
+  },
+
+  deleteComment: async (commentId: string): Promise<void> => {
+    await api.delete(`/admin/comments/${commentId}`)
+  },
+}
