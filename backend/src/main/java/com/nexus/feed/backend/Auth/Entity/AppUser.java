@@ -31,7 +31,8 @@ public class AppUser {
 
     @Column(name = "provider_id")
     private String providerId;
-    
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = true)
     private Role role = Role.USER;
 
