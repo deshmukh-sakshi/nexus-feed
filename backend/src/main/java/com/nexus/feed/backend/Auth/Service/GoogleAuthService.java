@@ -32,10 +32,6 @@ public class GoogleAuthService {
 
     @Transactional
     public Object initiateGoogleLogin(String idToken) {
-        if (googleIdTokenVerifier == null) {
-            throw new GoogleAuthException("Google authentication is not configured");
-        }
-
         GoogleUserInfo userInfo = verifyGoogleToken(idToken);
 
         Optional<AppUser> existingUser = appUserRepository.findByEmail(userInfo.email());
@@ -121,6 +117,9 @@ public class GoogleAuthService {
 
     public GoogleUserInfo verifyGoogleToken(String idToken) {
         try {
+            if (googleIdTokenVerifier == null) {
+                throw new GoogleAuthException("Google authentication is not configured");
+            }
             GoogleIdToken googleIdToken = googleIdTokenVerifier.verify(idToken);
             if (googleIdToken == null) {
                 throw new GoogleAuthException("Invalid Google token");

@@ -6,6 +6,7 @@ import com.nexus.feed.backend.Auth.Entity.AppUser;
 import com.nexus.feed.backend.Auth.Repository.AppUserRepository;
 import com.nexus.feed.backend.Email.Service.EmailService;
 import com.nexus.feed.backend.Entity.Users;
+import com.nexus.feed.backend.Repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class AuthServiceTest {
     private AppUserRepository appUserRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -51,6 +55,7 @@ class AuthServiceTest {
         authService = new AuthService(
             authenticationManager,
             appUserRepository,
+            userRepository,
             passwordEncoder,
             jwtService,
             emailService

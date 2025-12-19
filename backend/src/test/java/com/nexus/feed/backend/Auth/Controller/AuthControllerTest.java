@@ -5,6 +5,7 @@ import com.nexus.feed.backend.Auth.DTO.AuthResponse;
 import com.nexus.feed.backend.Auth.DTO.LoginRequest;
 import com.nexus.feed.backend.Auth.DTO.RegistrationRequest;
 import com.nexus.feed.backend.Auth.Service.AuthService;
+import com.nexus.feed.backend.Auth.Service.GoogleAuthService;
 import com.nexus.feed.backend.Exception.UserAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,8 +26,12 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.context.annotation.Import;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+
 @WebMvcTest(controllers = AuthController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("AuthController Tests")
 class AuthControllerTest {
@@ -39,6 +44,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private GoogleAuthService googleAuthService;
 
     @MockitoBean
     private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
