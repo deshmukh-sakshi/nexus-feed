@@ -75,7 +75,7 @@ export const AdminComments = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <div className="px-6 py-3 bg-yellow-300 border-4 border-black font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="px-6 py-3 bg-yellow-300 border-2 border-black font-bold text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           Loading...
         </div>
       </div>
@@ -85,7 +85,7 @@ export const AdminComments = () => {
 
   return (
     <div className="space-y-6 mx-4 md:mx-8 lg:mx-12">
-      <h1 className="text-3xl font-black text-black">Manage Comments</h1>
+      <h1 className="text-3xl font-bold text-black">Manage Comments</h1>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center">
@@ -123,26 +123,26 @@ export const AdminComments = () => {
         </div>
       </div>
 
-      <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         <table className="w-full">
-          <thead className="bg-green-400 border-b-4 border-black">
+          <thead className="bg-green-400 border-b-2 border-black">
             <tr>
-              <th className="px-4 py-3 text-left font-black">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="body">Comment</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-black">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="username">Author</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-black">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="postTitle">Post</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-black">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="votes">Votes</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-black">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="createdAt">Created</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-black">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>

@@ -33,7 +33,7 @@ export const AdminLayout = () => {
               <Home className="h-5 w-5" />
               Back to Site
             </Link>
-            <h1 className="text-2xl font-black text-black">Admin Panel</h1>
+            <h1 className="text-2xl font-bold text-black">Admin Panel</h1>
           </div>
           <div className="flex items-center gap-4">
             <span className="px-3 py-1 bg-green-300 border-2 border-black font-bold text-sm">

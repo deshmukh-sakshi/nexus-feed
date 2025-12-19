@@ -86,7 +86,7 @@ export const AdminUsers = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center p-8 mx-4 md:mx-8 lg:mx-12">
-        <div className="px-6 py-3 bg-yellow-300 border-4 border-black font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="px-6 py-3 bg-yellow-300 border-2 border-black font-bold text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           Loading...
         </div>
       </div>
@@ -96,7 +96,7 @@ export const AdminUsers = () => {
   if (error) {
     return (
       <div className="space-y-6 mx-4 md:mx-8 lg:mx-12">
-        <h1 className="text-2xl font-black text-black">Manage Users</h1>
+        <h1 className="text-3xl font-bold text-black">Manage Users</h1>
         <div className="px-6 py-4 bg-red-300 border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           Error loading users. Make sure you have admin privileges.
         </div>
@@ -107,7 +107,7 @@ export const AdminUsers = () => {
 
   return (
     <div className="space-y-6 mx-4 md:mx-8 lg:mx-12">
-      <h1 className="text-2xl font-black text-black">Manage Users</h1>
+      <h1 className="text-3xl font-bold text-black">Manage Users</h1>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center">
@@ -159,29 +159,29 @@ export const AdminUsers = () => {
         </div>
       </div>
 
-      <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         <table className="w-full">
-          <thead className="bg-purple-400 border-b-4 border-black">
+          <thead className="bg-purple-400 border-b-2 border-black">
             <tr>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="username">Username</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="email">Email</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="role">Role</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="karma">Karma</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="postCount">Posts</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">
+              <th className="px-4 py-3 text-left font-semibold text-sm">
                 <SortButton field="commentCount">Comments</SortButton>
               </th>
-              <th className="px-4 py-3 text-left font-bold text-sm">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>

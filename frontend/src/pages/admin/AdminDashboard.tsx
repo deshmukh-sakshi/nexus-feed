@@ -8,7 +8,7 @@ export const AdminDashboard = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <div className="px-6 py-3 bg-yellow-300 border-4 border-black font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="px-6 py-3 bg-yellow-300 border-2 border-black font-bold text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           Loading...
         </div>
       </div>
@@ -24,13 +24,13 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-8 mx-4 md:mx-8 lg:mx-12">
-      <h1 className="text-3xl font-black text-black">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-black">Dashboard</h1>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <div
             key={stat.title}
-            className={`${stat.color} border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`}
+            className={`${stat.color} border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-bold uppercase tracking-wide">{stat.title}</span>
@@ -51,7 +51,7 @@ export const AdminDashboard = () => {
         ))}
       </div>
 
-      <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <h2 className="text-xl font-black mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <Link
