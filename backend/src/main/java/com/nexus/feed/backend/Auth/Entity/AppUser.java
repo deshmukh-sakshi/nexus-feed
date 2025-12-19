@@ -11,7 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @ToString(exclude = {"userProfile"})
 @EqualsAndHashCode(exclude = {"userProfile"})
-@Table(name = "app_users")
+@Table(name = "app_users", indexes = {
+    @Index(name = "idx_app_users_email_provider", columnList = "email, auth_provider")
+})
 public class AppUser {
 
     @Id
@@ -21,8 +23,14 @@ public class AppUser {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(name = "provider_id")
+    private String providerId;
 
     @OneToOne(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private Users userProfile;

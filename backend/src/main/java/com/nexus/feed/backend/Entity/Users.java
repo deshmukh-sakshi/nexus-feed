@@ -27,7 +27,6 @@ public class Users {
     @GeneratedValue
     private UUID id;
 
-    @NotBlank
     @Size(max = 50)
     private String username;
 
