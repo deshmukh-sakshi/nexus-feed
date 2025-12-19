@@ -44,7 +44,14 @@ export const AdminComments = () => {
             {data?.content.map((comment, idx) => (
               <tr key={comment.id} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                 <td className="px-4 py-3 max-w-xs truncate">{comment.body}</td>
-                <td className="px-4 py-3 font-bold">{comment.username}</td>
+                <td className="px-4 py-3 font-bold">
+                  <Link
+                    to={`/user/${comment.username}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {comment.username}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 max-w-xs truncate text-sm">{comment.postTitle}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 border-2 border-black font-bold text-sm ${

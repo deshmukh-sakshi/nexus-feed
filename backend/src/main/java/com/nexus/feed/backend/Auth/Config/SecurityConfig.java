@@ -52,6 +52,9 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/api/badges/**").permitAll()
                         .requestMatchers(GET, "/api/tags/**").permitAll()
                         
+                        // Admin endpoints - require ADMIN role
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

@@ -1,18 +1,12 @@
 import { useState } from 'react'
-import { useAdminUsers, useUpdateUserRole, useDeleteUser } from '@/hooks/useAdmin'
+import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
 import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
-import type { AdminUser } from '@/types'
 
 export const AdminUsers = () => {
   const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminUsers(page)
-  const updateRole = useUpdateUserRole()
   const deleteUser = useDeleteUser()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-
-  const handleRoleChange = (user: AdminUser, newRole: string) => {
-    updateRole.mutate({ userId: user.id, role: newRole })
-  }
 
   const handleDelete = (userId: string) => {
     deleteUser.mutate(userId)
@@ -64,14 +58,9 @@ export const AdminUsers = () => {
                   <td className="px-4 py-3 font-semibold text-sm">{user.username}</td>
                   <td className="px-4 py-3 text-sm">{user.email}</td>
                   <td className="px-4 py-3">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user, e.target.value)}
-                      className="px-2 py-1 border-2 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                    >
-                      <option value="USER">User</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
+                    <span className={`px-2 py-1 border-2 border-black font-semibold text-xs ${user.role === 'ADMIN' ? 'bg-purple-300' : 'bg-gray-200'}`}>
+                      {user.role}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-1 bg-green-300 border-2 border-black font-semibold text-xs">

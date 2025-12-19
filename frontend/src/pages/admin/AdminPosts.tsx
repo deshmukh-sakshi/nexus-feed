@@ -44,7 +44,14 @@ export const AdminPosts = () => {
             {data?.content.map((post, idx) => (
               <tr key={post.id} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                 <td className="px-4 py-3 font-bold max-w-xs truncate">{post.title}</td>
-                <td className="px-4 py-3">{post.username}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/user/${post.username}`}
+                    className="text-blue-600 hover:underline font-semibold"
+                  >
+                    {post.username}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 border-2 border-black font-bold text-sm ${
                     post.upvotes - post.downvotes >= 0 ? 'bg-green-300' : 'bg-red-300'

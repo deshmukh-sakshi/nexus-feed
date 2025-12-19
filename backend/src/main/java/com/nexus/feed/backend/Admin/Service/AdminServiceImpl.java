@@ -98,16 +98,23 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private AdminUserResponse toAdminUserResponse(Users user) {
+        String email = user.getAppUser() != null ? user.getAppUser().getEmail() : null;
+        String role = (user.getAppUser() != null && user.getAppUser().getRole() != null) 
+                ? user.getAppUser().getRole().name() : "USER";
+        
+        long postCount = postRepository.countByUser(user);
+        long commentCount = commentRepository.countByUser(user);
+        
         return new AdminUserResponse(
                 user.getId(),
                 user.getUsername(),
-                user.getAppUser().getEmail(),
-                user.getAppUser().getRole().name(),
+                email,
+                role,
                 user.getKarma(),
                 user.getProfilePictureUrl(),
                 user.getCreatedAt(),
-                user.getPosts().size(),
-                user.getComments().size()
+                (int) postCount,
+                (int) commentCount
         );
     }
 
