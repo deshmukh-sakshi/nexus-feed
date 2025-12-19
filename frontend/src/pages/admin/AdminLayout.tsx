@@ -21,7 +21,7 @@ export const AdminLayout = () => {
   // if (!isAdmin) return <Navigate to="/" replace />
 
   return (
-    <div className="min-h-screen bg-yellow-50">
+    <div className="min-h-screen">
       {/* Admin Header */}
       <header className="sticky top-0 z-50 border-b-4 border-black bg-purple-400">
         <div className="container mx-auto px-6 max-w-7xl flex h-16 items-center justify-between">
