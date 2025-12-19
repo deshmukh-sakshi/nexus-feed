@@ -25,6 +25,14 @@ export interface RegistrationRequest {
   password: string
 }
 
+export interface GoogleAuthResponse {
+  needsUsername: boolean
+  tempToken: string
+  email: string
+  suggestedName: string
+  pictureUrl?: string
+}
+
 // Post types
 export interface Post {
   id: string

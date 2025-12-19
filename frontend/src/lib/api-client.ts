@@ -3,6 +3,7 @@ import type {
   AuthResponse,
   LoginRequest,
   RegistrationRequest,
+  GoogleAuthResponse,
   Post,
   PostCreateRequest,
   PostUpdateRequest,
@@ -24,6 +25,16 @@ export const authApi = {
 
   register: async (data: RegistrationRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/auth/register', data)
+    return response.data
+  },
+
+  googleLogin: async (idToken: string): Promise<AuthResponse | GoogleAuthResponse> => {
+    const response = await api.post<AuthResponse | GoogleAuthResponse>('/auth/google', { idToken })
+    return response.data
+  },
+
+  completeGoogleRegistration: async (tempToken: string, username: string): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/google/complete', { tempToken, username })
     return response.data
   },
 }
