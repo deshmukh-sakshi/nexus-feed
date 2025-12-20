@@ -27,8 +27,10 @@ public class Post {
 
     @NotBlank
     @Size(max = 300)
+    @Column(length = 300)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String body;
 
     @ManyToOne(optional = false)

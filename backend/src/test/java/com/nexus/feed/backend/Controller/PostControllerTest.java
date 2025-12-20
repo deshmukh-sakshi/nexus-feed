@@ -71,7 +71,6 @@ class PostControllerTest {
         postCreateRequest = new PostCreateRequest();
         postCreateRequest.setTitle("Test Post Title");
         postCreateRequest.setBody("Test post body content");
-        postCreateRequest.setUrl("https://example.com");
         postCreateRequest.setImageUrls(List.of("https://example.com/image1.jpg"));
 
         // Setup update request

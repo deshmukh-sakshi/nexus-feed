@@ -95,7 +95,6 @@ class PostServiceImplTest {
         PostCreateRequest request = new PostCreateRequest();
         request.setTitle("New Post");
         request.setBody("New Body");
-        request.setUrl("https://example.com");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(postRepository.save(any(Post.class))).thenReturn(post);

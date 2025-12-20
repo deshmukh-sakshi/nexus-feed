@@ -41,7 +41,6 @@ export interface AdminUser {
 export interface AdminPost {
   id: string
   title: string
-  url?: string
   body?: string
   userId: string
   username: string
@@ -106,7 +105,6 @@ export interface Post {
 
 export interface PostCreateRequest {
   title: string
-  url?: string
   body?: string
   imageUrls?: string[]
   tags?: string[]
@@ -155,7 +153,6 @@ export interface CommentUpdateRequest {
 
 export interface PostUpdateRequest {
   title?: string
-  url?: string
   body?: string
   imageUrls?: string[]
   tags?: string[]

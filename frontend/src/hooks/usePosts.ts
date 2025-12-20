@@ -34,7 +34,6 @@ export const usePosts = (pageSize = 4) => {
         id: tempId,
         title: data.title,
         body: data.body,
-        url: data.url,
         userId: 'temp',
         username: 'loading',
         createdAt: new Date().toISOString(),
