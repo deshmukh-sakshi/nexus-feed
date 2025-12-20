@@ -55,6 +55,8 @@ export const PostDetail = () => {
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
   const [editImageUrls, setEditImageUrls] = useState<string[]>([])
+  const [editTags, setEditTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -152,6 +154,7 @@ export const PostDetail = () => {
             title: data.title || postDetail.post.title,
             body: data.body !== undefined ? data.body : postDetail.post.body,
             imageUrls: data.imageUrls !== undefined ? data.imageUrls : postDetail.post.imageUrls,
+            tags: data.tags !== undefined ? data.tags : postDetail.post.tags,
             updatedAt: now,
           },
         }
@@ -172,6 +175,7 @@ export const PostDetail = () => {
                 title: data.title || p.title,
                 body: data.body !== undefined ? data.body : p.body,
                 imageUrls: data.imageUrls !== undefined ? data.imageUrls : p.imageUrls,
+                tags: data.tags !== undefined ? data.tags : p.tags,
                 updatedAt: now,
               }
             }),
@@ -315,6 +319,8 @@ export const PostDetail = () => {
     setEditTitle(post.title)
     setEditBody(post.body || '')
     setEditImageUrls(post.imageUrls || [])
+    setEditTags(post.tags || [])
+    setTagInput('')
     setIsEditing(true)
   }
 
@@ -324,6 +330,7 @@ export const PostDetail = () => {
         title: editTitle.trim(),
         body: editBody.trim() || undefined,
         imageUrls: editImageUrls,
+        tags: editTags,
       })
       setIsEditing(false)
     }
@@ -334,6 +341,8 @@ export const PostDetail = () => {
     setEditTitle('')
     setEditBody('')
     setEditImageUrls([])
+    setEditTags([])
+    setTagInput('')
   }
 
   const handleDelete = () => {
@@ -455,6 +464,67 @@ export const PostDetail = () => {
         {isEditing && (
           <CardContent>
             <div className="space-y-3">
+              {/* Tag editing */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tags (max 5)</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {editTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 text-sm font-bold border border-black flex items-center gap-1"
+                      style={{
+                        backgroundColor: generateTagColor(tag),
+                        color: getTagTextColor(tag),
+                      }}
+                    >
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => setEditTags(editTags.filter(t => t !== tag))}
+                        className="ml-1 hover:opacity-70"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {editTags.length < 5 && (
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && tagInput.trim()) {
+                          e.preventDefault()
+                          const newTag = tagInput.trim()
+                          if (newTag && !editTags.includes(newTag) && editTags.length < 5) {
+                            setEditTags([...editTags, newTag])
+                            setTagInput('')
+                          }
+                        }
+                      }}
+                      placeholder="Add a tag..."
+                      className="flex-1"
+                      maxLength={50}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const newTag = tagInput.trim()
+                        if (newTag && !editTags.includes(newTag) && editTags.length < 5) {
+                          setEditTags([...editTags, newTag])
+                          setTagInput('')
+                        }
+                      }}
+                      disabled={!tagInput.trim() || editTags.includes(tagInput.trim())}
+                      className="bg-blue-400 text-black hover:bg-blue-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold disabled:opacity-50"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                )}
+              </div>
               <ImageUpload
                 value={editImageUrls}
                 onChange={setEditImageUrls}
