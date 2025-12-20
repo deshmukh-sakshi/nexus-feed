@@ -42,6 +42,10 @@ public interface VoteRepository extends JpaRepository<Vote, Vote.VoteId> {
     
     void deleteByIdVotableIdAndVotableType(UUID votableId, Vote.VotableType votableType);
     
+    void deleteByIdVotableId(UUID votableId);
+    
+    void deleteByIdUserId(UUID userId);
+    
     interface VoteCount {
         UUID getVotableId();
         Vote.VoteValue getVoteValue();

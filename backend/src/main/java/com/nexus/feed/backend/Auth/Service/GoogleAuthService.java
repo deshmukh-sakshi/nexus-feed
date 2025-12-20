@@ -55,7 +55,7 @@ public class GoogleAuthService {
             AppUserDetails appUserDetails = new AppUserDetails(appUser);
             String jwt = jwtService.generateToken(appUserDetails);
             log.info("Google user logged in: email={}", userInfo.email());
-            return new AuthResponse(profile.getId(), profile.getUsername(), userInfo.email(), jwt);
+            return new AuthResponse(profile.getId(), profile.getUsername(), userInfo.email(), jwt, appUser.getRole().name());
         }
 
         AppUser newAppUser = new AppUser();
@@ -112,7 +112,7 @@ public class GoogleAuthService {
         log.info("Google user completed registration: email={}, username={}",
                 tokenData.email(), trimmedUsername);
 
-        return new AuthResponse(profile.getId(), trimmedUsername, tokenData.email(), jwt);
+        return new AuthResponse(profile.getId(), trimmedUsername, tokenData.email(), jwt, appUser.getRole().name());
     }
 
     public GoogleUserInfo verifyGoogleToken(String idToken) {

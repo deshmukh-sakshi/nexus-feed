@@ -23,6 +23,7 @@ export const useAuth = (redirectTo?: string) => {
           userId: data.userId,
           username: data.username,
           email: data.email,
+          role: data.role,
         },
         data.token
       )
@@ -51,6 +52,7 @@ export const useAuth = (redirectTo?: string) => {
           userId: data.userId,
           username: data.username,
           email: data.email,
+          role: data.role,
         },
         data.token
       )
