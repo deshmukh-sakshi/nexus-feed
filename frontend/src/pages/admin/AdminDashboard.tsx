@@ -56,19 +56,19 @@ export const AdminDashboard = () => {
         <div className="flex flex-wrap gap-4">
           <Link
             to="/admin/users"
-            className="px-6 py-3 bg-pink-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="px-6 py-3 bg-pink-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-500 transition-colors"
           >
             Manage Users
           </Link>
           <Link
             to="/admin/posts"
-            className="px-6 py-3 bg-cyan-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="px-6 py-3 bg-cyan-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-cyan-500 transition-colors"
           >
             Manage Posts
           </Link>
           <Link
             to="/admin/comments"
-            className="px-6 py-3 bg-green-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="px-6 py-3 bg-green-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 transition-colors"
           >
             Manage Comments
           </Link>
