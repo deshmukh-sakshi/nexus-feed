@@ -70,23 +70,29 @@ public class AdminServiceImpl implements AdminService {
         // Delete all votes by this user
         voteRepository.deleteByIdUserId(userId);
         
-        // Delete votes on user's posts and comments
+        // Delete votes on user's posts and comments (including nested comment replies)
         for (Post post : user.getPosts()) {
             voteRepository.deleteByIdVotableId(post.getId());
+            for (Comment comment : post.getComments()) {
+                deleteCommentVotesRecursively(comment);
+            }
         }
         for (Comment comment : user.getComments()) {
-            voteRepository.deleteByIdVotableId(comment.getId());
+            deleteCommentVotesRecursively(comment);
         }
         
-        // Delete the AppUser (auth record) - must be done before deleting Users due to FK constraint
+        // Get the AppUser reference
         AppUser appUser = user.getAppUser();
-        user.setAppUser(null);
-        userRepository.save(user);
         
-        // Now delete the user (cascades to posts, comments, badges)
+        // Clear the bidirectional relationship from AppUser side
+        if (appUser != null) {
+            appUser.setUserProfile(null);
+        }
+        
+        // Delete the user (cascades to posts, comments, badges)
         userRepository.delete(user);
         
-        // Finally delete the app_user record
+        // Now delete the app_user record
         if (appUser != null) {
             appUserRepository.delete(appUser);
         }

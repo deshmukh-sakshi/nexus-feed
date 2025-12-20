@@ -10,7 +10,7 @@ type SortOrder = 'asc' | 'desc'
 export const AdminUsers = () => {
   const [searchParams] = useSearchParams()
   const [page, setPage] = useState(0)
-  const { data, isLoading, error } = useAdminUsers(page, 100)
+  const { data, isLoading, error } = useAdminUsers(page, 20)
   const deleteUser = useDeleteUser()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
@@ -42,7 +42,7 @@ export const AdminUsers = () => {
     
     let filtered = data.content.filter((user: AdminUser) => {
       const search = searchTerm.toLowerCase()
-      const matchesSearch = user.username.toLowerCase().includes(search) || user.email.toLowerCase().includes(search)
+      const matchesSearch = user.username?.toLowerCase().includes(search) || user.email?.toLowerCase().includes(search)
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
       return matchesSearch && matchesRole
     })

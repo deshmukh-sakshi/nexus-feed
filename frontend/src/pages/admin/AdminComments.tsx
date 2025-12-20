@@ -9,7 +9,7 @@ type SortOrder = 'asc' | 'desc'
 
 export const AdminComments = () => {
   const [page, setPage] = useState(0)
-  const { data, isLoading } = useAdminComments(page, 100)
+  const { data, isLoading, error } = useAdminComments(page, 20)
   const deleteComment = useDeleteComment()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
@@ -77,6 +77,17 @@ export const AdminComments = () => {
       <div className="flex justify-center p-8">
         <div className="px-6 py-3 bg-yellow-300 border-2 border-black font-bold text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           Loading...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 mx-4 md:mx-8 lg:mx-12">
+        <h1 className="text-3xl font-bold text-black">Manage Comments</h1>
+        <div className="px-6 py-4 bg-red-300 border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          Error loading comments. Make sure you have admin privileges.
         </div>
       </div>
     )
