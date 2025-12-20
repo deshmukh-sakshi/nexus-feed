@@ -209,11 +209,11 @@ export const AdminUsers = () => {
                   <td className="px-4 py-3">
                     {deleteConfirm === user.id ? (
                       <div className="flex gap-2">
-                        <button onClick={() => handleDelete(user.id)} className="px-2 py-1 bg-red-500 text-white border-2 border-black font-semibold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all">Confirm</button>
-                        <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-300 border-2 border-black font-semibold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all">Cancel</button>
+                        <button onClick={() => handleDelete(user.id)} className="px-2 py-1 bg-red-500 text-white border-2 border-black font-semibold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Confirm</button>
+                        <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-300 border-2 border-black font-semibold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Cancel</button>
                       </div>
                     ) : (
-                      <button onClick={() => setDeleteConfirm(user.id)} className="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all">
+                      <button onClick={() => setDeleteConfirm(user.id)} className="p-2 bg-red-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     )}
