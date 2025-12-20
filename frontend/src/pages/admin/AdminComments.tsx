@@ -8,7 +8,7 @@ type SortField = 'body' | 'username' | 'postTitle' | 'votes' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
 export const AdminComments = () => {
-  const [page, setPage] = useState(0)
+  const [page] = useState(0)
   const { data, isLoading, error } = useAdminComments(page, 20)
   const deleteComment = useDeleteComment()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -33,7 +33,7 @@ export const AdminComments = () => {
   const filteredAndSortedComments = useMemo(() => {
     if (!data?.content) return []
     
-    let filtered = data.content.filter((comment: AdminComment) => {
+    const filtered = data.content.filter((comment: AdminComment) => {
       const search = searchTerm.toLowerCase()
       return (
         comment.body.toLowerCase().includes(search) ||

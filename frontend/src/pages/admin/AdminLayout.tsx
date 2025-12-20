@@ -12,7 +12,7 @@ const navItems = [
 ]
 
 export const AdminLayout = () => {
-  const { isAdmin, isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const { logout } = useAuth()
   const location = useLocation()
 
