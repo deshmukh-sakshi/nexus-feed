@@ -348,7 +348,11 @@ export const PostDetail = () => {
     <div className="w-full max-w-4xl mx-auto space-y-4">
       <Button
         size="sm"
-        onClick={() => navigate(-1)}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          navigate(-1)
+        }}
         className="mb-4 bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />

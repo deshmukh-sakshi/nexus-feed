@@ -103,7 +103,11 @@ const SortableImage = ({ url, index, onRemove, onPreview, disabled }: SortableIm
       <Button
         type="button"
         size="sm"
-        onClick={onRemove}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          onRemove()
+        }}
         disabled={disabled}
         className="absolute top-1 right-1 h-6 w-6 p-0 bg-red-500 hover:bg-red-600 text-white border-2 border-black rounded"
       >
