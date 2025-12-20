@@ -84,7 +84,7 @@ class PostServiceImplTest {
         post.setUser(user);
         post.setCreatedAt(Instant.now());
         post.setUpdatedAt(Instant.now());
-        post.setImages(new ArrayList<>());
+        post.setImages(new LinkedHashSet<>());
         post.setTags(new HashSet<>());
     }
 
@@ -150,7 +150,7 @@ class PostServiceImplTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(postRepository.save(any(Post.class))).thenReturn(post);
-        when(postImageRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+        when(postImageRepository.saveAll(anyCollection())).thenReturn(new ArrayList<>());
         when(voteRepository.countByVotableIdAndVotableTypeAndVoteValue(any(), any(), any())).thenReturn(0L);
         when(commentRepository.countByPost(any())).thenReturn(0L);
 
@@ -159,7 +159,7 @@ class PostServiceImplTest {
 
         // Then
         assertThat(response).isNotNull();
-        verify(postImageRepository).saveAll(anyList());
+        verify(postImageRepository).saveAll(anyCollection());
     }
 
     @Test

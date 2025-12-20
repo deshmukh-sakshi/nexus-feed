@@ -35,6 +35,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
+        log.info("Creating post with imageUrls: {}", request.getImageUrls());
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
@@ -55,7 +56,7 @@ public class PostServiceImpl implements PostService {
         // Handle images with order preservation
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
             List<String> urls = request.getImageUrls();
-            List<PostImage> images = new java.util.ArrayList<>();
+            Set<PostImage> images = new java.util.LinkedHashSet<>();
             for (int i = 0; i < urls.size(); i++) {
                 PostImage image = new PostImage();
                 image.setPost(savedPost);
@@ -200,6 +201,7 @@ public class PostServiceImpl implements PostService {
 
     private PostResponse convertToResponse(Post post) {
         List<String> imageUrls = post.getImages().stream()
+                .sorted(java.util.Comparator.comparingInt(PostImage::getOrderIndex))
                 .map(PostImage::getImageUrl)
                 .collect(Collectors.toList());
 
@@ -290,6 +292,7 @@ public class PostServiceImpl implements PostService {
         
         return posts.map(post -> {
             List<String> imageUrls = post.getImages().stream()
+                    .sorted(java.util.Comparator.comparingInt(PostImage::getOrderIndex))
                     .map(PostImage::getImageUrl)
                     .collect(Collectors.toList());
             

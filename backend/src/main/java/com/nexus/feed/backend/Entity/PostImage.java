@@ -11,7 +11,6 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"post"})
-@EqualsAndHashCode(exclude = {"post"})
 @Entity
 @Table(name = "post_images", indexes = {
     @Index(name = "idx_post_image_post_id", columnList = "post_id"),
@@ -38,5 +37,18 @@ public class PostImage {
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PostImage postImage = (PostImage) o;
+        return Objects.equals(imageUrl, postImage.imageUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(imageUrl);
     }
 }
