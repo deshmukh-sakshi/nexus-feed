@@ -22,6 +22,7 @@ public class VoteServiceImpl implements VoteService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final KarmaService karmaService;
+    private final BadgeAwardingService badgeAwardingService;
 
     @Override
     public void vote(UUID userId, VoteRequest request) {
@@ -72,6 +73,9 @@ public class VoteServiceImpl implements VoteService {
             voteRepository.save(newVote);
             karmaService.updateKarmaForVote(contentAuthorId, userId, delta);
             log.info("Vote created: userId={}, votableId={}, type={}, value={}", userId, request.getVotableId(), request.getVotableType(), request.getVoteValue());
+            
+            // Check for vote badges
+            badgeAwardingService.checkVoteBadges(userId);
         }
     }
 

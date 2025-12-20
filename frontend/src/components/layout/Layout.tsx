@@ -21,7 +21,7 @@ export const Layout = () => {
             </div>
           ) : (
             // Three-column layout for other pages
-            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_340px] gap-6">
               {/* Left Sidebar - hidden on mobile/tablet */}
               <div className="hidden lg:block">
                 <LeftSidebar />

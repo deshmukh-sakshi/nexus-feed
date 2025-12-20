@@ -1,10 +1,11 @@
 package com.nexus.feed.backend.Service;
 
+import com.nexus.feed.backend.Auth.Entity.AppUser;
+import com.nexus.feed.backend.Email.Service.EmailService;
 import com.nexus.feed.backend.Entity.Badge;
 import com.nexus.feed.backend.Entity.Users;
 import com.nexus.feed.backend.Repository.*;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,239 +18,240 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("BadgeAwardingServiceImpl Unit Tests")
 class BadgeAwardingServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
-
     @Mock
     private PostRepository postRepository;
-
+    @Mock
+    private VoteRepository voteRepository;
     @Mock
     private CommentRepository commentRepository;
-
     @Mock
     private BadgeRepository badgeRepository;
-
     @Mock
     private UserBadgeRepository userBadgeRepository;
-
     @Mock
     private BadgeService badgeService;
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private BadgeAwardingServiceImpl badgeAwardingService;
 
     private UUID userId;
     private Users user;
-    private Badge firstPostBadge;
-    private Badge prolificPosterBadge;
-    private Badge commentatorBadge;
-    private Badge risingStarBadge;
-    private Badge popularBadge;
-    private Badge veteranBadge;
+    private Badge badge;
+    private Integer badgeId;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-
         user = new Users();
         user.setId(userId);
-        user.setUsername("tester");
-        user.setKarma(0L);
+        user.setUsername("testuser");
         user.setCreatedAt(Instant.now());
+        
+        AppUser appUser = new AppUser();
+        appUser.setEmail("test@example.com");
+        user.setAppUser(appUser);
 
-        firstPostBadge = new Badge();
-        firstPostBadge.setId(1);
-        firstPostBadge.setName("First Post");
-
-        prolificPosterBadge = new Badge();
-        prolificPosterBadge.setId(2);
-        prolificPosterBadge.setName("Prolific Poster");
-
-        commentatorBadge = new Badge();
-        commentatorBadge.setId(3);
-        commentatorBadge.setName("Commentator");
-
-        risingStarBadge = new Badge();
-        risingStarBadge.setId(4);
-        risingStarBadge.setName("Rising Star");
-
-        popularBadge = new Badge();
-        popularBadge.setId(5);
-        popularBadge.setName("Popular");
-
-        veteranBadge = new Badge();
-        veteranBadge.setId(6);
-        veteranBadge.setName("Veteran");
+        badgeId = 1;
+        badge = new Badge();
+        badge.setId(badgeId);
+        badge.setName("First Post");
+        badge.setDescription("Created your first post");
+        badge.setIconUrl("🎉");
     }
 
     @Test
-    @DisplayName("Should award First Post badge when user has 1 post")
-    void shouldAwardFirstPostBadge() {
+    void checkPostBadges_shouldAwardFirstPostBadge_whenUserHasOnePost() {
         // Given
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(postRepository.countByUser(user)).thenReturn(1L);
-        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(firstPostBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 1)).thenReturn(false);
+        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(badge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, badgeId)).thenReturn(false);
 
         // When
         badgeAwardingService.checkPostBadges(userId);
 
         // Then
-        verify(badgeService).awardBadgeToUser(userId, 1);
+        verify(badgeService).awardBadgeToUser(userId, badgeId);
+        verify(emailService).sendBadgeAwardedEmail(
+            eq("test@example.com"),
+            eq("testuser"),
+            eq("First Post"),
+            eq("Created your first post"),
+            eq("🎉")
+        );
     }
 
     @Test
-    @DisplayName("Should award Prolific Poster badge when user has 10+ posts")
-    void shouldAwardProlificPosterBadge() {
-        // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(postRepository.countByUser(user)).thenReturn(10L);
-        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(firstPostBadge));
-        when(badgeRepository.findByName("Prolific Poster")).thenReturn(Optional.of(prolificPosterBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 1)).thenReturn(true);
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 2)).thenReturn(false);
-
-        // When
-        badgeAwardingService.checkPostBadges(userId);
-
-        // Then
-        verify(badgeService).awardBadgeToUser(userId, 2);
-    }
-
-    @Test
-    @DisplayName("Should not award badge if user already has it")
-    void shouldNotAwardBadgeIfAlreadyHas() {
+    void checkPostBadges_shouldNotAwardBadge_whenUserAlreadyHasIt() {
         // Given
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(postRepository.countByUser(user)).thenReturn(1L);
-        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(firstPostBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 1)).thenReturn(true);
+        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(badge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, badgeId)).thenReturn(true);
 
         // When
         badgeAwardingService.checkPostBadges(userId);
 
         // Then
-        verify(badgeService, never()).awardBadgeToUser(any(), anyInt());
+        verify(badgeService, never()).awardBadgeToUser(any(), any());
+        verify(emailService, never()).sendBadgeAwardedEmail(any(), any(), any(), any(), any());
     }
 
     @Test
-    @DisplayName("Should award Commentator badge when user has 50+ comments")
-    void shouldAwardCommentatorBadge() {
+    void checkPostBadges_shouldAwardStorytellerBadge_whenUserHasFivePosts() {
         // Given
+        Integer storytellerBadgeId = 2;
+        Badge storytellerBadge = new Badge();
+        storytellerBadge.setId(storytellerBadgeId);
+        storytellerBadge.setName("Storyteller");
+        storytellerBadge.setDescription("Created 5 posts");
+        storytellerBadge.setIconUrl("📝");
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(commentRepository.countByUser(user)).thenReturn(50L);
-        when(badgeRepository.findByName("Commentator")).thenReturn(Optional.of(commentatorBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 3)).thenReturn(false);
+        when(postRepository.countByUser(user)).thenReturn(5L);
+        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(badge));
+        when(badgeRepository.findByName("Storyteller")).thenReturn(Optional.of(storytellerBadge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, badgeId)).thenReturn(false);
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, storytellerBadgeId)).thenReturn(false);
+
+        // When
+        badgeAwardingService.checkPostBadges(userId);
+
+        // Then
+        verify(badgeService).awardBadgeToUser(userId, badgeId);
+        verify(badgeService).awardBadgeToUser(userId, storytellerBadgeId);
+    }
+
+    @Test
+    void checkCommentBadges_shouldAwardFirstCommentBadge_whenUserHasOneComment() {
+        // Given
+        Integer firstCommentBadgeId = 3;
+        Badge firstCommentBadge = new Badge();
+        firstCommentBadge.setId(firstCommentBadgeId);
+        firstCommentBadge.setName("First Comment");
+        firstCommentBadge.setDescription("Made your first comment");
+        firstCommentBadge.setIconUrl("💭");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(commentRepository.countByUser(user)).thenReturn(1L);
+        when(badgeRepository.findByName("First Comment")).thenReturn(Optional.of(firstCommentBadge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, firstCommentBadgeId)).thenReturn(false);
 
         // When
         badgeAwardingService.checkCommentBadges(userId);
 
         // Then
-        verify(badgeService).awardBadgeToUser(userId, 3);
+        verify(badgeService).awardBadgeToUser(userId, firstCommentBadgeId);
     }
 
     @Test
-    @DisplayName("Should not award Commentator badge when user has less than 50 comments")
-    void shouldNotAwardCommentatorBadgeWhenNotEnoughComments() {
+    void checkKarmaBadges_shouldAwardGettingStartedBadge_whenUserHas10Karma() {
         // Given
+        Integer karmaBadgeId = 4;
+        Badge karmaBadge = new Badge();
+        karmaBadge.setId(karmaBadgeId);
+        karmaBadge.setName("Getting Started");
+        karmaBadge.setDescription("Reached 10 karma");
+        karmaBadge.setIconUrl("🌱");
+
+        user.setKarma(10L);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(commentRepository.countByUser(user)).thenReturn(49L);
-
-        // When
-        badgeAwardingService.checkCommentBadges(userId);
-
-        // Then
-        verify(badgeService, never()).awardBadgeToUser(any(), anyInt());
-    }
-
-    @Test
-    @DisplayName("Should award Rising Star badge when user has 100+ karma")
-    void shouldAwardRisingStarBadge() {
-        // Given
-        user.setKarma(100L);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(badgeRepository.findByName("Rising Star")).thenReturn(Optional.of(risingStarBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 4)).thenReturn(false);
+        when(badgeRepository.findByName("Getting Started")).thenReturn(Optional.of(karmaBadge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, karmaBadgeId)).thenReturn(false);
 
         // When
         badgeAwardingService.checkKarmaBadges(userId);
 
         // Then
-        verify(badgeService).awardBadgeToUser(userId, 4);
+        verify(badgeService).awardBadgeToUser(userId, karmaBadgeId);
     }
 
     @Test
-    @DisplayName("Should award Popular badge when user has 1000+ karma")
-    void shouldAwardPopularBadge() {
+    void checkVoteBadges_shouldAwardFirstVoteBadge_whenUserHasOneVote() {
         // Given
-        user.setKarma(1000L);
+        Integer voteBadgeId = 5;
+        Badge voteBadge = new Badge();
+        voteBadge.setId(voteBadgeId);
+        voteBadge.setName("First Vote");
+        voteBadge.setDescription("Cast your first vote");
+        voteBadge.setIconUrl("👍");
+
+        when(voteRepository.countByUserId(userId)).thenReturn(1L);
+        when(badgeRepository.findByName("First Vote")).thenReturn(Optional.of(voteBadge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, voteBadgeId)).thenReturn(false);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(badgeRepository.findByName("Rising Star")).thenReturn(Optional.of(risingStarBadge));
-        when(badgeRepository.findByName("Popular")).thenReturn(Optional.of(popularBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 4)).thenReturn(true);
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 5)).thenReturn(false);
 
         // When
-        badgeAwardingService.checkKarmaBadges(userId);
+        badgeAwardingService.checkVoteBadges(userId);
 
         // Then
-        verify(badgeService).awardBadgeToUser(userId, 5);
+        verify(badgeService).awardBadgeToUser(userId, voteBadgeId);
     }
 
     @Test
-    @DisplayName("Should award Veteran badge when account is 1+ year old")
-    void shouldAwardVeteranBadge() {
+    void checkAccountAgeBadges_shouldAwardNewcomerBadge_whenAccountIs7DaysOld() {
         // Given
-        user.setCreatedAt(Instant.now().minus(366, ChronoUnit.DAYS));
+        Integer newcomerBadgeId = 6;
+        Badge newcomerBadge = new Badge();
+        newcomerBadge.setId(newcomerBadgeId);
+        newcomerBadge.setName("Newcomer");
+        newcomerBadge.setDescription("Member for 7 days");
+        newcomerBadge.setIconUrl("👋");
+
+        user.setCreatedAt(Instant.now().minus(8, ChronoUnit.DAYS));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(badgeRepository.findByName("Veteran")).thenReturn(Optional.of(veteranBadge));
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, 6)).thenReturn(false);
+        when(badgeRepository.findByName("Newcomer")).thenReturn(Optional.of(newcomerBadge));
+        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(userId, newcomerBadgeId)).thenReturn(false);
 
         // When
         badgeAwardingService.checkAccountAgeBadges(userId);
 
         // Then
-        verify(badgeService).awardBadgeToUser(userId, 6);
+        verify(badgeService).awardBadgeToUser(userId, newcomerBadgeId);
     }
 
     @Test
-    @DisplayName("Should not award Veteran badge when account is less than 1 year old")
-    void shouldNotAwardVeteranBadgeWhenAccountTooNew() {
+    void checkAccountAgeBadges_shouldNotAwardBadge_whenAccountIsTooNew() {
         // Given
-        user.setCreatedAt(Instant.now().minus(100, ChronoUnit.DAYS));
+        user.setCreatedAt(Instant.now().minus(3, ChronoUnit.DAYS));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When
         badgeAwardingService.checkAccountAgeBadges(userId);
 
         // Then
-        verify(badgeService, never()).awardBadgeToUser(any(), anyInt());
+        verify(badgeService, never()).awardBadgeToUser(any(), any());
     }
 
     @Test
-    @DisplayName("Should handle user not found gracefully")
-    void shouldHandleUserNotFound() {
+    void checkAllBadges_shouldCheckAllBadgeTypes() {
         // Given
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(postRepository.countByUser(user)).thenReturn(0L);
+        when(commentRepository.countByUser(user)).thenReturn(0L);
+        when(voteRepository.countByUserId(userId)).thenReturn(0L);
 
         // When
-        badgeAwardingService.checkPostBadges(userId);
+        badgeAwardingService.checkAllBadges(userId);
 
-        // Then
-        verify(postRepository, never()).countByUser(any());
-        verify(badgeService, never()).awardBadgeToUser(any(), anyInt());
+        // Then - verify all check methods were called
+        verify(postRepository).countByUser(user);
+        verify(commentRepository).countByUser(user);
+        verify(voteRepository).countByUserId(userId);
     }
 
     @Test
-    @DisplayName("Should handle badge not found gracefully")
-    void shouldHandleBadgeNotFound() {
+    void tryAwardBadge_shouldHandleMissingBadgeGracefully() {
         // Given
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(postRepository.countByUser(user)).thenReturn(1L);
@@ -258,32 +260,20 @@ class BadgeAwardingServiceImplTest {
         // When
         badgeAwardingService.checkPostBadges(userId);
 
-        // Then
-        verify(badgeService, never()).awardBadgeToUser(any(), anyInt());
+        // Then - should not throw, just log warning
+        verify(badgeService, never()).awardBadgeToUser(any(), any());
     }
 
     @Test
-    @DisplayName("Should check all badges")
-    void shouldCheckAllBadges() {
+    void tryAwardBadge_shouldHandleMissingUserGracefully() {
         // Given
-        user.setKarma(100L);
-        user.setCreatedAt(Instant.now().minus(400, ChronoUnit.DAYS));
-        
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(postRepository.countByUser(user)).thenReturn(1L);
-        when(commentRepository.countByUser(user)).thenReturn(50L);
-        
-        when(badgeRepository.findByName("First Post")).thenReturn(Optional.of(firstPostBadge));
-        when(badgeRepository.findByName("Commentator")).thenReturn(Optional.of(commentatorBadge));
-        when(badgeRepository.findByName("Rising Star")).thenReturn(Optional.of(risingStarBadge));
-        when(badgeRepository.findByName("Veteran")).thenReturn(Optional.of(veteranBadge));
-        
-        when(userBadgeRepository.existsByIdUserIdAndIdBadgeId(any(), anyInt())).thenReturn(false);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When
-        badgeAwardingService.checkAllBadges(userId);
+        badgeAwardingService.checkPostBadges(userId);
 
-        // Then
-        verify(badgeService, times(4)).awardBadgeToUser(eq(userId), anyInt());
+        // Then - should not throw
+        verify(postRepository, never()).countByUser(any());
+        verify(badgeService, never()).awardBadgeToUser(any(), any());
     }
 }

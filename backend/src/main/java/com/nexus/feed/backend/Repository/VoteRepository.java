@@ -61,4 +61,7 @@ public interface VoteRepository extends JpaRepository<Vote, Vote.VoteId> {
            "FROM Vote v JOIN Comment c ON v.id.votableId = c.id " +
            "WHERE c.user.id = :userId AND v.votableType = 'COMMENT' AND v.id.userId != :userId")
     long calculateCommentKarma(@Param("userId") UUID userId);
+    
+    @Query("SELECT COUNT(v) FROM Vote v WHERE v.id.userId = :userId")
+    long countByUserId(@Param("userId") UUID userId);
 }

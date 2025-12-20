@@ -108,4 +108,24 @@ public class EmailServiceImpl implements EmailService {
             username
         );
     }
+
+    @Async
+    @Override
+    public void sendBadgeAwardedEmail(String to, String username, String badgeName, String badgeDescription, String badgeIcon) {
+        String subject = "🎉 You earned a new badge: " + badgeName;
+        String body = composeBadgeEmail(username, badgeName, badgeDescription, badgeIcon);
+        sendEmailInternal(to, subject, body);
+    }
+
+    String composeBadgeEmail(String username, String badgeName, String badgeDescription, String badgeIcon) {
+        return String.format(
+            "Hey %s,\n\n" +
+            "Congratulations! You've earned a new badge on Nexus Feed!\n\n" +
+            "%s %s\n" +
+            "%s\n\n" +
+            "Keep up the great work and continue engaging with the community to earn more badges!\n\n" +
+            "The Nexus Feed Team",
+            username, badgeIcon, badgeName, badgeDescription
+        );
+    }
 }

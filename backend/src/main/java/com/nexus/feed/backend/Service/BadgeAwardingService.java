@@ -28,6 +28,11 @@ public interface BadgeAwardingService {
     void checkAccountAgeBadges(UUID userId);
     
     /**
+     * Check and award voting badges for a user.
+     */
+    void checkVoteBadges(UUID userId);
+    
+    /**
      * Run all badge checks for a user.
      */
     void checkAllBadges(UUID userId);
