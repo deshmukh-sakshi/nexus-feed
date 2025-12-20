@@ -57,6 +57,13 @@ export const getOptimizedImageUrl = (
   return url.replace('/upload/', `/upload/${transformString}/`)
 }
 
+// Helper to check if image is cached in browser
+export const isImageCached = (src: string): boolean => {
+  const img = new Image()
+  img.src = src
+  return img.complete
+}
+
 export interface UploadProgress {
   loaded: number
   total: number

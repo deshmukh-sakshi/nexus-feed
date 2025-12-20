@@ -1,8 +1,8 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getOptimizedImageUrl } from '@/lib/cloudinary'
-import { useState } from 'react'
 
 interface ImageLightboxProps {
   images: string[]
@@ -108,9 +108,17 @@ export const ImageLightbox = ({
 
   if (!isOpen) return null
 
-  return (
+  const lightboxContent = (
     <div 
       className="fixed inset-0 z-[100] bg-gray-500/70 backdrop-blur-sm flex items-center justify-center"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
     >
       {/* Close button */}
       <button
@@ -207,4 +215,6 @@ export const ImageLightbox = ({
       </div>
     </div>
   )
+
+  return createPortal(lightboxContent, document.body)
 }
