@@ -40,7 +40,6 @@ public class PostServiceImpl implements PostService {
 
         Post post = new Post();
         post.setTitle(request.getTitle());
-        post.setUrl(request.getUrl());
         post.setBody(request.getBody());
         post.setUser(user);
 
@@ -147,9 +146,6 @@ public class PostServiceImpl implements PostService {
         if (request.getTitle() != null) {
             post.setTitle(request.getTitle());
         }
-        if (request.getUrl() != null) {
-            post.setUrl(request.getUrl());
-        }
         if (request.getBody() != null) {
             post.setBody(request.getBody());
         }
@@ -232,7 +228,6 @@ public class PostServiceImpl implements PostService {
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
-                .url(post.getUrl())
                 .body(post.getBody())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
@@ -305,7 +300,6 @@ public class PostServiceImpl implements PostService {
             return PostResponse.builder()
                     .id(post.getId())
                     .title(post.getTitle())
-                    .url(post.getUrl())
                     .body(post.getBody())
                     .createdAt(post.getCreatedAt())
                     .updatedAt(post.getUpdatedAt())

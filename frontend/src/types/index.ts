@@ -90,7 +90,6 @@ export interface GoogleAuthResponse {
 export interface Post {
   id: string
   title: string
-  url?: string
   body?: string
   createdAt: string
   updatedAt: string

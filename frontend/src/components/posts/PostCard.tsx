@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { generateTagColor, getTagTextColor } from '@/lib/tag-colors'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowBigUp, ArrowBigDown, MessageSquare, ExternalLink, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, MessageSquare, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -114,23 +114,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         {/* Body */}
         <h3 className="text-2xl font-bold mb-1 leading-tight">{post.title}</h3>
 
-        {post.url && (
-            <a
-              href={post.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-blue-600 font-bold hover:underline mb-1 w-fit"
-            >
-              <ExternalLink className="h-3 w-3" />
-              {(() => {
-                try {
-                  return new URL(post.url).hostname
-                } catch {
-                  return post.url
-                }
-              })()}
-            </a>
-          )}
+        
 
         {post.body && (
           <div className="mb-0.5">

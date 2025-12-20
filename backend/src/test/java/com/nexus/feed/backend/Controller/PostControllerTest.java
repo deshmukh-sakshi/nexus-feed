@@ -84,7 +84,6 @@ class PostControllerTest {
         postResponse.setId(postId);
         postResponse.setTitle("Test Post Title");
         postResponse.setBody("Test post body content");
-        postResponse.setUrl("https://example.com");
         postResponse.setUserId(userId);
         postResponse.setUsername("tester");
         postResponse.setCreatedAt(Instant.now());

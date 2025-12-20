@@ -8,7 +8,6 @@ import {
   ArrowBigUp,
   ArrowBigDown,
   MessageSquare,
-  ExternalLink,
   Edit2,
   Trash2,
   Save,
@@ -437,24 +436,6 @@ export const PostDetail = () => {
               ) : (
                 <>
                   <h1 className="text-2xl font-bold">{post.title}</h1>
-
-                  {post.url && (
-                    <a
-                      href={post.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-blue-500 hover:underline"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      {(() => {
-                        try {
-                          return new URL(post.url).hostname
-                        } catch {
-                          return post.url
-                        }
-                      })()}
-                    </a>
-                  )}
                 </>
               )}
             </div>

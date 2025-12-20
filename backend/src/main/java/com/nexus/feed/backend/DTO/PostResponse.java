@@ -12,7 +12,6 @@ import java.util.UUID;
 public class PostResponse {
     private UUID id;
     private String title;
-    private String url;
     private String body;
     private Instant createdAt;
     private Instant updatedAt;

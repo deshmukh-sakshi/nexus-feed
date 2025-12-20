@@ -29,9 +29,6 @@ public class Post {
     @Size(max = 300)
     private String title;
 
-    @Size(max = 2048)
-    private String url;
-
     private String body;
 
     @ManyToOne(optional = false)

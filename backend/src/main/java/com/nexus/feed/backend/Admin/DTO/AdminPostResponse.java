@@ -7,7 +7,6 @@ import java.util.UUID;
 public record AdminPostResponse(
     UUID id,
     String title,
-    String url,
     String body,
     UUID userId,
     String username,

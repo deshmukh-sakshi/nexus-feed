@@ -81,7 +81,6 @@ class PostServiceImplTest {
         post.setId(postId);
         post.setTitle("Test Post");
         post.setBody("Test Body");
-        post.setUrl("https://example.com");
         post.setUser(user);
         post.setCreatedAt(Instant.now());
         post.setUpdatedAt(Instant.now());

@@ -121,7 +121,6 @@ export const usePosts = (pageSize = 4) => {
                 ...post,
                 title: data.title || post.title,
                 body: data.body !== undefined ? data.body : post.body,
-                url: data.url !== undefined ? data.url : post.url,
                 updatedAt: now,
               }
             }),
@@ -139,7 +138,6 @@ export const usePosts = (pageSize = 4) => {
             ...postDetail.post,
             title: data.title || postDetail.post.title,
             body: data.body !== undefined ? data.body : postDetail.post.body,
-            url: data.url !== undefined ? data.url : postDetail.post.url,
             updatedAt: now,
           },
         }
