@@ -3,25 +3,27 @@ FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copy all project files
-COPY . .
+# Copy only dependency files first (for caching)
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
 
-# Make Maven wrapper executable
-RUN chmod +x ./mvnw
+# Make Maven wrapper executable and download dependencies
+RUN chmod +x ./mvnw && ./mvnw dependency:go-offline -B
+
+# Now copy source code
+COPY src ./src
 
 # Build the application, skipping tests
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -o
 
 # --- Stage 2: Create the final, lightweight image ---
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Copy the built JAR file from the builder stage
 COPY --from=builder /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose the port the app runs on
 EXPOSE 10008
 
-# Run the application
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
