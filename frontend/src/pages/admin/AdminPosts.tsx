@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAdminPosts, useDeletePost } from '@/hooks/useAdmin'
 import { Trash2, ExternalLink, ArrowUpDown, Search } from 'lucide-react'
+import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import type { AdminPost } from '@/types'
 
 type SortField = 'title' | 'username' | 'votes' | 'commentCount' | 'createdAt'
@@ -205,47 +206,31 @@ export const AdminPosts = () => {
       <div className="lg:hidden space-y-4">
         {filteredAndSortedPosts.length > 0 ? (
           filteredAndSortedPosts.map((post: AdminPost) => (
-            <div key={post.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className="mb-3">
-                <h3 className="font-bold text-lg line-clamp-2">{post.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-gray-600">by</span>
-                  <Link to={`/admin/users?search=${post.username}`} className="text-blue-600 hover:underline font-semibold text-sm">
-                    {post.username}
-                  </Link>
-                  <span className="text-sm text-gray-500">• {new Date(post.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className={`border-2 border-black p-2 text-center ${post.upvotes - post.downvotes >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                  <div className="font-bold text-lg">{post.upvotes - post.downvotes}</div>
-                  <div className="text-xs text-gray-600">Votes</div>
-                </div>
-                <div className="bg-blue-100 border-2 border-black p-2 text-center">
-                  <div className="font-bold text-lg">{post.commentCount}</div>
-                  <div className="text-xs text-gray-600">Comments</div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Link to={`/post/${post.id}`} target="_blank" className="flex items-center gap-2 px-3 py-2 bg-blue-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-blue-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                  <ExternalLink className="h-4 w-4" />
-                  View
-                </Link>
-                {deleteConfirm === post.id ? (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDelete(post.id)} className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Confirm</button>
-                    <button onClick={() => setDeleteConfirm(null)} className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Cancel</button>
+            <AdminMobileCard
+              key={post.id}
+              id={post.id}
+              header={
+                <div className="mb-3">
+                  <h3 className="font-bold text-lg line-clamp-2">{post.title}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-600">by</span>
+                    <Link to={`/admin/users?search=${post.username}`} className="text-blue-600 hover:underline font-semibold text-sm">
+                      {post.username}
+                    </Link>
+                    <span className="text-sm text-gray-500">• {new Date(post.createdAt).toLocaleDateString()}</span>
                   </div>
-                ) : (
-                  <button onClick={() => setDeleteConfirm(post.id)} className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
+                </div>
+              }
+              stats={[
+                { value: post.upvotes - post.downvotes, label: 'Votes', color: 'dynamic', dynamicPositive: post.upvotes - post.downvotes >= 0 },
+                { value: post.commentCount, label: 'Comments', color: 'blue' },
+              ]}
+              viewLink={`/post/${post.id}`}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDelete}
+              onDeleteCancel={() => setDeleteConfirm(null)}
+            />
           ))
         ) : (
           <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

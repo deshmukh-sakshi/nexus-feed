@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
 import { Trash2, ArrowUpDown, Search } from 'lucide-react'
+import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import type { AdminUser } from '@/types'
 
 type SortField = 'username' | 'email' | 'role' | 'karma' | 'postCount' | 'commentCount' | 'createdAt'
@@ -234,48 +235,32 @@ export const AdminUsers = () => {
       <div className="lg:hidden space-y-4">
         {filteredAndSortedUsers.length > 0 ? (
           filteredAndSortedUsers.map((user: AdminUser) => (
-            <div key={user.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <Link to={`/user/${user.username}`} className="text-blue-600 hover:underline font-bold text-lg">
-                    {user.username}
-                  </Link>
-                  <p className="text-sm text-gray-600 break-all">{user.email}</p>
-                </div>
-                <span className={`px-2 py-1 border-2 border-black font-semibold text-xs ${user.role === 'ADMIN' ? 'bg-purple-300' : 'bg-gray-200'}`}>
-                  {user.role}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                <div className="bg-green-100 border-2 border-black p-2">
-                  <div className="font-bold text-lg">{user.karma}</div>
-                  <div className="text-xs text-gray-600">Karma</div>
-                </div>
-                <div className="bg-blue-100 border-2 border-black p-2">
-                  <div className="font-bold text-lg">{user.postCount}</div>
-                  <div className="text-xs text-gray-600">Posts</div>
-                </div>
-                <div className="bg-yellow-100 border-2 border-black p-2">
-                  <div className="font-bold text-lg">{user.commentCount}</div>
-                  <div className="text-xs text-gray-600">Comments</div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                {deleteConfirm === user.id ? (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDelete(user.id)} className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Confirm Delete</button>
-                    <button onClick={() => setDeleteConfirm(null)} className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Cancel</button>
+            <AdminMobileCard
+              key={user.id}
+              id={user.id}
+              header={
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <Link to={`/user/${user.username}`} className="text-blue-600 hover:underline font-bold text-lg">
+                      {user.username}
+                    </Link>
+                    <p className="text-sm text-gray-600 break-all">{user.email}</p>
                   </div>
-                ) : (
-                  <button onClick={() => setDeleteConfirm(user.id)} className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
+                  <span className={`px-2 py-1 border-2 border-black font-semibold text-xs ${user.role === 'ADMIN' ? 'bg-purple-300' : 'bg-gray-200'}`}>
+                    {user.role}
+                  </span>
+                </div>
+              }
+              stats={[
+                { value: user.karma, label: 'Karma', color: 'green' },
+                { value: user.postCount, label: 'Posts', color: 'blue' },
+                { value: user.commentCount, label: 'Comments', color: 'yellow' },
+              ]}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDelete}
+              onDeleteCancel={() => setDeleteConfirm(null)}
+            />
           ))
         ) : (
           <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

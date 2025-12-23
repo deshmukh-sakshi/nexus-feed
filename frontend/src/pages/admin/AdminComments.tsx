@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAdminComments, useDeleteComment } from '@/hooks/useAdmin'
 import { Trash2, ExternalLink, ArrowUpDown, Search } from 'lucide-react'
+import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import type { AdminComment } from '@/types'
 
 type SortField = 'body' | 'username' | 'postTitle' | 'votes' | 'createdAt'
@@ -206,47 +207,37 @@ export const AdminComments = () => {
       <div className="lg:hidden space-y-4">
         {filteredAndSortedComments.length > 0 ? (
           filteredAndSortedComments.map((comment: AdminComment) => (
-            <div key={comment.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className="mb-3">
-                <p className="text-sm line-clamp-3 mb-2">{comment.body}</p>
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className="text-gray-600">by</span>
-                  <Link to={`/admin/users?search=${comment.username}`} className="text-blue-600 hover:underline font-semibold">
-                    {comment.username}
-                  </Link>
-                  <span className="text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="mt-2">
-                  <span className="text-xs text-gray-500">on post:</span>
-                  <p className="text-sm font-medium line-clamp-1">{comment.postTitle}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <div className={`border-2 border-black px-3 py-1 ${comment.upvotes - comment.downvotes >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                  <span className="font-bold">{comment.upvotes - comment.downvotes}</span>
-                  <span className="text-xs text-gray-600 ml-1">votes</span>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Link to={`/post/${comment.postId}`} target="_blank" className="flex items-center gap-2 px-3 py-2 bg-blue-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-blue-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                  <ExternalLink className="h-4 w-4" />
-                  View
-                </Link>
-                {deleteConfirm === comment.id ? (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleDelete(comment.id)} className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Confirm</button>
-                    <button onClick={() => setDeleteConfirm(null)} className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Cancel</button>
+            <AdminMobileCard
+              key={comment.id}
+              id={comment.id}
+              header={
+                <div className="mb-3">
+                  <p className="text-sm line-clamp-3 mb-2">{comment.body}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-gray-600">by</span>
+                    <Link to={`/admin/users?search=${comment.username}`} className="text-blue-600 hover:underline font-semibold">
+                      {comment.username}
+                    </Link>
+                    <span className="text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
                   </div>
-                ) : (
-                  <button onClick={() => setDeleteConfirm(comment.id)} className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-500">on post:</span>
+                    <p className="text-sm font-medium line-clamp-1">{comment.postTitle}</p>
+                  </div>
+                  <div className="mt-3">
+                    <div className={`inline-block border-2 border-black px-3 py-1 ${comment.upvotes - comment.downvotes >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                      <span className="font-bold">{comment.upvotes - comment.downvotes}</span>
+                      <span className="text-xs text-gray-600 ml-1">votes</span>
+                    </div>
+                  </div>
+                </div>
+              }
+              viewLink={`/post/${comment.postId}`}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDelete}
+              onDeleteCancel={() => setDeleteConfirm(null)}
+            />
           ))
         ) : (
           <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

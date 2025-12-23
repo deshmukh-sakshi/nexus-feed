@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { LogOut, User, PlusCircle, Search, Shield, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,8 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { MobileNavItem } from '@/components/layout/MobileNavItem'
 import { useAuthStore } from '@/stores/authStore'
 import { useAuth } from '@/hooks/useAuth'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 export const Navbar = () => {
   const { user, isAuthenticated, isAdmin } = useAuthStore()
@@ -19,27 +21,8 @@ export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
-  // Click outside handler to close mobile menu
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        setIsMobileMenuOpen(false)
-      }
-    }
-
-    if (isMobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isMobileMenuOpen])
-
-  // Close mobile menu when navigating
-  const handleMobileNavClick = () => {
-    setIsMobileMenuOpen(false)
-  }
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), [])
+  useClickOutside(mobileMenuRef, closeMobileMenu, isMobileMenuOpen)
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-yellow-50 backdrop-blur-sm">
@@ -146,61 +129,29 @@ export const Navbar = () => {
           {isMobileMenuOpen && (
             <div className="absolute top-full right-4 mt-2 w-56 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50">
               <div className="flex flex-col p-2 space-y-2">
-                <Link to="/search" onClick={handleMobileNavClick}>
-                  <Button className="w-full bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                    <Search className="mr-2 h-5 w-5" />
-                    Search
-                  </Button>
-                </Link>
+                <MobileNavItem to="/search" icon={Search} label="Search" color="teal" onClick={closeMobileMenu} />
 
                 {isAuthenticated ? (
                   <>
-                    <Link to="/create-post" onClick={handleMobileNavClick}>
-                      <Button className="w-full bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                        <PlusCircle className="mr-2 h-5 w-5" />
-                        Create Post
-                      </Button>
-                    </Link>
-
-                    <Link to={`/user/${user?.username}`} onClick={handleMobileNavClick}>
-                      <Button className="w-full bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                        <User className="mr-2 h-5 w-5" />
-                        Profile
-                      </Button>
-                    </Link>
-
+                    <MobileNavItem to="/create-post" icon={PlusCircle} label="Create Post" color="green" onClick={closeMobileMenu} />
+                    <MobileNavItem to={`/user/${user?.username}`} icon={User} label="Profile" color="yellow" onClick={closeMobileMenu} />
                     {isAdmin && (
-                      <Link to="/admin" onClick={handleMobileNavClick}>
-                        <Button className="w-full bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                          <Shield className="mr-2 h-5 w-5" />
-                          Admin Panel
-                        </Button>
-                      </Link>
+                      <MobileNavItem to="/admin" icon={Shield} label="Admin Panel" color="purple" onClick={closeMobileMenu} />
                     )}
-
-                    <Button
+                    <MobileNavItem
+                      icon={LogOut}
+                      label="Log out"
+                      color="red"
                       onClick={() => {
                         logout()
-                        handleMobileNavClick()
+                        closeMobileMenu()
                       }}
-                      className="w-full bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start"
-                    >
-                      <LogOut className="mr-2 h-5 w-5" />
-                      Log out
-                    </Button>
+                    />
                   </>
                 ) : (
                   <>
-                    <Link to="/login" onClick={handleMobileNavClick}>
-                      <Button className="w-full bg-pink-400 text-black hover:bg-pink-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                        Log in
-                      </Button>
-                    </Link>
-                    <Link to="/register" onClick={handleMobileNavClick}>
-                      <Button className="w-full bg-blue-500 text-black hover:bg-blue-600 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold justify-start">
-                        Sign up
-                      </Button>
-                    </Link>
+                    <MobileNavItem to="/login" label="Log in" color="pink" onClick={closeMobileMenu} />
+                    <MobileNavItem to="/register" label="Sign up" color="blue" onClick={closeMobileMenu} />
                   </>
                 )}
               </div>
