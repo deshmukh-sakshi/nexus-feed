@@ -60,6 +60,9 @@ class PostServiceImplTest {
     @Mock
     private TagService tagService;
 
+    @Mock
+    private TagRepository tagRepository;
+
     @InjectMocks
     private PostServiceImpl postService;
 
@@ -372,6 +375,7 @@ class PostServiceImplTest {
         // Given
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         doNothing().when(postRepository).delete(any(Post.class));
+        when(tagRepository.deleteOrphanTags()).thenReturn(0);
         doNothing().when(karmaService).recalculateKarma(any());
 
         // When
@@ -379,6 +383,25 @@ class PostServiceImplTest {
 
         // Then
         verify(postRepository).delete(post);
+        verify(tagRepository).deleteOrphanTags();
+        verify(karmaService).recalculateKarma(userId);
+    }
+
+    @Test
+    @DisplayName("Should delete post and clean up orphan tags")
+    void shouldDeletePostAndCleanUpOrphanTags() {
+        // Given
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        doNothing().when(postRepository).delete(any(Post.class));
+        when(tagRepository.deleteOrphanTags()).thenReturn(2);
+        doNothing().when(karmaService).recalculateKarma(any());
+
+        // When
+        postService.deletePost(postId, userId);
+
+        // Then
+        verify(postRepository).delete(post);
+        verify(tagRepository).deleteOrphanTags();
         verify(karmaService).recalculateKarma(userId);
     }
 

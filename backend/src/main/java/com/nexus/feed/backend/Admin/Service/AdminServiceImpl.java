@@ -11,6 +11,7 @@ import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Entity.Vote;
 import com.nexus.feed.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
@@ -29,6 +31,7 @@ public class AdminServiceImpl implements AdminService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final VoteRepository voteRepository;
+    private final TagRepository tagRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -119,6 +122,12 @@ public class AdminServiceImpl implements AdminService {
         }
         
         postRepository.delete(post);
+        
+        // Clean up orphan tags (tags with no posts)
+        int deletedTags = tagRepository.deleteOrphanTags();
+        if (deletedTags > 0) {
+            log.info("Cleaned up {} orphan tag(s) after post deletion", deletedTags);
+        }
     }
 
     @Override

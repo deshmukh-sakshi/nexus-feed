@@ -32,6 +32,7 @@ public class PostServiceImpl implements PostService {
     private final KarmaService karmaService;
     private final BadgeAwardingService badgeAwardingService;
     private final TagService tagService;
+    private final TagRepository tagRepository;
 
     @Override
     public PostResponse createPost(UUID userId, PostCreateRequest request) {
@@ -195,6 +196,13 @@ public class PostServiceImpl implements PostService {
         UUID authorId = post.getUser().getId();
 
         postRepository.delete(post);
+        
+        // Clean up orphan tags (tags with no posts)
+        int deletedTags = tagRepository.deleteOrphanTags();
+        if (deletedTags > 0) {
+            log.info("Cleaned up {} orphan tag(s) after post deletion", deletedTags);
+        }
+        
         karmaService.recalculateKarma(authorId);
         log.info("Post deleted: id={}, userId={}", postId, userId);
     }
