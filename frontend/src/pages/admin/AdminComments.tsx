@@ -99,8 +99,8 @@ export const AdminComments = () => {
       <h1 className="text-3xl font-bold text-black">Manage Comments</h1>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input
             type="text"
@@ -110,12 +110,12 @@ export const AdminComments = () => {
             className="w-full pl-10 pr-4 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="font-bold text-sm">Sort by:</label>
           <select
             value={sortField}
             onChange={(e) => setSortField(e.target.value as SortField)}
-            className="px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="flex-1 sm:flex-none px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
           >
             <option value="createdAt">Date</option>
             <option value="body">Comment</option>
@@ -134,7 +134,8 @@ export const AdminComments = () => {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         <table className="w-full">
           <thead className="bg-green-400 border-b-2 border-black">
             <tr>
@@ -199,6 +200,59 @@ export const AdminComments = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredAndSortedComments.length > 0 ? (
+          filteredAndSortedComments.map((comment: AdminComment) => (
+            <div key={comment.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="mb-3">
+                <p className="text-sm line-clamp-3 mb-2">{comment.body}</p>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-gray-600">by</span>
+                  <Link to={`/admin/users?search=${comment.username}`} className="text-blue-600 hover:underline font-semibold">
+                    {comment.username}
+                  </Link>
+                  <span className="text-gray-500">• {new Date(comment.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="mt-2">
+                  <span className="text-xs text-gray-500">on post:</span>
+                  <p className="text-sm font-medium line-clamp-1">{comment.postTitle}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between mb-4">
+                <div className={`border-2 border-black px-3 py-1 ${comment.upvotes - comment.downvotes >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                  <span className="font-bold">{comment.upvotes - comment.downvotes}</span>
+                  <span className="text-xs text-gray-600 ml-1">votes</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Link to={`/post/${comment.postId}`} target="_blank" className="flex items-center gap-2 px-3 py-2 bg-blue-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-blue-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                  <ExternalLink className="h-4 w-4" />
+                  View
+                </Link>
+                {deleteConfirm === comment.id ? (
+                  <div className="flex gap-2">
+                    <button onClick={() => handleDelete(comment.id)} className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Confirm</button>
+                    <button onClick={() => setDeleteConfirm(null)} className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeleteConfirm(comment.id)} className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            No comments found
+          </div>
+        )}
       </div>
 
       <div className="text-sm font-semibold text-gray-600">
