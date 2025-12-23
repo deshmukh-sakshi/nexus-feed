@@ -231,17 +231,4 @@ public class CommentServiceImpl implements CommentService {
                 .userVote(userVote)
                 .build();
     }
-
-    private CommentResponse convertToResponseWithReplies(Comment comment) {
-        CommentResponse response = convertToResponse(comment);
-        
-        // Load replies recursively (limit depth to avoid infinite recursion)
-        List<Comment> replies = commentRepository.findByParentCommentOrderByCreatedAtAsc(comment);
-        List<CommentResponse> replyResponses = replies.stream()
-                .map(this::convertToResponseWithReplies) // Recursive call to load nested replies
-                .collect(Collectors.toList());
-        
-        response.setReplies(replyResponses);
-        return response;
-    }
 }

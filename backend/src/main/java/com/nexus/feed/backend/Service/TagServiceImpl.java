@@ -62,9 +62,11 @@ public class TagServiceImpl implements TagService {
     @Transactional(readOnly = true)
     public List<TagResponse> searchTags(String query) {
         if (query == null || query.trim().isEmpty()) {
+            log.debug("Empty search query, returning trending tags");
             return getTrendingTags(10);
         }
         
+        log.debug("Searching tags with query: {}", query.trim());
         return tagRepository.searchByName(query.trim()).stream()
                 .limit(10)
                 .map(this::convertToResponse)

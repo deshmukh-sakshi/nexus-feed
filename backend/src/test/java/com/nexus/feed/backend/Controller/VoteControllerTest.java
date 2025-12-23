@@ -24,8 +24,17 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = VoteController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import org.springframework.context.annotation.Import;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = VoteController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("VoteController Tests")
 class VoteControllerTest {
@@ -43,10 +52,10 @@ class VoteControllerTest {
     private AuthenticationService authenticationService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
     private UUID votableId;
@@ -146,17 +155,17 @@ class VoteControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when vote fails")
-    void shouldReturn400WhenVoteFails() throws Exception {
+    @DisplayName("Should return 403 when vote fails due to unauthorized")
+    void shouldReturn403WhenVoteFails() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId())
-                .thenThrow(new RuntimeException("Vote failed"));
+                .thenThrow(new UnauthorizedException("User not authenticated"));
 
         // When & Then
         mockMvc.perform(post("/api/votes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(voteRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -173,16 +182,16 @@ class VoteControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when remove vote fails")
-    void shouldReturn400WhenRemoveVoteFails() throws Exception {
+    @DisplayName("Should return 403 when remove vote fails due to unauthorized")
+    void shouldReturn403WhenRemoveVoteFails() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId())
-                .thenThrow(new RuntimeException("Vote not found"));
+                .thenThrow(new UnauthorizedException("User not authenticated"));
 
         // When & Then
         mockMvc.perform(delete("/api/votes/{votableId}", votableId)
                         .param("votableType", Vote.VotableType.POST.name()))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -227,7 +236,7 @@ class VoteControllerTest {
     void shouldGetVoteCountsWithoutUserVoteForUnauthenticatedUser() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId())
-                .thenThrow(new RuntimeException("User not authenticated"));
+                .thenThrow(new UnauthorizedException("User not authenticated"));
         when(voteService.getUpvoteCount(votableId, Vote.VotableType.POST)).thenReturn(10L);
         when(voteService.getDownvoteCount(votableId, Vote.VotableType.POST)).thenReturn(2L);
 
@@ -242,16 +251,16 @@ class VoteControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when getting vote counts fails")
-    void shouldReturn400WhenGetVoteCountsFails() throws Exception {
+    @DisplayName("Should return 404 when getting vote counts for non-existent votable")
+    void shouldReturn404WhenGetVoteCountsFails() throws Exception {
         // Given
         when(voteService.getUpvoteCount(votableId, Vote.VotableType.POST))
-                .thenThrow(new RuntimeException("Votable not found"));
+                .thenThrow(new ResourceNotFoundException("Post", "id", votableId));
 
         // When & Then
         mockMvc.perform(get("/api/votes/{votableId}/counts", votableId)
                         .param("votableType", Vote.VotableType.POST.name()))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test

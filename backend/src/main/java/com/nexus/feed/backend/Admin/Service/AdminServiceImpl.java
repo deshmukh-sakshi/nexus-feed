@@ -58,9 +58,11 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
         AppUser appUser = user.getAppUser();
+        Role oldRole = appUser.getRole();
         appUser.setRole(Role.valueOf(role.toUpperCase()));
         appUserRepository.save(appUser);
         
+        log.info("User role updated: userId={}, oldRole={}, newRole={}", userId, oldRole, role.toUpperCase());
         return toAdminUserResponse(user);
     }
 
@@ -69,6 +71,8 @@ public class AdminServiceImpl implements AdminService {
     public void deleteUser(UUID userId) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        String username = user.getUsername();
         
         // Delete all votes by this user
         voteRepository.deleteByIdUserId(userId);
@@ -99,6 +103,8 @@ public class AdminServiceImpl implements AdminService {
         if (appUser != null) {
             appUserRepository.delete(appUser);
         }
+        
+        log.info("User deleted by admin: userId={}, username={}", userId, username);
     }
 
     @Override
@@ -112,6 +118,9 @@ public class AdminServiceImpl implements AdminService {
     public void deletePost(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        
+        String postTitle = post.getTitle();
+        UUID authorId = post.getUser().getId();
         
         // Delete votes on this post
         voteRepository.deleteByIdVotableId(postId);
@@ -128,6 +137,8 @@ public class AdminServiceImpl implements AdminService {
         if (deletedTags > 0) {
             log.info("Cleaned up {} orphan tag(s) after post deletion", deletedTags);
         }
+        
+        log.info("Post deleted by admin: postId={}, title={}, authorId={}", postId, postTitle, authorId);
     }
 
     @Override
@@ -142,10 +153,15 @@ public class AdminServiceImpl implements AdminService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
         
+        UUID authorId = comment.getUser().getId();
+        UUID postId = comment.getPost().getId();
+        
         // Delete votes on this comment and all its replies recursively
         deleteCommentVotesRecursively(comment);
         
         commentRepository.delete(comment);
+        
+        log.info("Comment deleted by admin: commentId={}, postId={}, authorId={}", commentId, postId, authorId);
     }
     
     private void deleteCommentVotesRecursively(Comment comment) {

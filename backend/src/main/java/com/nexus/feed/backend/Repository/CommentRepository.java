@@ -26,8 +26,6 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     @Query("SELECT c.post.id as postId, COUNT(c) as count FROM Comment c WHERE c.post.id IN :postIds GROUP BY c.post.id")
     java.util.List<CommentCount> countByPostIds(@Param("postIds") java.util.List<UUID> postIds);
     
-    void deleteByPost(Post post);
-    
     long countByUser(Users user);
     
     interface CommentCount {

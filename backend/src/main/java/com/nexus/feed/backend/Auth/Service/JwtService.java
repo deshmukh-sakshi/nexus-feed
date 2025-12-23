@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -28,12 +30,14 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date((System.currentTimeMillis()) + 1000 * 60 * 60 * 24)) // 24 hours
                 .signWith(getSignInKey())
                 .compact();
+        log.debug("JWT generated for user: {}", userDetails.getUsername());
+        return token;
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

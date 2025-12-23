@@ -25,8 +25,16 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = BadgeController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import org.springframework.context.annotation.Import;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = BadgeController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("BadgeController Tests")
 class BadgeControllerTest {
@@ -41,10 +49,10 @@ class BadgeControllerTest {
     private BadgeAwardingService badgeAwardingService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private BadgeResponse badgeResponse;
     private UUID userId;
@@ -104,7 +112,7 @@ class BadgeControllerTest {
     void shouldReturn404WhenBadgeNotFoundById() throws Exception {
         // Given
         when(badgeService.getBadgeById(999))
-                .thenThrow(new RuntimeException("Badge not found"));
+                .thenThrow(new ResourceNotFoundException("Badge", "id", 999));
 
         // When & Then
         mockMvc.perform(get("/api/badges/{id}", 999))
@@ -129,7 +137,7 @@ class BadgeControllerTest {
     void shouldReturn404WhenBadgeNotFoundByName() throws Exception {
         // Given
         when(badgeService.getBadgeByName("Nonexistent Badge"))
-                .thenThrow(new RuntimeException("Badge not found"));
+                .thenThrow(new ResourceNotFoundException("Badge", "name", "Nonexistent Badge"));
 
         // When & Then
         mockMvc.perform(get("/api/badges/name/{name}", "Nonexistent Badge"))
@@ -165,7 +173,7 @@ class BadgeControllerTest {
         // Given
         UUID nonExistentUserId = UUID.randomUUID();
         when(badgeService.getUserBadges(nonExistentUserId))
-                .thenThrow(new RuntimeException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User", "id", nonExistentUserId));
 
         // When & Then
         mockMvc.perform(get("/api/badges/user/{userId}", nonExistentUserId))
@@ -203,7 +211,7 @@ class BadgeControllerTest {
     @DisplayName("Should return 400 when awarding badge fails")
     void shouldReturn400WhenAwardingBadgeFails() throws Exception {
         // Given
-        doThrow(new RuntimeException("User or badge not found"))
+        doThrow(new IllegalArgumentException("User or badge not found"))
                 .when(badgeService).awardBadgeToUser(any(UUID.class), any(Integer.class));
 
         // When & Then
@@ -217,7 +225,7 @@ class BadgeControllerTest {
     @DisplayName("Should return 400 when awarding duplicate badge")
     void shouldReturn400WhenAwardingDuplicateBadge() throws Exception {
         // Given
-        doThrow(new RuntimeException("Badge already awarded"))
+        doThrow(new IllegalArgumentException("User already has badge 'First Post'"))
                 .when(badgeService).awardBadgeToUser(any(UUID.class), any(Integer.class));
 
         // When & Then

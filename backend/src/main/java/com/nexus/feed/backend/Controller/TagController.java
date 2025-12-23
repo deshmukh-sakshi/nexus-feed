@@ -4,11 +4,13 @@ import com.nexus.feed.backend.DTO.TagResponse;
 import com.nexus.feed.backend.DTO.TrendingTagResponse;
 import com.nexus.feed.backend.Service.TagService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class TagController {
 
     @GetMapping("/search")
     public ResponseEntity<List<TagResponse>> searchTags(@RequestParam(required = false) String query) {
+        log.debug("Searching tags with query: {}", query);
         return ResponseEntity.ok(tagService.searchTags(query));
     }
 
