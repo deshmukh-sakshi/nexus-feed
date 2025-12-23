@@ -12,7 +12,7 @@ import { ImageGallery } from '@/components/ui/image-gallery'
 import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { useVotePost } from '@/hooks/useVotePost'
+import { useOptimisticVote } from '@/hooks/useOptimisticVote'
 import type { Post } from '@/types'
 
 interface PostCardProps {
@@ -22,7 +22,7 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const { votePost } = useVotePost()
+  const { votePost } = useOptimisticVote()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [isCardPressed, setIsCardPressed] = useState(false)
 
