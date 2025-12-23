@@ -80,22 +80,19 @@ export const UserProfile = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             <UserAvatar 
               username={profile.username} 
               profileImageUrl={profile.profilePictureUrl}
               size="lg" 
             />
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3">
                 <h1 className="text-2xl font-bold">u/{profile.username}</h1>
                 {isOwnProfile && (
                   <Button
-                    
-                   
                     size="sm"
                     onClick={() => setIsEditDialogOpen(true)}
-                  
                     className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
                   >
                     <Edit2 className="mr-2 h-4 w-4" />
