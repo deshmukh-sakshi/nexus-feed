@@ -154,11 +154,11 @@ export const CreatePost = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-3 border-t-2 border-dashed border-black/20">
+            <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t-2 border-dashed border-black/20">
               <Button 
                 type="submit" 
                 disabled={!title.trim() || isCreating || isUploadingImages}
-                className="flex-1 bg-lime-300 text-black hover:bg-lime-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:flex-1 bg-lime-300 text-black hover:bg-lime-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {isCreating ? 'Creating...' : isUploadingImages ? 'Uploading Images...' : 'Create Post'}
@@ -167,7 +167,7 @@ export const CreatePost = () => {
                 type="button"
                 onClick={() => navigate(-1)}
                 disabled={isCreating}
-                className="bg-gray-200 text-black hover:bg-gray-300 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold px-6 transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50"
+                className="w-full sm:w-auto bg-gray-200 text-black hover:bg-gray-300 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold px-6 transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50"
               >
                 Cancel
               </Button>
