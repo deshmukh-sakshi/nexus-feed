@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAdminComments, useDeleteComment } from '@/hooks/useAdmin'
 import { Trash2, ExternalLink, ArrowUpDown, Search } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminComment } from '@/types'
 
 type SortField = 'body' | 'username' | 'postTitle' | 'votes' | 'createdAt'
@@ -16,6 +17,7 @@ export const AdminComments = () => {
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
 
   const handleDelete = (commentId: string) => {
     deleteComment.mutate(commentId)
@@ -35,7 +37,7 @@ export const AdminComments = () => {
     if (!data?.content) return []
     
     const filtered = data.content.filter((comment: AdminComment) => {
-      const search = searchTerm.toLowerCase()
+      const search = debouncedSearch.toLowerCase()
       return (
         comment.body.toLowerCase().includes(search) ||
         comment.username.toLowerCase().includes(search) ||
@@ -64,7 +66,7 @@ export const AdminComments = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison
     })
-  }, [data?.content, sortField, sortOrder, searchTerm])
+  }, [data?.content, sortField, sortOrder, debouncedSearch])
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button onClick={() => handleSort(field)} className="flex items-center gap-1 hover:text-blue-800">

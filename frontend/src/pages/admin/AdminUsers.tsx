@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
 import { Trash2, ArrowUpDown, Search } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminUser } from '@/types'
 
 type SortField = 'username' | 'email' | 'role' | 'karma' | 'postCount' | 'commentCount' | 'createdAt'
@@ -18,6 +19,7 @@ export const AdminUsers = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const debouncedSearch = useDebounce(searchTerm, 300)
 
   useEffect(() => {
     const search = searchParams.get('search')
@@ -42,7 +44,7 @@ export const AdminUsers = () => {
     if (!data?.content) return []
     
     const filtered = data.content.filter((user: AdminUser) => {
-      const search = searchTerm.toLowerCase()
+      const search = debouncedSearch.toLowerCase()
       const matchesSearch = user.username?.toLowerCase().includes(search) || user.email?.toLowerCase().includes(search)
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
       return matchesSearch && matchesRole
@@ -75,7 +77,7 @@ export const AdminUsers = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison
     })
-  }, [data?.content, sortField, sortOrder, searchTerm, roleFilter])
+  }, [data?.content, sortField, sortOrder, debouncedSearch, roleFilter])
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button onClick={() => handleSort(field)} className="flex items-center gap-1 hover:text-blue-800">

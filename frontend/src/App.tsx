@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from '@/components/ui/sonner'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Layout } from '@/components/layout/Layout'
 import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
@@ -10,6 +11,7 @@ import { PostDetail } from '@/pages/PostDetail'
 import { UserProfile } from '@/pages/UserProfile'
 import { CreatePost } from '@/pages/CreatePost'
 import { Search } from '@/pages/Search'
+import { NotFound } from '@/pages/NotFound'
 import { AdminLayout, AdminDashboard, AdminUsers, AdminPosts, AdminComments } from '@/pages/admin'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
@@ -52,6 +54,7 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/guidelines" element={<Guidelines />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )
@@ -60,10 +63,12 @@ const AppRoutes = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster />
-      </BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toaster />
+        </BrowserRouter>
+      </ErrorBoundary>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )
