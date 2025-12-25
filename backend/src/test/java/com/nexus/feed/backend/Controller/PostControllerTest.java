@@ -1,9 +1,16 @@
 package com.nexus.feed.backend.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import com.nexus.feed.backend.DTO.CommentResponse;
 import com.nexus.feed.backend.DTO.PostCreateRequest;
+import com.nexus.feed.backend.DTO.PostDetailResponse;
 import com.nexus.feed.backend.DTO.PostResponse;
 import com.nexus.feed.backend.DTO.PostUpdateRequest;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Service.AuthenticationService;
 import com.nexus.feed.backend.Service.PostService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -27,13 +35,15 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = PostController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = PostController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("PostController Tests")
 class PostControllerTest {
@@ -51,10 +61,10 @@ class PostControllerTest {
     private AuthenticationService authenticationService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
     private UUID postId;
@@ -161,7 +171,7 @@ class PostControllerTest {
         // Given
         UUID nonExistentId = UUID.randomUUID();
         when(postService.getPostById(nonExistentId))
-                .thenThrow(new RuntimeException("Post not found"));
+                .thenThrow(new ResourceNotFoundException("Post", "id", nonExistentId));
 
         // When & Then
         mockMvc.perform(get("/api/posts/{id}", nonExistentId))
@@ -253,18 +263,18 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when update fails")
-    void shouldReturn400WhenUpdateFails() throws Exception {
+    @DisplayName("Should return 403 when update fails due to unauthorized")
+    void shouldReturn403WhenUpdateFails() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId()).thenReturn(userId);
         when(postService.updatePost(any(UUID.class), any(UUID.class), any(PostUpdateRequest.class)))
-                .thenThrow(new RuntimeException("Update failed"));
+                .thenThrow(new UnauthorizedException("Not authorized to update this post"));
 
         // When & Then
         mockMvc.perform(put("/api/posts/{id}", postId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(postUpdateRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -280,15 +290,16 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when delete fails")
-    void shouldReturn400WhenDeleteFails() throws Exception {
+    @DisplayName("Should return 403 when delete fails due to unauthorized")
+    void shouldReturn403WhenDeleteFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId())
-                .thenThrow(new RuntimeException("Delete failed"));
+        when(authenticationService.getCurrentUserId()).thenReturn(userId);
+        doThrow(new UnauthorizedException("Not authorized to delete this post"))
+                .when(postService).deletePost(any(UUID.class), any(UUID.class));
 
         // When & Then
         mockMvc.perform(delete("/api/posts/{id}", postId))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -309,33 +320,33 @@ class PostControllerTest {
     @DisplayName("Should get post with comments successfully")
     void shouldGetPostWithCommentsSuccessfully() throws Exception {
         // Given
-        com.nexus.feed.backend.DTO.CommentResponse comment1 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+        CommentResponse comment1 = CommentResponse.builder()
                 .id(UUID.randomUUID())
                 .body("Test comment 1")
                 .userId(userId)
                 .username("tester")
                 .postId(postId)
-                .createdAt(java.time.Instant.now())
-                .updatedAt(java.time.Instant.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .upvotes(0)
                 .downvotes(0)
                 .build();
 
-        com.nexus.feed.backend.DTO.CommentResponse comment2 = com.nexus.feed.backend.DTO.CommentResponse.builder()
+        CommentResponse comment2 = CommentResponse.builder()
                 .id(UUID.randomUUID())
                 .body("Test comment 2")
                 .userId(userId)
                 .username("tester")
                 .postId(postId)
-                .createdAt(java.time.Instant.now())
-                .updatedAt(java.time.Instant.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .upvotes(0)
                 .downvotes(0)
                 .build();
 
-        List<com.nexus.feed.backend.DTO.CommentResponse> comments = Arrays.asList(comment1, comment2);
+        List<CommentResponse> comments = Arrays.asList(comment1, comment2);
         
-        com.nexus.feed.backend.DTO.PostDetailResponse postDetailResponse = com.nexus.feed.backend.DTO.PostDetailResponse.builder()
+        PostDetailResponse postDetailResponse = PostDetailResponse.builder()
                 .post(postResponse)
                 .comments(comments)
                 .build();
@@ -361,7 +372,7 @@ class PostControllerTest {
         // Given
         UUID nonExistentId = UUID.randomUUID();
         when(postService.getPostWithComments(nonExistentId))
-                .thenThrow(new RuntimeException("Post not found"));
+                .thenThrow(new ResourceNotFoundException("Post", "id", nonExistentId));
 
         // When & Then
         mockMvc.perform(get("/api/posts/{id}/with-comments", nonExistentId))

@@ -31,6 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
     private final ObjectMapper objectMapper;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JwtAuthFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
@@ -67,8 +68,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
+            log.debug("JWT expired for request: {}", request.getRequestURI());
             sendErrorResponse(response, "Session expired. Please login again.");
         } catch (MalformedJwtException | SignatureException e) {
+            log.warn("Invalid JWT token for request: {}", request.getRequestURI());
             sendErrorResponse(response, "Invalid token. Please login again.");
         }
     }

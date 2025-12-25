@@ -24,27 +24,28 @@ export const AdminLayout = () => {
     <div className="min-h-screen">
       {/* Admin Header */}
       <header className="sticky top-0 z-50 border-b-4 border-black bg-purple-400">
-        <div className="container mx-auto px-6 max-w-7xl flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl flex flex-col sm:flex-row h-auto sm:h-16 py-3 sm:py-0 items-center justify-between gap-3 sm:gap-0">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
             <Link
               to="/"
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-300 text-black font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-300 text-black font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-sm sm:text-base"
             >
-              <Home className="h-5 w-5" />
-              Back to Site
+              <Home className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Back to Site</span>
+              <span className="sm:hidden">Home</span>
             </Link>
-            <h1 className="text-2xl font-bold text-black">Admin Panel</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-black">Admin Panel</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="px-3 py-1 bg-green-300 border-2 border-black font-bold text-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="px-2 sm:px-3 py-1 bg-green-300 border-2 border-black font-bold text-xs sm:text-sm">
               {user?.username}
             </span>
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-400 text-black font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-red-400 text-black font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-sm sm:text-base"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>

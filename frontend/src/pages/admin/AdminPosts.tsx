@@ -1,20 +1,23 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAdminPosts, useDeletePost } from '@/hooks/useAdmin'
-import { Trash2, ExternalLink, ArrowUpDown, Search } from 'lucide-react'
+import { Trash2, ExternalLink, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminPost } from '@/types'
 
 type SortField = 'title' | 'username' | 'votes' | 'commentCount' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
 export const AdminPosts = () => {
-  const [page] = useState(0)
+  const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminPosts(page, 20)
   const deletePost = useDeletePost()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
 
   const handleDelete = (postId: string) => {
     deletePost.mutate(postId)
@@ -34,7 +37,7 @@ export const AdminPosts = () => {
     if (!data?.content) return []
     
     const filtered = data.content.filter((post: AdminPost) => {
-      const search = searchTerm.toLowerCase()
+      const search = debouncedSearch.toLowerCase()
       return (
         post.title.toLowerCase().includes(search) ||
         post.username.toLowerCase().includes(search)
@@ -62,7 +65,7 @@ export const AdminPosts = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison
     })
-  }, [data?.content, sortField, sortOrder, searchTerm])
+  }, [data?.content, sortField, sortOrder, debouncedSearch])
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button onClick={() => handleSort(field)} className="flex items-center gap-1 hover:text-blue-800">
@@ -98,8 +101,8 @@ export const AdminPosts = () => {
       <h1 className="text-3xl font-bold text-black">Manage Posts</h1>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input
             type="text"
@@ -109,12 +112,12 @@ export const AdminPosts = () => {
             className="w-full pl-10 pr-4 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="font-bold text-sm">Sort by:</label>
           <select
             value={sortField}
             onChange={(e) => setSortField(e.target.value as SortField)}
-            className="px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            className="flex-1 sm:flex-none px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
           >
             <option value="createdAt">Date</option>
             <option value="title">Title</option>
@@ -133,7 +136,8 @@ export const AdminPosts = () => {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         <table className="w-full">
           <thead className="bg-cyan-400 border-b-2 border-black">
             <tr>
@@ -200,9 +204,71 @@ export const AdminPosts = () => {
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredAndSortedPosts.length > 0 ? (
+          filteredAndSortedPosts.map((post: AdminPost) => (
+            <AdminMobileCard
+              key={post.id}
+              id={post.id}
+              header={
+                <div className="mb-3">
+                  <h3 className="font-bold text-lg line-clamp-2">{post.title}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-600">by</span>
+                    <Link to={`/admin/users?search=${post.username}`} className="text-blue-600 hover:underline font-semibold text-sm">
+                      {post.username}
+                    </Link>
+                    <span className="text-sm text-gray-500">• {new Date(post.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              }
+              stats={[
+                { value: post.upvotes - post.downvotes, label: 'Votes', color: 'dynamic', dynamicPositive: post.upvotes - post.downvotes >= 0 },
+                { value: post.commentCount, label: 'Comments', color: 'blue' },
+              ]}
+              viewLink={`/post/${post.id}`}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDelete}
+              onDeleteCancel={() => setDeleteConfirm(null)}
+            />
+          ))
+        ) : (
+          <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            No posts found
+          </div>
+        )}
+      </div>
+
       <div className="text-sm font-semibold text-gray-600">
         Showing {filteredAndSortedPosts.length} of {data?.content.length || 0} posts
       </div>
+
+      {/* Pagination Controls */}
+      {data?.page && data.page.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-cyan-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-cyan-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyan-400"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm bg-white border-2 border-black font-semibold">
+            {page + 1} / {data.page.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(data.page.totalPages - 1, p + 1))}
+            disabled={page >= data.page.totalPages - 1}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-cyan-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-cyan-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyan-400"
+          >
+            Next
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

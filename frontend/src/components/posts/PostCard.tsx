@@ -12,7 +12,7 @@ import { ImageGallery } from '@/components/ui/image-gallery'
 import { PostSkeleton } from '@/components/posts/PostSkeleton'
 import { cn, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
-import { useVotePost } from '@/hooks/useVotePost'
+import { useOptimisticVote } from '@/hooks/useOptimisticVote'
 import type { Post } from '@/types'
 
 interface PostCardProps {
@@ -22,7 +22,7 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const { votePost } = useVotePost()
+  const { votePost } = useOptimisticVote()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [isCardPressed, setIsCardPressed] = useState(false)
 
@@ -81,7 +81,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
     >
       {/* Content Area */}
-      <div className="post-content px-4 py-3 pb-0">
+      <div className="post-content px-3 sm:px-4 py-3 pb-0">
         {/* Header */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 group">
            <Link 
@@ -102,7 +102,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
 
         {/* Body */}
-        <h3 className="text-2xl font-bold mb-1 leading-tight">{post.title}</h3>
+        <h3 className="text-xl sm:text-2xl font-bold mb-1 leading-tight">{post.title}</h3>
 
         
 
@@ -144,7 +144,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2 flex items-center gap-2">
+      <div className="px-3 sm:px-4 py-2 flex flex-wrap items-center gap-2">
           {/* Vote Pill */}
           <div 
             className="flex items-center bg-pink-200 border-2 border-black rounded-full h-10 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"

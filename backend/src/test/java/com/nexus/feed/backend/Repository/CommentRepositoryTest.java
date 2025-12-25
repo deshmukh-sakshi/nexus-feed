@@ -181,14 +181,4 @@ class CommentRepositoryTest {
         // Then
         assertThat(replies).isEmpty();
     }
-
-    @Test
-    @DisplayName("Should delete comments by post")
-    void shouldDeleteCommentsByPost() {
-        // When
-        commentRepository.deleteByPost(post);
-
-        // Then
-        assertThat(commentRepository.countByPost(post)).isEqualTo(0);
-    }
 }

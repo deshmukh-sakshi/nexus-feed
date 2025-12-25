@@ -1,7 +1,6 @@
 package com.nexus.feed.backend.Service;
 
 import com.nexus.feed.backend.Auth.Entity.AppUser;
-import com.nexus.feed.backend.DTO.UserCreateRequest;
 import com.nexus.feed.backend.DTO.UserResponse;
 import com.nexus.feed.backend.DTO.UserUpdateRequest;
 import com.nexus.feed.backend.Entity.Users;
@@ -53,21 +52,6 @@ class UserServiceImplTest {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         user.setAppUser(appUser);
-    }
-
-    @Test
-    @DisplayName("Should throw UnsupportedOperationException when creating user")
-    void shouldThrowUnsupportedOperationExceptionWhenCreatingUser() {
-        // Given
-        UserCreateRequest request = new UserCreateRequest();
-        request.setUsername("newuser");
-        request.setEmail("new@example.com");
-        request.setPassword("password");
-
-        // When & Then
-        assertThatThrownBy(() -> userService.createUser(request))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("Use /api/auth/register endpoint");
     }
 
     @Test

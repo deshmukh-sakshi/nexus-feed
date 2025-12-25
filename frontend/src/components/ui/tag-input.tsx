@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { tagsApi } from '@/lib/api-client'
+import { useClickOutside } from '@/hooks/useClickOutside'
+import { useDebounce } from '@/hooks/useDebounce'
 
 interface TagInputProps {
   value: string[]
@@ -23,23 +25,17 @@ export const TagInput = ({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  const debouncedInput = useDebounce(inputValue, 300)
 
-  const { data: suggestions = [] } = useQuery({
-    queryKey: ['tagSuggestions', inputValue],
-    queryFn: () => tagsApi.searchTags(inputValue),
-    enabled: inputValue.length > 0,
+  useClickOutside(containerRef, () => setShowSuggestions(false), showSuggestions)
+
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
+    queryKey: ['tagSuggestions', debouncedInput],
+    queryFn: () => tagsApi.searchTags(debouncedInput),
+    enabled: debouncedInput.length > 0,
     staleTime: 30000,
   })
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
 
   const addTag = (tag: string) => {
     const normalized = tag.trim().toLowerCase()
@@ -111,21 +107,28 @@ export const TagInput = ({
         )}
       </div>
 
-      {showSuggestions && filteredSuggestions.length > 0 && (
+      {showSuggestions && (suggestionsLoading || filteredSuggestions.length > 0) && (
         <div className="absolute z-50 w-full mt-1 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-h-48 overflow-auto">
-          {filteredSuggestions.map((suggestion) => (
-            <button
-              key={suggestion.id}
-              type="button"
-              onClick={() => addTag(suggestion.name)}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-yellow-100 flex justify-between items-center"
-            >
-              <span>#{suggestion.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {suggestion.postCount} posts
-              </span>
-            </button>
-          ))}
+          {suggestionsLoading ? (
+            <div className="flex items-center justify-center py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+            </div>
+          ) : (
+            filteredSuggestions.map((suggestion) => (
+              <button
+                key={suggestion.id}
+                type="button"
+                onClick={() => addTag(suggestion.name)}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-yellow-100 flex justify-between items-center"
+              >
+                <span>#{suggestion.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {suggestion.postCount} posts
+                </span>
+              </button>
+            ))
+          )}
         </div>
       )}
 

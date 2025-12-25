@@ -45,24 +45,7 @@ public class EmailServiceImpl implements EmailService {
     @Async
     @Override
     public void sendEmail(String to, String subject, String body) {
-        if (!enabled) {
-            log.debug("Email not sent (service disabled): to={}, subject={}", to, subject);
-            return;
-        }
-
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(FROM_ADDRESS);
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-
-            mailSender.send(message);
-            log.info("Email sent successfully: to={}, subject={}", to, subject);
-        } catch (MailException e) {
-            log.error("Failed to send email: to={}, subject={}, error={}", to, subject, e.getMessage());
-            throw new EmailSendException("Failed to send email to " + to, e);
-        }
+        doSendEmail(to, subject, body);
     }
 
     @Async
@@ -70,10 +53,18 @@ public class EmailServiceImpl implements EmailService {
     public void sendWelcomeEmail(String to, String username) {
         String subject = "Welcome to Nexus Feed!";
         String body = composeWelcomeEmail(username);
-        sendEmailInternal(to, subject, body);
+        doSendEmail(to, subject, body);
     }
 
-    private void sendEmailInternal(String to, String subject, String body) {
+    @Async
+    @Override
+    public void sendBadgeAwardedEmail(String to, String username, String badgeName, String badgeDescription, String badgeIcon) {
+        String subject = "🎉 You earned a new badge: " + badgeName;
+        String body = composeBadgeEmail(username, badgeName, badgeDescription, badgeIcon);
+        doSendEmail(to, subject, body);
+    }
+
+    private void doSendEmail(String to, String subject, String body) {
         if (!enabled) {
             log.debug("Email not sent (service disabled): to={}, subject={}", to, subject);
             return;
@@ -87,7 +78,7 @@ public class EmailServiceImpl implements EmailService {
             message.setText(body);
 
             mailSender.send(message);
-            log.info("Email sent successfully: to={}, subject={}", to, subject);
+            log.info("Email sent: to={}, subject={}", to, subject);
         } catch (MailException e) {
             log.error("Failed to send email: to={}, subject={}, error={}", to, subject, e.getMessage());
             throw new EmailSendException("Failed to send email to " + to, e);
@@ -107,14 +98,6 @@ public class EmailServiceImpl implements EmailService {
             "The Nexus Feed Team",
             username
         );
-    }
-
-    @Async
-    @Override
-    public void sendBadgeAwardedEmail(String to, String username, String badgeName, String badgeDescription, String badgeIcon) {
-        String subject = "🎉 You earned a new badge: " + badgeName;
-        String body = composeBadgeEmail(username, badgeName, badgeDescription, badgeIcon);
-        sendEmailInternal(to, subject, body);
     }
 
     String composeBadgeEmail(String username, String badgeName, String badgeDescription, String badgeIcon) {

@@ -4,72 +4,70 @@ import { votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
 import type { Post } from '@/types'
 
-export const useVotePost = () => {
+/**
+ * Shared optimistic vote logic for posts.
+ * Updates all relevant caches: posts list, single post, user posts, and post detail.
+ */
+export const useOptimisticVote = () => {
   const queryClient = useQueryClient()
+
+  const updatePostOptimistically = (post: Post, id: string, voteValue: 'UPVOTE' | 'DOWNVOTE'): Post => {
+    if (!post || post.id !== id) return post
+
+    const isSameVote = post.userVote === voteValue
+    const newVote = isSameVote ? null : voteValue
+
+    let upvotes = post.upvotes
+    let downvotes = post.downvotes
+
+    // Remove old vote
+    if (post.userVote === 'UPVOTE') upvotes--
+    if (post.userVote === 'DOWNVOTE') downvotes--
+
+    // Add new vote
+    if (newVote === 'UPVOTE') upvotes++
+    if (newVote === 'DOWNVOTE') downvotes++
+
+    return { ...post, userVote: newVote, upvotes, downvotes }
+  }
 
   const votePostMutation = useMutation({
     mutationFn: ({ id, voteValue }: { id: string; voteValue: 'UPVOTE' | 'DOWNVOTE' }) =>
       votesApi.votePost(id, voteValue),
     onMutate: async ({ id, voteValue }) => {
-      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['posts'] })
       await queryClient.cancelQueries({ queryKey: ['post', id] })
       await queryClient.cancelQueries({ queryKey: ['userPosts'] })
       await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
 
-      // Snapshot the previous values
-      const previousPosts4 = queryClient.getQueryData(['posts', 4])
+      // Snapshot previous values
+      const previousPostsQueries = queryClient.getQueriesData({ queryKey: ['posts'] })
       const previousPost = queryClient.getQueryData(['post', id])
-      const previousUserPosts = new Map()
+      const previousUserPosts = new Map<string, unknown>()
       const previousPostDetail = queryClient.getQueryData(['postWithComments', id])
 
-      // Helper to update a single post based on its CURRENT cache state
-      const updatePostOptimistically = (post: Post) => {
-        if (!post || post.id !== id) return post
-
-        const isSameVote = post.userVote === voteValue
-        const newVote = isSameVote ? null : voteValue
-
-        let upvotes = post.upvotes
-        let downvotes = post.downvotes
-
-        // Remove old vote
-        if (post.userVote === 'UPVOTE') upvotes--
-        if (post.userVote === 'DOWNVOTE') downvotes--
-
-        // Add new vote
-        if (newVote === 'UPVOTE') upvotes++
-        if (newVote === 'DOWNVOTE') downvotes++
-
-        return {
-          ...post,
-          userVote: newVote,
-          upvotes,
-          downvotes,
-        }
-      }
-
-      // Update Infinite Query Cache (main feed) - handle all page sizes
+      // Update all posts list queries (handles any page size)
       queryClient.setQueriesData({ queryKey: ['posts'] }, (old: unknown) => {
         if (!old) return old
-        const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
+        const typedOld = old as { pages?: { content: Post[]; [key: string]: unknown }[] }
         if (!typedOld.pages) return old
         return {
           ...typedOld,
           pages: typedOld.pages.map((page) => ({
             ...page,
-            content: page.content.map(updatePostOptimistically),
+            content: page.content.map((post) => updatePostOptimistically(post, id, voteValue)),
           })),
         }
       })
 
-      // Update Single Post Cache
+      // Update single post cache
       queryClient.setQueryData(['post', id], (old: unknown) => {
         if (!old) return old
-        return updatePostOptimistically(old as Post)
+        return updatePostOptimistically(old as Post, id, voteValue)
       })
 
-      // Update User Posts Cache (profile page)
+      // Update user posts cache
       queryClient.getQueriesData({ queryKey: ['userPosts'] }).forEach(([key, data]) => {
         if (data) {
           previousUserPosts.set(JSON.stringify(key), data)
@@ -78,33 +76,36 @@ export const useVotePost = () => {
             const typedOld = old as { content: Post[]; [key: string]: unknown }
             return {
               ...typedOld,
-              content: typedOld.content.map(updatePostOptimistically),
+              content: typedOld.content.map((post) => updatePostOptimistically(post, id, voteValue)),
             }
           })
         }
       })
 
-      // Update Post Detail Cache (post detail page)
+      // Update post detail cache
       queryClient.setQueryData(['postWithComments', id], (old: unknown) => {
         if (!old) return old
         const postDetail = old as { post: Post; comments: unknown[] }
         return {
           ...postDetail,
-          post: updatePostOptimistically(postDetail.post),
+          post: updatePostOptimistically(postDetail.post, id, voteValue),
         }
       })
 
-      return { previousPosts4, previousPost, previousUserPosts, previousPostDetail }
+      return { previousPostsQueries, previousPost, previousUserPosts, previousPostDetail }
     },
     onError: (err, variables, context) => {
-      if (context?.previousPosts4) {
-        queryClient.setQueryData(['posts', 4], context.previousPosts4)
+      // Restore all previous values on error
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
       }
       if (context?.previousPost) {
         queryClient.setQueryData(['post', variables.id], context.previousPost)
       }
       if (context?.previousUserPosts) {
-        context.previousUserPosts.forEach((data: unknown, key: string) => {
+        context.previousUserPosts.forEach((data, key) => {
           queryClient.setQueryData(JSON.parse(key), data)
         })
       }
@@ -118,5 +119,6 @@ export const useVotePost = () => {
   return {
     votePost: (id: string, voteValue: 'UPVOTE' | 'DOWNVOTE') =>
       votePostMutation.mutate({ id, voteValue }),
+    isVoting: votePostMutation.isPending,
   }
 }

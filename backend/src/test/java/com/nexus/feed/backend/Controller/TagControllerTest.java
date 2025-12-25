@@ -21,8 +21,15 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = TagController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import org.springframework.context.annotation.Import;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = TagController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("TagController Tests")
 class TagControllerTest {
@@ -34,10 +41,10 @@ class TagControllerTest {
     private TagService tagService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private TagResponse tagResponse1;
     private TagResponse tagResponse2;

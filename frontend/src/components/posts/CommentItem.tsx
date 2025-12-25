@@ -120,7 +120,7 @@ export const CommentItem = ({
   return (
     <>
       <div
-        className={cn("border-l-2 border-muted pl-4 py-2", depth > 0 && "ml-4")}
+        className={cn("border-l-2 border-muted pl-2 sm:pl-4 py-2", depth > 0 && "ml-2 sm:ml-4")}
       >
         <div className="space-y-2">
           <div className="flex items-start gap-2 group">
@@ -243,13 +243,13 @@ export const CommentItem = ({
                 {canNest && (
                   <Button
                     size="sm"
-                    className="h-8 px-3 bg-cyan-300 text-black hover:bg-cyan-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-7 sm:h-8 px-2 sm:px-3 bg-cyan-300 text-black hover:bg-cyan-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleReply}
                     disabled={isTempComment}
                     title={isTempComment ? "Please wait for comment to be posted..." : "Reply to this comment"}
                   >
-                    <MessageSquare className="mr-1 h-3 w-3" />
-                    Reply
+                    <MessageSquare className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Reply</span>
                   </Button>
                 )}
 
@@ -257,19 +257,19 @@ export const CommentItem = ({
                   <>
                     <Button
                       size="sm"
-                      className="h-8 px-3 bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                      className="h-7 sm:h-8 px-2 sm:px-3 bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                       onClick={() => setIsEditing(true)}
                     >
-                      <Edit2 className="mr-1 h-3 w-3" />
-                      Edit
+                      <Edit2 className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                     <Button
                       size="sm"
-                      className="h-8 px-3 bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                      className="h-7 sm:h-8 px-2 sm:px-3 bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                       onClick={handleDelete}
                     >
-                      <Trash2 className="mr-1 h-3 w-3" />
-                      Delete
+                      <Trash2 className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">Delete</span>
                     </Button>
                   </>
                 )}

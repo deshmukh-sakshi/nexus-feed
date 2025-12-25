@@ -1,5 +1,6 @@
+import { useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { LogOut, User, PlusCircle, Search, Shield } from 'lucide-react'
+import { LogOut, User, PlusCircle, Search, Shield, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import {
@@ -9,12 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { MobileNavItem } from '@/components/layout/MobileNavItem'
 import { useAuthStore } from '@/stores/authStore'
 import { useAuth } from '@/hooks/useAuth'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 export const Navbar = () => {
   const { user, isAuthenticated, isAdmin } = useAuthStore()
   const { logout } = useAuth()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), [])
+  useClickOutside(mobileMenuRef, closeMobileMenu, isMobileMenuOpen)
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-2 border-black bg-yellow-50 backdrop-blur-sm">
@@ -25,11 +33,12 @@ export const Navbar = () => {
             className="mr-6 flex items-center gap-2 px-4 py-2 bg-purple-400 text-black hover:bg-purple-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all rounded-none font-bold"
           >
             <img src="/logo.svg" alt="Nexus Feed" className="h-6 w-6" />
-            <span>Nexus Feed</span>
+            <span className="hidden sm:inline">Nexus Feed</span>
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-end space-x-2">
+        {/* Desktop navigation - hidden on mobile */}
+        <div className="hidden sm:flex flex-1 items-center justify-end space-x-2">
           <Link to="/search">
             <Button className="bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold">
               <Search className="mr-2 h-5 w-5" />
@@ -103,6 +112,50 @@ export const Navbar = () => {
                 </Button>
               </Link>
             </>
+          )}
+        </div>
+
+        {/* Mobile hamburger button - visible only on mobile */}
+        <div className="flex flex-1 items-center justify-end sm:hidden" ref={mobileMenuRef}>
+          <Button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="bg-orange-400 text-black hover:bg-orange-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold p-2"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
+
+          {/* Mobile dropdown menu */}
+          {isMobileMenuOpen && (
+            <div className="absolute top-full right-4 mt-2 w-56 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50">
+              <div className="flex flex-col p-2 space-y-2">
+                <MobileNavItem to="/search" icon={Search} label="Search" color="teal" onClick={closeMobileMenu} />
+
+                {isAuthenticated ? (
+                  <>
+                    <MobileNavItem to="/create-post" icon={PlusCircle} label="Create Post" color="green" onClick={closeMobileMenu} />
+                    <MobileNavItem to={`/user/${user?.username}`} icon={User} label="Profile" color="yellow" onClick={closeMobileMenu} />
+                    {isAdmin && (
+                      <MobileNavItem to="/admin" icon={Shield} label="Admin Panel" color="purple" onClick={closeMobileMenu} />
+                    )}
+                    <MobileNavItem
+                      icon={LogOut}
+                      label="Log out"
+                      color="red"
+                      onClick={() => {
+                        logout()
+                        closeMobileMenu()
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <MobileNavItem to="/login" label="Log in" color="pink" onClick={closeMobileMenu} />
+                    <MobileNavItem to="/register" label="Sign up" color="blue" onClick={closeMobileMenu} />
+                  </>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>

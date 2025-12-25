@@ -26,7 +26,7 @@ export const AdminDashboard = () => {
     <div className="space-y-8 mx-4 md:mx-8 lg:mx-12">
       <h1 className="text-3xl font-bold text-black">Dashboard</h1>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <div
             key={stat.title}
@@ -53,22 +53,22 @@ export const AdminDashboard = () => {
 
       <div className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <h2 className="text-xl font-black mb-4">Quick Actions</h2>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4">
           <Link
             to="/admin/users"
-            className="px-6 py-3 bg-pink-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            className="px-6 py-3 bg-pink-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-center"
           >
             Manage Users
           </Link>
           <Link
             to="/admin/posts"
-            className="px-6 py-3 bg-cyan-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-cyan-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            className="px-6 py-3 bg-cyan-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-cyan-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-center"
           >
             Manage Posts
           </Link>
           <Link
             to="/admin/comments"
-            className="px-6 py-3 bg-green-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            className="px-6 py-3 bg-green-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-center"
           >
             Manage Comments
           </Link>

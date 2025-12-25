@@ -4,6 +4,7 @@ import com.nexus.feed.backend.Admin.DTO.*;
 import com.nexus.feed.backend.Admin.Service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class AdminController {
 
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsResponse> getStats() {
+        log.debug("Admin fetching stats");
         return ResponseEntity.ok(adminService.getStats());
     }
 
@@ -38,11 +41,13 @@ public class AdminController {
     public ResponseEntity<AdminUserResponse> updateUserRole(
             @PathVariable UUID userId,
             @Valid @RequestBody UpdateUserRoleRequest request) {
+        log.info("Admin updating user role: userId={}, newRole={}", userId, request.role());
         return ResponseEntity.ok(adminService.updateUserRole(userId, request.role()));
     }
 
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+        log.info("Admin deleting user: {}", userId);
         adminService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
@@ -57,6 +62,7 @@ public class AdminController {
 
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<Void> deletePost(@PathVariable UUID postId) {
+        log.info("Admin deleting post: {}", postId);
         adminService.deletePost(postId);
         return ResponseEntity.noContent().build();
     }
@@ -71,6 +77,7 @@ public class AdminController {
 
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable UUID commentId) {
+        log.info("Admin deleting comment: {}", commentId);
         adminService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
     }

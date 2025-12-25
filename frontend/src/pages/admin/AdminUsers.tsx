@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
-import { Trash2, ArrowUpDown, Search } from 'lucide-react'
+import { Trash2, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminUser } from '@/types'
 
 type SortField = 'username' | 'email' | 'role' | 'karma' | 'postCount' | 'commentCount' | 'createdAt'
@@ -9,7 +11,7 @@ type SortOrder = 'asc' | 'desc'
 
 export const AdminUsers = () => {
   const [searchParams] = useSearchParams()
-  const [page] = useState(0)
+  const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminUsers(page, 20)
   const deleteUser = useDeleteUser()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -17,6 +19,7 @@ export const AdminUsers = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const debouncedSearch = useDebounce(searchTerm, 300)
 
   useEffect(() => {
     const search = searchParams.get('search')
@@ -41,7 +44,7 @@ export const AdminUsers = () => {
     if (!data?.content) return []
     
     const filtered = data.content.filter((user: AdminUser) => {
-      const search = searchTerm.toLowerCase()
+      const search = debouncedSearch.toLowerCase()
       const matchesSearch = user.username?.toLowerCase().includes(search) || user.email?.toLowerCase().includes(search)
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
       return matchesSearch && matchesRole
@@ -74,7 +77,7 @@ export const AdminUsers = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison
     })
-  }, [data?.content, sortField, sortOrder, searchTerm, roleFilter])
+  }, [data?.content, sortField, sortOrder, debouncedSearch, roleFilter])
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button onClick={() => handleSort(field)} className="flex items-center gap-1 hover:text-blue-800">
@@ -110,8 +113,8 @@ export const AdminUsers = () => {
       <h1 className="text-3xl font-bold text-black">Manage Users</h1>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input
             type="text"
@@ -121,7 +124,7 @@ export const AdminUsers = () => {
             className="w-full pl-10 pr-4 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="font-bold text-sm">Role:</label>
           <select
             value={roleFilter}
@@ -133,12 +136,12 @@ export const AdminUsers = () => {
             <option value="ADMIN">Admin</option>
           </select>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="font-bold text-sm">Sort by:</label>
           <select
             value={sortField}
             onChange={(e) => setSortField(e.target.value as SortField)}
-            className="px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="flex-1 sm:flex-none px-3 py-2 border-3 border-black font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
           >
             <option value="createdAt">Date</option>
             <option value="username">Username</option>
@@ -159,7 +162,8 @@ export const AdminUsers = () => {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
         <table className="w-full">
           <thead className="bg-purple-400 border-b-2 border-black">
             <tr>
@@ -229,9 +233,72 @@ export const AdminUsers = () => {
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredAndSortedUsers.length > 0 ? (
+          filteredAndSortedUsers.map((user: AdminUser) => (
+            <AdminMobileCard
+              key={user.id}
+              id={user.id}
+              header={
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <Link to={`/user/${user.username}`} className="text-blue-600 hover:underline font-bold text-lg">
+                      {user.username}
+                    </Link>
+                    <p className="text-sm text-gray-600 break-all">{user.email}</p>
+                  </div>
+                  <span className={`px-2 py-1 border-2 border-black font-semibold text-xs ${user.role === 'ADMIN' ? 'bg-purple-300' : 'bg-gray-200'}`}>
+                    {user.role}
+                  </span>
+                </div>
+              }
+              stats={[
+                { value: user.karma, label: 'Karma', color: 'green' },
+                { value: user.postCount, label: 'Posts', color: 'blue' },
+                { value: user.commentCount, label: 'Comments', color: 'yellow' },
+              ]}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDelete}
+              onDeleteCancel={() => setDeleteConfirm(null)}
+            />
+          ))
+        ) : (
+          <div className="bg-white border-2 border-black p-8 text-center text-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            No users found
+          </div>
+        )}
+      </div>
+
       <div className="text-sm font-semibold text-gray-600">
         Showing {filteredAndSortedUsers.length} of {data?.content.length || 0} users
       </div>
+
+      {/* Pagination Controls */}
+      {data?.page && data.page.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-purple-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-purple-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-400"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm bg-white border-2 border-black font-semibold">
+            {page + 1} / {data.page.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(data.page.totalPages - 1, p + 1))}
+            disabled={page >= data.page.totalPages - 1}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-purple-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-purple-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-400"
+          >
+            Next
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

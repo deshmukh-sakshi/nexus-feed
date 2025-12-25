@@ -23,11 +23,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public UserResponse createUser(UserCreateRequest request) {
-        throw new UnsupportedOperationException("Use /api/auth/register endpoint to create users");
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
         Users user = userRepository.findById(id)

@@ -1,10 +1,12 @@
 package com.nexus.feed.backend.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexus.feed.backend.DTO.UserCreateRequest;
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
 import com.nexus.feed.backend.DTO.UserResponse;
 import com.nexus.feed.backend.DTO.UserUpdateRequest;
-import com.nexus.feed.backend.Repository.UserRepository;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,23 +14,25 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = UserController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = UserController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("UserController Tests")
 class UserControllerTest {
@@ -43,28 +47,18 @@ class UserControllerTest {
     private UserService userService;
 
     @MockitoBean
-    private UserRepository userRepository;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
-
-    @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
-    private UserCreateRequest userCreateRequest;
     private UserUpdateRequest userUpdateRequest;
     private UserResponse userResponse;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-
-        // Setup create request
-        userCreateRequest = new UserCreateRequest();
-        userCreateRequest.setUsername("tester");
-        userCreateRequest.setEmail("test@example.com");
-        userCreateRequest.setPassword("password123");
 
         // Setup update request
         userUpdateRequest = new UserUpdateRequest();
@@ -78,70 +72,6 @@ class UserControllerTest {
         userResponse.setEmail("test@example.com");
         userResponse.setCreatedAt(Instant.now());
         userResponse.setUpdatedAt(Instant.now());
-    }
-
-    @Test
-    @DisplayName("Should return success for test endpoint")
-    void shouldReturnSuccessForTestEndpoint() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/api/users/test"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("API is working!"));
-    }
-
-    @Test
-    @DisplayName("Should return database status for test-db endpoint")
-    void shouldReturnDatabaseStatusForTestDbEndpoint() throws Exception {
-        // Given
-        when(userRepository.count()).thenReturn(5L);
-
-        // When & Then
-        mockMvc.perform(get("/api/users/test-db"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Database connected! User count: 5"));
-    }
-
-    @Test
-    @DisplayName("Should handle database error gracefully")
-    void shouldHandleDatabaseErrorGracefully() throws Exception {
-        // Given
-        when(userRepository.count()).thenThrow(new RuntimeException("Database connection failed"));
-
-        // When & Then
-        mockMvc.perform(get("/api/users/test-db"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Database error: Database connection failed"));
-    }
-
-    @Test
-    @DisplayName("Should register user successfully")
-    void shouldRegisterUserSuccessfully() throws Exception {
-        // Given
-        when(userService.createUser(any(UserCreateRequest.class))).thenReturn(userResponse);
-
-        // When & Then
-        mockMvc.perform(post("/api/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userCreateRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.username").value("tester"))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
-    }
-
-    @Test
-    @DisplayName("Should return 400 when registration fails")
-    void shouldReturn400WhenRegistrationFails() throws Exception {
-        // Given
-        when(userService.createUser(any(UserCreateRequest.class)))
-                .thenThrow(new RuntimeException("User already exists"));
-
-        // When & Then
-        mockMvc.perform(post("/api/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userCreateRequest)))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -162,7 +92,7 @@ class UserControllerTest {
     void shouldReturn404WhenUserNotFoundByUsername() throws Exception {
         // Given
         when(userService.getUserByUsername("nonexistent"))
-                .thenThrow(new RuntimeException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User", "username", "nonexistent"));
 
         // When & Then
         mockMvc.perform(get("/api/users/username/{username}", "nonexistent"))
@@ -188,7 +118,7 @@ class UserControllerTest {
         // Given
         UUID nonExistentId = UUID.randomUUID();
         when(userService.getUserById(nonExistentId))
-                .thenThrow(new RuntimeException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User", "id", nonExistentId));
 
         // When & Then
         mockMvc.perform(get("/api/users/id/{id}", nonExistentId))
@@ -227,7 +157,7 @@ class UserControllerTest {
     void shouldReturn404WhenUpdateFails() throws Exception {
         // Given
         when(userService.updateUser(any(UUID.class), any(UserUpdateRequest.class)))
-                .thenThrow(new RuntimeException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User", "id", userId));
 
         // When & Then
         mockMvc.perform(put("/api/users/id/{id}", userId)
@@ -251,7 +181,8 @@ class UserControllerTest {
     @DisplayName("Should return 404 when delete fails")
     void shouldReturn404WhenDeleteFails() throws Exception {
         // Given
-        doThrow(new RuntimeException("User not found")).when(userService).deleteUser(any(UUID.class));
+        doThrow(new ResourceNotFoundException("User", "id", userId))
+                .when(userService).deleteUser(any(UUID.class));
 
         // When & Then
         mockMvc.perform(delete("/api/users/id/{id}", userId))

@@ -1,5 +1,6 @@
 package com.nexus.feed.backend.Entity;
 
+import com.nexus.feed.backend.Auth.Entity.AppUser;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -40,7 +41,7 @@ public class Users {
 
     @OneToOne
     @JoinColumn(name = "app_user_id", unique = true, nullable = false)
-    private com.nexus.feed.backend.Auth.Entity.AppUser appUser;
+    private AppUser appUser;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();

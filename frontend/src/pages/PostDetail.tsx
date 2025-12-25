@@ -443,7 +443,7 @@ export const PostDetail = () => {
                   ))}
                 </div>
                 {editTags.length < 5 && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Input
                       type="text"
                       value={tagInput}
@@ -459,7 +459,7 @@ export const PostDetail = () => {
                         }
                       }}
                       placeholder="Add a tag..."
-                      className="flex-1"
+                      className="flex-1 w-full"
                       maxLength={50}
                     />
                     <Button
@@ -472,7 +472,7 @@ export const PostDetail = () => {
                         }
                       }}
                       disabled={!tagInput.trim() || editTags.includes(tagInput.trim())}
-                      className="bg-blue-400 text-black hover:bg-blue-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold disabled:opacity-50"
+                      className="w-full sm:w-auto bg-blue-400 text-black hover:bg-blue-500 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold disabled:opacity-50"
                     >
                       Add
                     </Button>
@@ -486,18 +486,18 @@ export const PostDetail = () => {
                 disabled={updatePostMutation.isPending}
                 onUploadingChange={setIsUploadingImages}
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button 
                   onClick={handleSaveEdit}
                   disabled={!editTitle.trim() || isUploadingImages}
-                  className="bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
+                  className="w-full sm:w-auto bg-green-400 text-black hover:bg-green-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold disabled:opacity-50"
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {isUploadingImages ? 'Uploading...' : 'Save'}
                 </Button>
                 <Button 
                   onClick={handleCancelEdit}
-                  className="bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                  className="w-full sm:w-auto bg-gray-300 text-black hover:bg-gray-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
                 >
                   <X className="mr-2 h-4 w-4" />
                   Cancel
@@ -552,11 +552,11 @@ export const PostDetail = () => {
           </div>
 
           {isOwner && !isEditing && (
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto w-full sm:w-auto flex flex-col sm:flex-row gap-2">
               <Button 
                 size="sm" 
                 onClick={handleStartEdit}
-                className="bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                className="w-full sm:w-auto bg-yellow-400 text-black hover:bg-yellow-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
               >
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
@@ -564,7 +564,7 @@ export const PostDetail = () => {
               <Button
                 size="sm"
                 onClick={handleDelete}
-                className="bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
+                className="w-full sm:w-auto bg-red-400 text-black hover:bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete

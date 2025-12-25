@@ -61,14 +61,14 @@ export const Search = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Search by Tags</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2">Search by Tags</h1>
         <p className="text-muted-foreground">
           Discover posts by exploring tags
         </p>
       </div>
 
       {/* Search Input */}
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -80,7 +80,7 @@ export const Search = () => {
         </div>
         <Button
           type="submit"
-          className="h-12 px-6 bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold"
+          className="h-12 px-6 w-full sm:w-auto bg-teal-400 text-black hover:bg-teal-500 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold"
         >
           <SearchIcon className="h-5 w-5 mr-2" />
           Search

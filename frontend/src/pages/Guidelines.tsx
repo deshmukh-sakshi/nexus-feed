@@ -16,22 +16,22 @@ export const Guidelines = () => {
         Back
       </Button>
 
-      <div className="bg-teal-50 dark:bg-gray-900 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-8">
-        <div className="flex items-center gap-4 mb-8 border-b-4 border-black pb-4">
-          <div className="p-3 bg-teal-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Scale className="w-8 h-8 text-black" />
+      <div className="bg-teal-50 dark:bg-gray-900 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-4 sm:p-8">
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 border-b-4 border-black pb-4">
+          <div className="p-2 sm:p-3 bg-teal-400 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Scale className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
           </div>
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">Community Guidelines</h1>
-            <p className="font-bold text-muted-foreground mt-1">Let's keep this place nice.</p>
+            <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight">Community Guidelines</h1>
+            <p className="font-bold text-muted-foreground mt-1 text-sm sm:text-base">Let's keep this place nice.</p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-green-100 dark:bg-green-900/30 p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-green-100 dark:bg-green-900/30 p-4 sm:p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-full">
             <div className="flex items-center gap-3 mb-4 border-b-2 border-black/20 pb-2">
-              <CheckCircle2 className="w-8 h-8 text-green-600 fill-green-200" />
-              <h3 className="text-2xl font-black uppercase text-green-800 dark:text-green-300">Do's</h3>
+              <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 fill-green-200" />
+              <h3 className="text-xl sm:text-2xl font-black uppercase text-green-800 dark:text-green-300">Do's</h3>
             </div>
             <ul className="space-y-3 font-bold">
               {[
@@ -49,10 +49,10 @@ export const Guidelines = () => {
             </ul>
           </div>
 
-          <div className="bg-red-100 dark:bg-red-900/30 p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-full">
+          <div className="bg-red-100 dark:bg-red-900/30 p-4 sm:p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-full">
             <div className="flex items-center gap-3 mb-4 border-b-2 border-black/20 pb-2">
-              <XCircle className="w-8 h-8 text-red-600 fill-red-200" />
-              <h3 className="text-2xl font-black uppercase text-red-800 dark:text-red-300">Don'ts</h3>
+              <XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 fill-red-200" />
+              <h3 className="text-xl sm:text-2xl font-black uppercase text-red-800 dark:text-red-300">Don'ts</h3>
             </div>
             <ul className="space-y-3 font-bold">
               {[
@@ -71,8 +71,8 @@ export const Guidelines = () => {
           </div>
         </div>
 
-        <div className="mt-8 p-4 bg-yellow-200 border-2 border-black text-center font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <p>Violating these rules may result in a permanent ban. Play nice!</p>
+        <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-yellow-200 border-2 border-black text-center font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <p className="text-sm sm:text-base">Violating these rules may result in a permanent ban. Play nice!</p>
         </div>
       </div>
     </div>

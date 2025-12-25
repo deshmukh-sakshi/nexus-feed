@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexus.feed.backend.DTO.CommentCreateRequest;
 import com.nexus.feed.backend.DTO.CommentResponse;
 import com.nexus.feed.backend.DTO.CommentUpdateRequest;
+import com.nexus.feed.backend.Exception.GlobalExceptionHandler;
+import com.nexus.feed.backend.Exception.ResourceNotFoundException;
+import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Service.AuthenticationService;
 import com.nexus.feed.backend.Service.CommentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,25 +15,32 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = CommentController.class, excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
+import com.nexus.feed.backend.Auth.Service.JwtService;
+import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+
+@WebMvcTest(controllers = CommentController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 @DisplayName("CommentController Tests")
 class CommentControllerTest {
@@ -48,10 +58,10 @@ class CommentControllerTest {
     private AuthenticationService authenticationService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.JwtService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private UUID userId;
     private UUID postId;
@@ -81,8 +91,8 @@ class CommentControllerTest {
         commentResponse.setUserId(userId);
         commentResponse.setUsername("tester");
         commentResponse.setPostId(postId);
-        commentResponse.setCreatedAt(java.time.Instant.now());
-        commentResponse.setUpdatedAt(java.time.Instant.now());
+        commentResponse.setCreatedAt(Instant.now());
+        commentResponse.setUpdatedAt(Instant.now());
     }
 
     @Test
@@ -134,18 +144,18 @@ class CommentControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when creating comment fails")
-    void shouldReturn400WhenCreateCommentFails() throws Exception {
+    @DisplayName("Should return 404 when creating comment for non-existent post")
+    void shouldReturn404WhenCreateCommentForNonExistentPost() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId()).thenReturn(userId);
         when(commentService.createComment(any(UUID.class), any(UUID.class), any(CommentCreateRequest.class)))
-                .thenThrow(new RuntimeException("Post not found"));
+                .thenThrow(new ResourceNotFoundException("Post", "id", postId));
 
         // When & Then
         mockMvc.perform(post("/api/comments/post/{postId}", postId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(commentCreateRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -168,7 +178,7 @@ class CommentControllerTest {
         // Given
         UUID nonExistentId = UUID.randomUUID();
         when(commentService.getCommentById(nonExistentId))
-                .thenThrow(new RuntimeException("Comment not found"));
+                .thenThrow(new ResourceNotFoundException("Comment", "id", nonExistentId));
 
         // When & Then
         mockMvc.perform(get("/api/comments/{id}", nonExistentId))
@@ -196,7 +206,7 @@ class CommentControllerTest {
         // Given
         UUID nonExistentPostId = UUID.randomUUID();
         when(commentService.getCommentsByPost(nonExistentPostId))
-                .thenThrow(new RuntimeException("Post not found"));
+                .thenThrow(new ResourceNotFoundException("Post", "id", nonExistentPostId));
 
         // When & Then
         mockMvc.perform(get("/api/comments/post/{postId}", nonExistentPostId))
@@ -249,8 +259,8 @@ class CommentControllerTest {
         updatedComment.setUserId(userId);
         updatedComment.setUsername("tester");
         updatedComment.setPostId(postId);
-        updatedComment.setCreatedAt(java.time.Instant.now());
-        updatedComment.setUpdatedAt(java.time.Instant.now());
+        updatedComment.setCreatedAt(Instant.now());
+        updatedComment.setUpdatedAt(Instant.now());
 
         when(commentService.updateComment(any(UUID.class), any(UUID.class), any(CommentUpdateRequest.class)))
                 .thenReturn(updatedComment);
@@ -265,18 +275,18 @@ class CommentControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when update comment fails")
-    void shouldReturn400WhenUpdateCommentFails() throws Exception {
+    @DisplayName("Should return 403 when update comment fails due to unauthorized")
+    void shouldReturn403WhenUpdateCommentFails() throws Exception {
         // Given
         when(authenticationService.getCurrentUserId()).thenReturn(userId);
         when(commentService.updateComment(any(UUID.class), any(UUID.class), any(CommentUpdateRequest.class)))
-                .thenThrow(new RuntimeException("Unauthorized or comment not found"));
+                .thenThrow(new UnauthorizedException("Not authorized to update this comment"));
 
         // When & Then
         mockMvc.perform(put("/api/comments/{id}", commentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(commentUpdateRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -292,15 +302,16 @@ class CommentControllerTest {
     }
 
     @Test
-    @DisplayName("Should return 400 when delete comment fails")
-    void shouldReturn400WhenDeleteCommentFails() throws Exception {
+    @DisplayName("Should return 403 when delete comment fails due to unauthorized")
+    void shouldReturn403WhenDeleteCommentFails() throws Exception {
         // Given
-        when(authenticationService.getCurrentUserId())
-                .thenThrow(new RuntimeException("Unauthorized or comment not found"));
+        when(authenticationService.getCurrentUserId()).thenReturn(userId);
+        doThrow(new UnauthorizedException("Not authorized to delete this comment"))
+                .when(commentService).deleteComment(any(UUID.class), any(UUID.class));
 
         // When & Then
         mockMvc.perform(delete("/api/comments/{id}", commentId))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -319,8 +330,8 @@ class CommentControllerTest {
         replyResponse.setUsername("tester");
         replyResponse.setPostId(postId);
         replyResponse.setParentCommentId(parentCommentId);
-        replyResponse.setCreatedAt(java.time.Instant.now());
-        replyResponse.setUpdatedAt(java.time.Instant.now());
+        replyResponse.setCreatedAt(Instant.now());
+        replyResponse.setUpdatedAt(Instant.now());
 
         when(authenticationService.getCurrentUserId()).thenReturn(userId);
         when(commentService.createComment(any(UUID.class), any(UUID.class), any(CommentCreateRequest.class)))
