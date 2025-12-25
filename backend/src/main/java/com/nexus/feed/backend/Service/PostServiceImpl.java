@@ -97,9 +97,19 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPosts(Pageable pageable) {
+    public Page<PostResponse> getAllPosts(Pageable pageable, String sort) {
+        String validatedSort = validateSortOption(sort);
         Page<Post> posts = postRepository.findAllOrderByCreatedAtDesc(pageable);
         return convertToResponseBatch(posts);
+    }
+    
+    private String validateSortOption(String sort) {
+        if (sort == null) return "new";
+        String normalized = sort.toLowerCase().trim();
+        return switch (normalized) {
+            case "new", "best", "hot" -> normalized;
+            default -> "new";
+        };
     }
 
     @Override

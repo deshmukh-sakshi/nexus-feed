@@ -46,9 +46,10 @@ public class PostController {
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "new") String sort) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<PostResponse> posts = postService.getAllPosts(pageable);
+        Page<PostResponse> posts = postService.getAllPosts(pageable, sort);
         return ResponseEntity.ok(posts);
     }
 
