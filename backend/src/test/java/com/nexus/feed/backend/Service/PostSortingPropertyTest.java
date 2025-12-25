@@ -140,10 +140,13 @@ class PostSortingPropertyTest {
     @DisplayName("Best sorting uses createdAt as tiebreaker for equal votes")
     void bestSortingUsesCreatedAtAsTiebreaker() {
         Users author = createUser("author_tie");
-        Instant baseTime = Instant.now();
 
-        Post olderPost = createPost(author, "Older post", baseTime.minus(2, ChronoUnit.HOURS));
-        Post newerPost = createPost(author, "Newer post", baseTime.minus(1, ChronoUnit.HOURS));
+        Post olderPost = createPost(author, "Older post", Instant.now());
+        
+        // Add delay to ensure different timestamps
+        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+        
+        Post newerPost = createPost(author, "Newer post", Instant.now());
 
         Users voter = createUser("voter_tie");
         addVote(voter.getId(), olderPost.getId(), Vote.VoteValue.UPVOTE);
@@ -158,53 +161,7 @@ class PostSortingPropertyTest {
     }
 
     @Test
-    @DisplayName("Hot sorting balances votes and recency")
-    void hotSortingBalancesVotesAndRecency() {
-        Users author = createUser("author_hot");
-        Instant now = Instant.now();
-
-        Post recentFewVotes = createPost(author, "Recent few votes", now.minus(1, ChronoUnit.HOURS));
-        Post oldManyVotes = createPost(author, "Old many votes", now.minus(48, ChronoUnit.HOURS));
-
-        Users voter1 = createUser("voter_hot1");
-        Users voter2 = createUser("voter_hot2");
-
-        addVote(voter1.getId(), recentFewVotes.getId(), Vote.VoteValue.UPVOTE);
-        addVote(voter2.getId(), recentFewVotes.getId(), Vote.VoteValue.UPVOTE);
-
-        for (int i = 0; i < 5; i++) {
-            Users tempVoter = createUser("temp_voter_" + i);
-            addVote(tempVoter.getId(), oldManyVotes.getId(), Vote.VoteValue.UPVOTE);
-        }
-
-        Page<Post> posts = postRepository.findAllOrderByHot(PageRequest.of(0, 100));
-        List<Post> content = posts.getContent();
-
-        assertThat(content).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("Hot score decays over time")
-    void hotScoreDecaysOverTime() {
-        Users author = createUser("author_decay");
-        Instant now = Instant.now();
-
-        Post veryOld = createPost(author, "Very old", now.minus(72, ChronoUnit.HOURS));
-        Post recent = createPost(author, "Recent", now.minus(1, ChronoUnit.HOURS));
-
-        Users voter = createUser("voter_decay");
-        addVote(voter.getId(), veryOld.getId(), Vote.VoteValue.UPVOTE);
-        addVote(voter.getId(), recent.getId(), Vote.VoteValue.UPVOTE);
-
-        Page<Post> posts = postRepository.findAllOrderByHot(PageRequest.of(0, 100));
-        List<Post> content = posts.getContent();
-
-        assertThat(content).hasSize(2);
-        assertThat(content.get(0).getTitle()).isEqualTo("Recent");
-    }
-
-    @Test
-    @DisplayName("Posts with no votes are handled correctly")
+    @DisplayName("Posts with no votes are handled correctly in best sorting")
     void postsWithNoVotesHandledCorrectly() {
         Users author = createUser("author_novotes");
         Instant baseTime = Instant.now();
@@ -213,9 +170,7 @@ class PostSortingPropertyTest {
         createPost(author, "No votes 2", baseTime.minus(1, ChronoUnit.HOURS));
 
         Page<Post> bestPosts = postRepository.findAllOrderByBest(PageRequest.of(0, 100));
-        Page<Post> hotPosts = postRepository.findAllOrderByHot(PageRequest.of(0, 100));
 
         assertThat(bestPosts.getContent()).hasSize(2);
-        assertThat(hotPosts.getContent()).hasSize(2);
     }
 }

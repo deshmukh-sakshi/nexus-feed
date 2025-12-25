@@ -52,7 +52,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                    SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END) as net_votes
             FROM votes v WHERE v.votable_type = 'POST' GROUP BY v.votable_id
         ) vc ON vc.votable_id = p.id
-        ORDER BY COALESCE(vc.net_votes, 0) / POWER(DATEDIFF('SECOND', p.created_at, CURRENT_TIMESTAMP) / 3600.0 + 2, 1.5) DESC, p.created_at DESC
+        ORDER BY COALESCE(vc.net_votes, 0) / POWER(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - p.created_at)) / 3600.0 + 2, 1.5) DESC, p.created_at DESC
         """, 
         countQuery = "SELECT COUNT(p.id) FROM posts p",
         nativeQuery = true)
