@@ -242,7 +242,7 @@ class PostServiceImplTest {
         when(commentRepository.countByPostIds(anyList())).thenReturn(new ArrayList<>());
 
         // When
-        Page<PostResponse> responses = postService.getAllPosts(pageable);
+        Page<PostResponse> responses = postService.getAllPosts(pageable, "new");
 
         // Then
         assertThat(responses).isNotNull();
@@ -440,7 +440,7 @@ class PostServiceImplTest {
         when(postRepository.findAllOrderByCreatedAtDesc(pageable)).thenReturn(emptyPage);
 
         // When
-        Page<PostResponse> responses = postService.getAllPosts(pageable);
+        Page<PostResponse> responses = postService.getAllPosts(pageable, "new");
 
         // Then
         assertThat(responses).isEmpty();

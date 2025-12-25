@@ -184,7 +184,7 @@ class PostControllerTest {
         // Given
         List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
-        when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
+        when(postService.getAllPosts(any(PageRequest.class), anyString())).thenReturn(postPage);
 
         // When & Then
         mockMvc.perform(get("/api/posts")
@@ -308,7 +308,7 @@ class PostControllerTest {
         // Given
         List<PostResponse> posts = Collections.singletonList(postResponse);
         Page<PostResponse> postPage = new PageImpl<>(posts, PageRequest.of(0, 10), 1);
-        when(postService.getAllPosts(any(PageRequest.class))).thenReturn(postPage);
+        when(postService.getAllPosts(any(PageRequest.class), anyString())).thenReturn(postPage);
 
         // When & Then
         mockMvc.perform(get("/api/posts"))

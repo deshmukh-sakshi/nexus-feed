@@ -33,27 +33,28 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     long countByUser(Users user);
     
     @Query(value = """
-        SELECT DISTINCT p.* FROM posts p 
-        LEFT JOIN users u ON p.user_id = u.id 
-        ORDER BY (
-            SELECT COALESCE(SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END), 0) 
-            FROM votes v WHERE v.votable_id = p.id AND v.votable_type = 'POST'
-        ) DESC, p.created_at DESC
+        SELECT p.* FROM posts p 
+        LEFT JOIN (
+            SELECT v.votable_id, 
+                   SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END) as net_votes
+            FROM votes v WHERE v.votable_type = 'POST' GROUP BY v.votable_id
+        ) vc ON vc.votable_id = p.id
+        ORDER BY COALESCE(vc.net_votes, 0) DESC, p.created_at DESC
         """, 
-        countQuery = "SELECT COUNT(DISTINCT p.id) FROM posts p",
+        countQuery = "SELECT COUNT(p.id) FROM posts p",
         nativeQuery = true)
     Page<Post> findAllOrderByBest(Pageable pageable);
     
     @Query(value = """
-        SELECT DISTINCT p.* FROM posts p 
-        LEFT JOIN users u ON p.user_id = u.id 
-        ORDER BY (
-            COALESCE((SELECT SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END) 
-                      FROM votes v WHERE v.votable_id = p.id AND v.votable_type = 'POST'), 0)
-            / POWER(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2, 1.5)
-        ) DESC, p.created_at DESC
+        SELECT p.* FROM posts p 
+        LEFT JOIN (
+            SELECT v.votable_id, 
+                   SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END) as net_votes
+            FROM votes v WHERE v.votable_type = 'POST' GROUP BY v.votable_id
+        ) vc ON vc.votable_id = p.id
+        ORDER BY COALESCE(vc.net_votes, 0) / POWER(DATEDIFF('SECOND', p.created_at, CURRENT_TIMESTAMP) / 3600.0 + 2, 1.5) DESC, p.created_at DESC
         """, 
-        countQuery = "SELECT COUNT(DISTINCT p.id) FROM posts p",
+        countQuery = "SELECT COUNT(p.id) FROM posts p",
         nativeQuery = true)
     Page<Post> findAllOrderByHot(Pageable pageable);
 }
