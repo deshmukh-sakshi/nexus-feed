@@ -9,13 +9,13 @@ COPY .mvn .mvn
 COPY mvnw .
 
 # Make Maven wrapper executable and download dependencies
-RUN chmod +x ./mvnw && ./mvnw dependency:go-offline -B
+RUN chmod +x ./mvnw && ./mvnw dependency:resolve -B
 
 # Now copy source code
 COPY src ./src
 
 # Build the application, skipping tests
-RUN ./mvnw clean package -DskipTests -o
+RUN ./mvnw clean package -DskipTests
 
 # --- Stage 2: Create the final, lightweight image ---
 FROM eclipse-temurin:21-jre-alpine
