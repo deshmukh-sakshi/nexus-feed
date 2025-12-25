@@ -31,4 +31,29 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Page<Post> findByTagNames(@Param("tagNames") java.util.List<String> tagNames, Pageable pageable);
     
     long countByUser(Users user);
+    
+    @Query(value = """
+        SELECT DISTINCT p.* FROM posts p 
+        LEFT JOIN users u ON p.user_id = u.id 
+        ORDER BY (
+            SELECT COALESCE(SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END), 0) 
+            FROM votes v WHERE v.votable_id = p.id AND v.votable_type = 'POST'
+        ) DESC, p.created_at DESC
+        """, 
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM posts p",
+        nativeQuery = true)
+    Page<Post> findAllOrderByBest(Pageable pageable);
+    
+    @Query(value = """
+        SELECT DISTINCT p.* FROM posts p 
+        LEFT JOIN users u ON p.user_id = u.id 
+        ORDER BY (
+            COALESCE((SELECT SUM(CASE WHEN v.vote_value = 'UPVOTE' THEN 1 WHEN v.vote_value = 'DOWNVOTE' THEN -1 ELSE 0 END) 
+                      FROM votes v WHERE v.votable_id = p.id AND v.votable_type = 'POST'), 0)
+            / POWER(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2, 1.5)
+        ) DESC, p.created_at DESC
+        """, 
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM posts p",
+        nativeQuery = true)
+    Page<Post> findAllOrderByHot(Pageable pageable);
 }

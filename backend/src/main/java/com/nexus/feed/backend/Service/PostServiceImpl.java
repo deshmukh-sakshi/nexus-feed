@@ -99,7 +99,11 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public Page<PostResponse> getAllPosts(Pageable pageable, String sort) {
         String validatedSort = validateSortOption(sort);
-        Page<Post> posts = postRepository.findAllOrderByCreatedAtDesc(pageable);
+        Page<Post> posts = switch (validatedSort) {
+            case "best" -> postRepository.findAllOrderByBest(pageable);
+            case "hot" -> postRepository.findAllOrderByHot(pageable);
+            default -> postRepository.findAllOrderByCreatedAtDesc(pageable);
+        };
         return convertToResponseBatch(posts);
     }
     
