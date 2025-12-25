@@ -41,9 +41,9 @@ export const authApi = {
 
 // Posts API
 export const postsApi = {
-  getPosts: async (page = 0, size = 4): Promise<PageResponse<Post>> => {
+  getPosts: async (page = 0, size = 4, sort = 'new'): Promise<PageResponse<Post>> => {
     const response = await api.get<PageResponse<Post>>('/posts', {
-      params: { page, size },
+      params: { page, size, sort },
     })
     return response.data
   },

@@ -1,9 +1,18 @@
 import { PostList } from '@/components/posts/PostList'
+import { FeedSorter } from '@/components/posts/FeedSorter'
 import { usePosts } from '@/hooks/usePosts'
+import { useSortStore } from '@/stores/sortStore'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+const sortLabels = {
+  new: 'Latest posts from the community',
+  best: 'Top voted posts of all time',
+  hot: 'Trending posts right now',
+}
+
 export const Home = () => {
+  const { sortOption, setSortOption } = useSortStore()
   const {
     posts,
     isLoading,
@@ -14,7 +23,7 @@ export const Home = () => {
     hasNextPage,
     isLastPage,
     isFetchingNextPage,
-  } = usePosts()
+  } = usePosts(4, sortOption)
 
   if (error) {
     return (
@@ -44,8 +53,17 @@ export const Home = () => {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-4xl font-bold">Home Feed</h1>
-        <p className="text-muted-foreground">Latest posts from the community</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-4xl font-bold">Home Feed</h1>
+            <p className="text-muted-foreground">{sortLabels[sortOption]}</p>
+          </div>
+          <FeedSorter 
+            sortOption={sortOption} 
+            onSortChange={setSortOption}
+            isLoading={isLoading || isRefetching}
+          />
+        </div>
       </div>
       <PostList posts={posts} isLoading={isLoading} />
       

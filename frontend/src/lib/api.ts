@@ -18,13 +18,17 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+let isLoggingOut = false
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isLoggingOut) {
+      isLoggingOut = true
       const message = error.response?.data?.message || 'Session expired. Please login again.'
       useAuthStore.getState().logout()
       window.dispatchEvent(new CustomEvent('auth:session-expired', { detail: { message } }))
+      setTimeout(() => { isLoggingOut = false }, 1000)
     }
     return Promise.reject(error)
   }
