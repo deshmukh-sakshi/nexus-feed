@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminUsers, useDeleteUser } from '@/hooks/useAdmin'
-import { Trash2, ArrowUpDown, Search } from 'lucide-react'
+import { Trash2, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminUser } from '@/types'
@@ -11,7 +11,7 @@ type SortOrder = 'asc' | 'desc'
 
 export const AdminUsers = () => {
   const [searchParams] = useSearchParams()
-  const [page] = useState(0)
+  const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminUsers(page, 20)
   const deleteUser = useDeleteUser()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -274,6 +274,31 @@ export const AdminUsers = () => {
       <div className="text-sm font-semibold text-gray-600">
         Showing {filteredAndSortedUsers.length} of {data?.content.length || 0} users
       </div>
+
+      {/* Pagination Controls */}
+      {data?.page && data.page.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-purple-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-purple-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-400"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm bg-white border-2 border-black font-semibold">
+            {page + 1} / {data.page.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(data.page.totalPages - 1, p + 1))}
+            disabled={page >= data.page.totalPages - 1}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-purple-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-purple-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-400"
+          >
+            Next
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

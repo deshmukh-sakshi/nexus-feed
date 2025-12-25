@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAdminComments, useDeleteComment } from '@/hooks/useAdmin'
-import { Trash2, ExternalLink, ArrowUpDown, Search } from 'lucide-react'
+import { Trash2, ExternalLink, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { AdminComment } from '@/types'
@@ -10,7 +10,7 @@ type SortField = 'body' | 'username' | 'postTitle' | 'votes' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
 export const AdminComments = () => {
-  const [page] = useState(0)
+  const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminComments(page, 20)
   const deleteComment = useDeleteComment()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -251,6 +251,31 @@ export const AdminComments = () => {
       <div className="text-sm font-semibold text-gray-600">
         Showing {filteredAndSortedComments.length} of {data?.content.length || 0} comments
       </div>
+
+      {/* Pagination Controls */}
+      {data?.page && data.page.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-green-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-400"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm bg-white border-2 border-black font-semibold">
+            {page + 1} / {data.page.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(data.page.totalPages - 1, p + 1))}
+            disabled={page >= data.page.totalPages - 1}
+            className="flex items-center gap-1 px-2 py-1 text-sm bg-green-400 border-2 border-black font-semibold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-400"
+          >
+            Next
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
