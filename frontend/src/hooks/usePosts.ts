@@ -3,13 +3,14 @@ import { toast } from 'sonner'
 import { postsApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
 import type { PostCreateRequest, PostUpdateRequest, Post } from '@/types'
+import type { SortOption } from '@/stores/sortStore'
 
-export const usePosts = (pageSize = 4) => {
+export const usePosts = (pageSize = 4, sortOption: SortOption = 'new') => {
   const queryClient = useQueryClient()
 
   const postsQuery = useInfiniteQuery({
-    queryKey: ['posts', pageSize],
-    queryFn: ({ pageParam = 0 }) => postsApi.getPosts(pageParam, pageSize),
+    queryKey: ['posts', pageSize, sortOption],
+    queryFn: ({ pageParam = 0 }) => postsApi.getPosts(pageParam, pageSize, sortOption),
     getNextPageParam: (lastPage) => {
       const isLastPage = lastPage.page.number >= lastPage.page.totalPages - 1
       if (isLastPage) return undefined
@@ -22,9 +23,9 @@ export const usePosts = (pageSize = 4) => {
   const createPostMutation = useMutation({
     mutationFn: postsApi.createPost,
     onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: ['posts', pageSize] })
+      await queryClient.cancelQueries({ queryKey: ['posts', pageSize, sortOption] })
       
-      const previousPosts = queryClient.getQueryData(['posts', pageSize])
+      const previousPosts = queryClient.getQueryData(['posts', pageSize, sortOption])
       
       // Create temp ID for tracking
       const tempId = `temp-${Date.now()}-${Math.random()}`
@@ -46,7 +47,7 @@ export const usePosts = (pageSize = 4) => {
         isLoading: true, // Flag to show skeleton
       }
       
-      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+      queryClient.setQueryData(['posts', pageSize, sortOption], (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: unknown[]; [key: string]: unknown }[] }
         const firstPage = typedOld.pages[0]
@@ -66,7 +67,7 @@ export const usePosts = (pageSize = 4) => {
     onSuccess: (newPost, _variables, context) => {
       // Silently replace skeleton with real post
       if (context?.tempId) {
-        queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+        queryClient.setQueryData(['posts', pageSize, sortOption], (old: unknown) => {
           if (!old) return old
           const typedOld = old as { pages: { content: { id: string; [key: string]: unknown }[]; [key: string]: unknown }[] }
           return {
@@ -86,7 +87,7 @@ export const usePosts = (pageSize = 4) => {
     },
     onError: (error, _variables, context) => {
       if (context?.previousPosts) {
-        queryClient.setQueryData(['posts', pageSize], context.previousPosts)
+        queryClient.setQueryData(['posts', pageSize, sortOption], context.previousPosts)
       }
       toast.dismiss('create-post')
       toast.error(getErrorMessage(error))
@@ -101,13 +102,13 @@ export const usePosts = (pageSize = 4) => {
       await queryClient.cancelQueries({ queryKey: ['posts'] })
       await queryClient.cancelQueries({ queryKey: ['postWithComments', id] })
       
-      const previousPosts = queryClient.getQueryData(['posts', pageSize])
+      const previousPosts = queryClient.getQueryData(['posts', pageSize, sortOption])
       const previousPostDetail = queryClient.getQueryData(['postWithComments', id])
       
       const now = new Date().toISOString()
       
       // Update post in infinite query
-      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+      queryClient.setQueryData(['posts', pageSize, sortOption], (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
         return {
@@ -146,7 +147,7 @@ export const usePosts = (pageSize = 4) => {
     },
     onSuccess: (updatedPost, { id }) => {
       // Silently replace optimistic data with real server response
-      queryClient.setQueryData(['posts', pageSize], (old: unknown) => {
+      queryClient.setQueryData(['posts', pageSize, sortOption], (old: unknown) => {
         if (!old) return old
         const typedOld = old as { pages: { content: Post[]; [key: string]: unknown }[] }
         return {
@@ -173,7 +174,7 @@ export const usePosts = (pageSize = 4) => {
     },
     onError: (error, { id }, context) => {
       if (context?.previousPosts) {
-        queryClient.setQueryData(['posts', pageSize], context.previousPosts)
+        queryClient.setQueryData(['posts', pageSize, sortOption], context.previousPosts)
       }
       if (context?.previousPostDetail) {
         queryClient.setQueryData(['postWithComments', id], context.previousPostDetail)
