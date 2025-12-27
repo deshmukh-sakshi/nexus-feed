@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { useAdminReports } from '@/hooks/useAdmin'
-import { ExternalLink, ArrowUpDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAdminReports, useDeletePost } from '@/hooks/useAdmin'
+import { ArrowUpDown, Filter, ChevronLeft, ChevronRight, Trash2, Eye, MoreVertical } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
 import type { AdminReport, ReportReason } from '@/types'
 import { REPORT_REASONS } from '@/types'
@@ -13,8 +13,30 @@ export const AdminReports = () => {
   const [page, setPage] = useState(0)
   const [reasonFilter, setReasonFilter] = useState<ReportReason | ''>('')
   const { data, isLoading, error } = useAdminReports(page, 20, reasonFilter || undefined)
+  const deletePost = useDeletePost()
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null)
+        setDeleteConfirm(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleDeletePost = (postId: string) => {
+    deletePost.mutate(postId)
+    setDeleteConfirm(null)
+    setOpenDropdown(null)
+  }
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -130,7 +152,7 @@ export const AdminReports = () => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden lg:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+      <div className="hidden lg:block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <table className="w-full">
           <thead className="bg-cyan-400 border-b-2 border-black">
             <tr>
@@ -156,7 +178,7 @@ export const AdminReports = () => {
                 <tr key={report.id} className={idx % 2 === 0 ? 'bg-yellow-50' : 'bg-white'}>
                   <td className="px-4 py-3 font-bold max-w-xs">
                     <Link 
-                      to={`/post/${report.postId}`} 
+                      to={`/admin/posts?search=${encodeURIComponent(report.postTitle)}`} 
                       className="text-blue-600 hover:underline line-clamp-2"
                     >
                       {report.postTitle}
@@ -187,13 +209,54 @@ export const AdminReports = () => {
                   </td>
                   <td className="px-4 py-3 text-sm">{new Date(report.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <Link 
-                      to={`/post/${report.postId}`} 
-                      target="_blank" 
-                      className="p-2 bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-blue-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all inline-flex"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Link>
+                    <div className="relative" ref={openDropdown === report.id ? dropdownRef : null}>
+                      <button
+                        onClick={() => setOpenDropdown(openDropdown === report.id ? null : report.id)}
+                        className="p-2 bg-gray-200 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-300 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      
+                      {openDropdown === report.id && (
+                        <div className="absolute right-0 top-full mt-1 z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] min-w-[180px]">
+                          <Link
+                            to={`/admin/posts?search=${encodeURIComponent(report.postTitle)}`}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-100 font-semibold text-sm border-b border-gray-200"
+                            onClick={() => setOpenDropdown(null)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            View Post
+                          </Link>
+                          {deleteConfirm === report.postId ? (
+                            <div className="p-2 bg-red-50">
+                              <p className="text-xs font-semibold mb-2 text-red-700">Delete this post?</p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleDeletePost(report.postId)}
+                                  className="flex-1 px-2 py-1 bg-red-500 text-white border-2 border-black font-bold text-xs hover:bg-red-600"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirm(null)}
+                                  className="flex-1 px-2 py-1 bg-gray-300 border-2 border-black font-bold text-xs hover:bg-gray-400"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(report.postId)}
+                              className="flex items-center gap-2 px-4 py-2 hover:bg-red-100 font-semibold text-sm w-full text-left text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete Post
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -212,11 +275,11 @@ export const AdminReports = () => {
           sortedReports.map((report: AdminReport) => (
             <AdminMobileCard
               key={report.id}
-              id={report.id}
+              id={report.postId}
               header={
                 <div className="mb-3">
                   <Link 
-                    to={`/post/${report.postId}`}
+                    to={`/admin/posts?search=${encodeURIComponent(report.postTitle)}`}
                     className="font-bold text-lg line-clamp-2 text-blue-600 hover:underline"
                   >
                     {report.postTitle}
@@ -243,7 +306,11 @@ export const AdminReports = () => {
                 </div>
               }
               stats={[]}
-              viewLink={`/post/${report.postId}`}
+              viewLink={`/admin/posts?search=${encodeURIComponent(report.postTitle)}`}
+              deleteConfirm={deleteConfirm}
+              onDeleteClick={setDeleteConfirm}
+              onDeleteConfirm={handleDeletePost}
+              onDeleteCancel={() => setDeleteConfirm(null)}
             />
           ))
         ) : (
