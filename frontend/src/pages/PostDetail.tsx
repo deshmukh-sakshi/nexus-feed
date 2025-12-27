@@ -13,6 +13,7 @@ import {
   Save,
   X,
   ArrowLeft,
+  Flag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -26,11 +27,13 @@ import { ImageGallery } from '@/components/ui/image-gallery'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { CommentList } from '@/components/posts/CommentList'
 import { PostDetailSkeleton } from '@/components/posts/PostDetailSkeleton'
+import { ReportModal } from '@/components/posts/ReportModal'
 import { cn, formatNumber } from '@/lib/utils'
 import { generateTagColor, getTagTextColor } from '@/lib/tag-colors'
 import { useAuthStore } from '@/stores/authStore'
 import { usePostWithComments } from '@/hooks/usePosts'
 import { useComments } from '@/hooks/useComments'
+import { useReport } from '@/hooks/useReport'
 import { postsApi, votesApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
 import type { PostUpdateRequest } from '@/types'
@@ -55,6 +58,10 @@ export const PostDetail = () => {
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+
+  // Report hook - only enabled when authenticated
+  const { hasReported, isLoadingStatus: isLoadingReportStatus } = useReport(id!)
 
   // Mutations
   const votePostMutation = useMutation({
@@ -551,6 +558,24 @@ export const PostDetail = () => {
             <span>{formatNumber(post.commentCount)} comments</span>
           </div>
 
+          {/* Report button - only show for authenticated users who don't own the post */}
+          {isAuthenticated && !isOwner && !isEditing && (
+            <Button
+              size="sm"
+              onClick={() => setShowReportModal(true)}
+              disabled={hasReported || isLoadingReportStatus}
+              className={cn(
+                'w-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none font-bold',
+                hasReported
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-orange-400 text-black hover:bg-orange-500'
+              )}
+            >
+              <Flag className="mr-2 h-4 w-4" />
+              {hasReported ? 'Reported' : 'Report'}
+            </Button>
+          )}
+
           {isOwner && !isEditing && (
             <div className="ml-auto w-full sm:w-auto flex flex-col sm:flex-row gap-2">
               <Button 
@@ -617,6 +642,12 @@ export const PostDetail = () => {
         description="Are you sure you want to delete this post? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
+      />
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        postId={id!}
       />
     </div>
   )
