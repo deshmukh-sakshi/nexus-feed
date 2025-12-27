@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { adminApi } from '@/lib/api-client'
 import { getErrorMessage } from '@/types/errors'
+import type { ReportReason } from '@/types'
 
 export const useAdminStats = () => {
   return useQuery({
@@ -154,5 +155,15 @@ export const useDeleteComment = () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] })
       queryClient.invalidateQueries({ queryKey: ['comments'] })
     },
+  })
+}
+
+
+export const useAdminReports = (page = 0, size = 10, reason?: ReportReason) => {
+  return useQuery({
+    queryKey: ['admin', 'reports', page, size, reason],
+    queryFn: () => reason 
+      ? adminApi.getReportsByReason(reason, page, size)
+      : adminApi.getReports(page, size),
   })
 }

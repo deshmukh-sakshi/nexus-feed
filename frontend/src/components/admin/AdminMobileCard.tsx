@@ -14,10 +14,10 @@ type AdminMobileCardProps = {
   header: ReactNode
   stats?: StatItem[]
   viewLink?: string
-  deleteConfirm: string | null
-  onDeleteClick: (id: string) => void
-  onDeleteConfirm: (id: string) => void
-  onDeleteCancel: () => void
+  deleteConfirm?: string | null
+  onDeleteClick?: (id: string) => void
+  onDeleteConfirm?: (id: string) => void
+  onDeleteCancel?: () => void
 }
 
 const statColorClasses = {
@@ -38,6 +38,7 @@ export const AdminMobileCard = ({
   onDeleteCancel,
 }: AdminMobileCardProps) => {
   const isConfirming = deleteConfirm === id
+  const showDeleteActions = onDeleteClick && onDeleteConfirm && onDeleteCancel
 
   return (
     <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -70,29 +71,31 @@ export const AdminMobileCard = ({
             View
           </Link>
         )}
-        {isConfirming ? (
-          <>
+        {showDeleteActions && (
+          isConfirming ? (
+            <>
+              <button
+                onClick={() => onDeleteConfirm(id)}
+                className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                {viewLink ? 'Confirm' : 'Confirm Delete'}
+              </button>
+              <button
+                onClick={onDeleteCancel}
+                className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => onDeleteConfirm(id)}
-              className="px-3 py-2 bg-red-500 text-white border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              onClick={() => onDeleteClick(id)}
+              className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             >
-              {viewLink ? 'Confirm' : 'Confirm Delete'}
+              <Trash2 className="h-4 w-4" />
+              Delete
             </button>
-            <button
-              onClick={onDeleteCancel}
-              className="px-3 py-2 bg-gray-300 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => onDeleteClick(id)}
-            className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+          )
         )}
       </div>
     </div>
