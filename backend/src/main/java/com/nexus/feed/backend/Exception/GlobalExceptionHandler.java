@@ -42,6 +42,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(DuplicateReportException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateReport(DuplicateReportException ex) {
+        log.warn("Duplicate report attempt: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(GoogleAuthException.class)
     public ResponseEntity<ApiResponse<Void>> handleGoogleAuthException(GoogleAuthException ex) {
         log.warn("Google auth error: {}", ex.getMessage());

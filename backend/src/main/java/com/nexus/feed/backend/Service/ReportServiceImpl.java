@@ -6,6 +6,7 @@ import com.nexus.feed.backend.Entity.Post;
 import com.nexus.feed.backend.Entity.Report;
 import com.nexus.feed.backend.Entity.ReportReason;
 import com.nexus.feed.backend.Entity.Users;
+import com.nexus.feed.backend.Exception.DuplicateReportException;
 import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Repository.PostRepository;
 import com.nexus.feed.backend.Repository.ReportRepository;
@@ -144,14 +145,5 @@ public class ReportServiceImpl implements ReportService {
             username,
             postTitle
         );
-    }
-
-    /**
-     * Exception thrown when a user attempts to report a post they've already reported.
-     */
-    public static class DuplicateReportException extends RuntimeException {
-        public DuplicateReportException(String message) {
-            super(message);
-        }
     }
 }
