@@ -32,6 +32,7 @@ public class AdminServiceImpl implements AdminService {
     private final CommentRepository commentRepository;
     private final VoteRepository voteRepository;
     private final TagRepository tagRepository;
+    private final ReportRepository reportRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -110,6 +111,22 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(readOnly = true)
     public Page<AdminPostResponse> getAllPosts(Pageable pageable) {
+        return postRepository.findAllOrderByCreatedAtDesc(pageable).map(this::toAdminPostResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AdminPostResponse> getAllPosts(Pageable pageable, String sortBy, String sortDirection) {
+        if ("reports".equalsIgnoreCase(sortBy)) {
+            Page<Post> posts;
+            if ("asc".equalsIgnoreCase(sortDirection)) {
+                posts = postRepository.findAllOrderByReportsAsc(pageable);
+            } else {
+                posts = postRepository.findAllOrderByReportsDesc(pageable);
+            }
+            return posts.map(this::toAdminPostResponse);
+        }
+        // Default to createdAt sorting
         return postRepository.findAllOrderByCreatedAtDesc(pageable).map(this::toAdminPostResponse);
     }
 
@@ -199,6 +216,7 @@ public class AdminServiceImpl implements AdminService {
                 post.getId(), Vote.VotableType.POST, Vote.VoteValue.UPVOTE);
         long downvotes = voteRepository.countByVotableIdAndVotableTypeAndVoteValue(
                 post.getId(), Vote.VotableType.POST, Vote.VoteValue.DOWNVOTE);
+        long reportCount = reportRepository.countByPostId(post.getId());
         
         return new AdminPostResponse(
                 post.getId(),
@@ -211,6 +229,7 @@ public class AdminServiceImpl implements AdminService {
                 (int) upvotes,
                 (int) downvotes,
                 post.getComments().size(),
+                (int) reportCount,
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
