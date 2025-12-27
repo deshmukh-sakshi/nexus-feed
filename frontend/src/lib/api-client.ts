@@ -14,6 +14,10 @@ import type {
   UserProfile,
   PostDetail,
   Badge,
+  ReportRequest,
+  ReportStatusResponse,
+  AdminReport,
+  ReportReason,
 } from '@/types'
 
 // Auth API
@@ -233,6 +237,19 @@ export const tagsApi = {
 }
 
 
+// Reports API
+export const reportsApi = {
+  submitReport: async (postId: string, data: ReportRequest): Promise<void> => {
+    await api.post(`/posts/${postId}/report`, data)
+  },
+
+  getReportStatus: async (postId: string): Promise<ReportStatusResponse> => {
+    const response = await api.get<ReportStatusResponse>(`/posts/${postId}/report/status`)
+    return response.data
+  },
+}
+
+
 // Admin API
 export const adminApi = {
   getStats: async (): Promise<import('@/types').AdminStats> => {
@@ -256,9 +273,9 @@ export const adminApi = {
     await api.delete(`/admin/users/${userId}`)
   },
 
-  getPosts: async (page = 0, size = 10): Promise<PageResponse<import('@/types').AdminPost>> => {
+  getPosts: async (page = 0, size = 10, sortBy?: string, sortDir?: 'asc' | 'desc'): Promise<PageResponse<import('@/types').AdminPost>> => {
     const response = await api.get<PageResponse<import('@/types').AdminPost>>('/admin/posts', {
-      params: { page, size },
+      params: { page, size, sortBy, sortDir },
     })
     return response.data
   },
@@ -276,5 +293,19 @@ export const adminApi = {
 
   deleteComment: async (commentId: string): Promise<void> => {
     await api.delete(`/admin/comments/${commentId}`)
+  },
+
+  getReports: async (page = 0, size = 10): Promise<PageResponse<AdminReport>> => {
+    const response = await api.get<PageResponse<AdminReport>>('/admin/reports', {
+      params: { page, size },
+    })
+    return response.data
+  },
+
+  getReportsByReason: async (reason: ReportReason, page = 0, size = 10): Promise<PageResponse<AdminReport>> => {
+    const response = await api.get<PageResponse<AdminReport>>('/admin/reports', {
+      params: { reason, page, size },
+    })
+    return response.data
   },
 }
