@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminPosts, useDeletePost } from '@/hooks/useAdmin'
 import { Trash2, ExternalLink, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
@@ -10,14 +10,25 @@ type SortField = 'title' | 'username' | 'votes' | 'commentCount' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
 export const AdminPosts = () => {
+  const [searchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') || ''
+  
   const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminPosts(page, 20)
   const deletePost = useDeletePost()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
   const debouncedSearch = useDebounce(searchTerm, 300)
+
+  // Update search when URL param changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || ''
+    if (urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch)
+    }
+  }, [searchParams])
 
   const handleDelete = (postId: string) => {
     deletePost.mutate(postId)
