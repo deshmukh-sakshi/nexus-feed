@@ -64,6 +64,14 @@ public class EmailServiceImpl implements EmailService {
         doSendEmail(to, subject, body);
     }
 
+    @Async
+    @Override
+    public void sendReportConfirmationEmail(String to, String username, String postTitle) {
+        String subject = "Thanks for your report";
+        String body = composeReportConfirmationEmail(username, postTitle);
+        doSendEmail(to, subject, body);
+    }
+
     private void doSendEmail(String to, String subject, String body) {
         if (!enabled) {
             log.debug("Email not sent (service disabled): to={}, subject={}", to, subject);
@@ -109,6 +117,18 @@ public class EmailServiceImpl implements EmailService {
             "Keep up the great work and continue engaging with the community to earn more badges!\n\n" +
             "The Nexus Feed Team",
             username, badgeIcon, badgeName, badgeDescription
+        );
+    }
+
+    String composeReportConfirmationEmail(String username, String postTitle) {
+        return String.format(
+            "Hey %s,\n\n" +
+            "Thanks for reporting the post \"%s\".\n\n" +
+            "We take reports seriously and will review this content to ensure it meets our community guidelines. " +
+            "If we find that it violates our policies, we'll take appropriate action.\n\n" +
+            "We appreciate you helping us keep Nexus Feed a safe and welcoming community.\n\n" +
+            "The Nexus Feed Team",
+            username, postTitle
         );
     }
 }
