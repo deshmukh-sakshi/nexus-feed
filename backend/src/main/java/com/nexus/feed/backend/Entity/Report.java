@@ -43,7 +43,7 @@ public class Report {
     @Column(nullable = false, length = 30)
     private ReportReason reason;
 
-    @Column(name = "additional_details", length = 500)
+    @Column(name = "additional_details", length = 2048)
     private String additionalDetails;
 
     @Column(name = "created_at", nullable = false)

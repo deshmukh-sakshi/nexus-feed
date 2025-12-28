@@ -19,7 +19,7 @@ interface ReportModalProps {
   postId: string
 }
 
-const MAX_DETAILS_LENGTH = 500
+const MAX_DETAILS_LENGTH = 2048
 
 export const ReportModal = ({ isOpen, onClose, postId }: ReportModalProps) => {
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(null)
