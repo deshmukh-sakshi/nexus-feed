@@ -12,7 +12,7 @@ import { UserProfile } from '@/pages/UserProfile'
 import { CreatePost } from '@/pages/CreatePost'
 import { Search } from '@/pages/Search'
 import { NotFound } from '@/pages/NotFound'
-import { AdminLayout, AdminDashboard, AdminUsers, AdminPosts, AdminComments } from '@/pages/admin'
+import { AdminLayout, AdminDashboard, AdminUsers, AdminPosts, AdminComments, AdminReports } from '@/pages/admin'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
 import { Guidelines } from '@/pages/Guidelines'
@@ -40,6 +40,7 @@ const AppRoutes = () => {
         <Route path="users" element={<AdminUsers />} />
         <Route path="posts" element={<AdminPosts />} />
         <Route path="comments" element={<AdminComments />} />
+        <Route path="reports" element={<AdminReports />} />
       </Route>
       
       {/* Main app routes */}

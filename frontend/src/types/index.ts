@@ -22,6 +22,7 @@ export interface AdminStats {
   totalPosts: number
   totalComments: number
   totalVotes: number
+  totalReports: number
   newUsersToday: number
   newPostsToday: number
 }
@@ -49,6 +50,7 @@ export interface AdminPost {
   upvotes: number
   downvotes: number
   commentCount: number
+  reportCount: number
   createdAt: string
   updatedAt: string
 }
@@ -214,4 +216,50 @@ export interface UserProfile {
 export interface PostDetail {
   post: Post
   comments: Comment[]
+}
+
+
+// Report types
+export type ReportReason =
+  | 'SEXUAL_CONTENT'
+  | 'VIOLENT_OR_REPULSIVE'
+  | 'HATEFUL_OR_ABUSIVE'
+  | 'HARASSMENT_OR_BULLYING'
+  | 'HARMFUL_OR_DANGEROUS'
+  | 'MISINFORMATION'
+  | 'SPAM_OR_MISLEADING'
+  | 'LEGAL_ISSUE'
+  | 'OTHER'
+
+export const REPORT_REASONS: { value: ReportReason; label: string; icon: string }[] = [
+  { value: 'SEXUAL_CONTENT', label: 'Sexual content', icon: '🔞' },
+  { value: 'VIOLENT_OR_REPULSIVE', label: 'Violent or repulsive content', icon: '⚠️' },
+  { value: 'HATEFUL_OR_ABUSIVE', label: 'Hateful or abusive content', icon: '🚫' },
+  { value: 'HARASSMENT_OR_BULLYING', label: 'Harassment or bullying', icon: '😠' },
+  { value: 'HARMFUL_OR_DANGEROUS', label: 'Harmful or dangerous acts', icon: '☠️' },
+  { value: 'MISINFORMATION', label: 'Misinformation', icon: '❌' },
+  { value: 'SPAM_OR_MISLEADING', label: 'Spam or misleading', icon: '📧' },
+  { value: 'LEGAL_ISSUE', label: 'Legal issue', icon: '⚖️' },
+  { value: 'OTHER', label: 'Something else', icon: '💬' },
+]
+
+export interface ReportRequest {
+  reason: ReportReason
+  additionalDetails?: string
+}
+
+export interface ReportStatusResponse {
+  hasReported: boolean
+}
+
+export interface AdminReport {
+  id: string
+  postId: string
+  postTitle: string
+  reporterId: string
+  reporterUsername: string
+  reason: ReportReason
+  reasonDisplayName: string
+  additionalDetails?: string
+  createdAt: string
 }

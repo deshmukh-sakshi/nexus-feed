@@ -5,6 +5,7 @@ public record AdminStatsResponse(
     long totalPosts,
     long totalComments,
     long totalVotes,
+    long totalReports,
     long newUsersToday,
     long newPostsToday
 ) {}
