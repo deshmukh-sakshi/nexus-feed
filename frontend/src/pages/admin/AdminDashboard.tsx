@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAdminStats } from '@/hooks/useAdmin'
-import { Users, FileText, MessageSquare, ThumbsUp } from 'lucide-react'
+import { Users, FileText, MessageSquare, ThumbsUp, Flag } from 'lucide-react'
 
 export const AdminDashboard = () => {
   const { data: stats, isLoading } = useAdminStats()
@@ -20,6 +20,7 @@ export const AdminDashboard = () => {
     { title: 'Total Posts', value: stats?.totalPosts ?? 0, icon: FileText, link: '/admin/posts', color: 'bg-cyan-400' },
     { title: 'Total Comments', value: stats?.totalComments ?? 0, icon: MessageSquare, link: '/admin/comments', color: 'bg-green-400' },
     { title: 'Total Votes', value: stats?.totalVotes ?? 0, icon: ThumbsUp, link: null, color: 'bg-orange-400' },
+    { title: 'Total Reports', value: stats?.totalReports ?? 0, icon: Flag, link: '/admin/reports', color: 'bg-red-400' },
   ]
 
   return (
@@ -71,6 +72,12 @@ export const AdminDashboard = () => {
             className="px-6 py-3 bg-green-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-center"
           >
             Manage Comments
+          </Link>
+          <Link
+            to="/admin/reports"
+            className="px-6 py-3 bg-red-400 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all text-center"
+          >
+            Review Reports
           </Link>
         </div>
       </div>

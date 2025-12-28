@@ -22,6 +22,7 @@ export interface AdminStats {
   totalPosts: number
   totalComments: number
   totalVotes: number
+  totalReports: number
   newUsersToday: number
   newPostsToday: number
 }

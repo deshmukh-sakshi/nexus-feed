@@ -41,9 +41,10 @@ public class AdminServiceImpl implements AdminService {
         long totalPosts = postRepository.count();
         long totalComments = commentRepository.count();
         long totalVotes = voteRepository.count();
+        long totalReports = reportRepository.count();
         
         // For simplicity, we'll return 0 for daily stats - can be enhanced with proper queries
-        return new AdminStatsResponse(totalUsers, totalPosts, totalComments, totalVotes, 0, 0);
+        return new AdminStatsResponse(totalUsers, totalPosts, totalComments, totalVotes, totalReports, 0, 0);
     }
 
     @Override
