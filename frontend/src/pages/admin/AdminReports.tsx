@@ -100,7 +100,9 @@ export const AdminReports = () => {
     if (report.reportableType === 'POST') {
       return `/admin/posts?search=${encodeURIComponent(report.contentTitle)}`
     }
-    return `/admin/comments?search=${encodeURIComponent(report.contentTitle)}`
+    // For comments, use contentPreview (comment body) for search, fallback to contentTitle
+    const searchText = report.contentPreview || report.contentTitle
+    return `/admin/comments?search=${encodeURIComponent(searchText)}`
   }
 
   const getTypeIcon = (type: 'POST' | 'COMMENT') => {
