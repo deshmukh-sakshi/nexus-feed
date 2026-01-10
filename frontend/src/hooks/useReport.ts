@@ -5,22 +5,28 @@ import { useAuthStore } from '@/stores/authStore'
 import { getErrorMessage } from '@/types/errors'
 import type { ReportRequest } from '@/types'
 
-export const useReport = (postId: string) => {
+type ReportableType = 'POST' | 'COMMENT'
+
+export const useReport = (reportableId: string, reportableType: ReportableType = 'POST') => {
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuthStore()
 
   const reportStatusQuery = useQuery({
-    queryKey: ['reportStatus', postId],
-    queryFn: () => reportsApi.getReportStatus(postId),
-    enabled: !!postId && isAuthenticated,
+    queryKey: ['reportStatus', reportableType, reportableId],
+    queryFn: () => reportableType === 'POST' 
+      ? reportsApi.getPostReportStatus(reportableId)
+      : reportsApi.getCommentReportStatus(reportableId),
+    enabled: !!reportableId && isAuthenticated,
     retry: false,
   })
 
   const submitReportMutation = useMutation({
-    mutationFn: (data: ReportRequest) => reportsApi.submitReport(postId, data),
+    mutationFn: (data: ReportRequest) => reportableType === 'POST'
+      ? reportsApi.submitPostReport(reportableId, data)
+      : reportsApi.submitCommentReport(reportableId, data),
     onSuccess: () => {
-      queryClient.setQueryData(['reportStatus', postId], { hasReported: true })
-      queryClient.invalidateQueries({ queryKey: ['reportStatus', postId] })
+      queryClient.setQueryData(['reportStatus', reportableType, reportableId], { hasReported: true })
+      queryClient.invalidateQueries({ queryKey: ['reportStatus', reportableType, reportableId] })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))

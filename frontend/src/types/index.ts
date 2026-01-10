@@ -254,8 +254,10 @@ export interface ReportStatusResponse {
 
 export interface AdminReport {
   id: string
-  postId: string
-  postTitle: string
+  reportableId: string
+  reportableType: 'POST' | 'COMMENT'
+  contentTitle: string
+  contentPreview?: string
   reporterId: string
   reporterUsername: string
   reason: ReportReason

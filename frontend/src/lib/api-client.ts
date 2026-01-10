@@ -239,6 +239,25 @@ export const tagsApi = {
 
 // Reports API
 export const reportsApi = {
+  submitPostReport: async (postId: string, data: ReportRequest): Promise<void> => {
+    await api.post(`/posts/${postId}/report`, data)
+  },
+
+  getPostReportStatus: async (postId: string): Promise<ReportStatusResponse> => {
+    const response = await api.get<ReportStatusResponse>(`/posts/${postId}/report/status`)
+    return response.data
+  },
+
+  submitCommentReport: async (commentId: string, data: ReportRequest): Promise<void> => {
+    await api.post(`/comments/${commentId}/report`, data)
+  },
+
+  getCommentReportStatus: async (commentId: string): Promise<ReportStatusResponse> => {
+    const response = await api.get<ReportStatusResponse>(`/comments/${commentId}/report/status`)
+    return response.data
+  },
+
+  // Legacy aliases
   submitReport: async (postId: string, data: ReportRequest): Promise<void> => {
     await api.post(`/posts/${postId}/report`, data)
   },
@@ -295,16 +314,16 @@ export const adminApi = {
     await api.delete(`/admin/comments/${commentId}`)
   },
 
-  getReports: async (page = 0, size = 10): Promise<PageResponse<AdminReport>> => {
+  getReports: async (page = 0, size = 10, type?: 'POST' | 'COMMENT'): Promise<PageResponse<AdminReport>> => {
     const response = await api.get<PageResponse<AdminReport>>('/admin/reports', {
-      params: { page, size },
+      params: { page, size, type },
     })
     return response.data
   },
 
-  getReportsByReason: async (reason: ReportReason, page = 0, size = 10): Promise<PageResponse<AdminReport>> => {
+  getReportsByReason: async (reason: ReportReason, page = 0, size = 10, type?: 'POST' | 'COMMENT'): Promise<PageResponse<AdminReport>> => {
     const response = await api.get<PageResponse<AdminReport>>('/admin/reports', {
-      params: { reason, page, size },
+      params: { reason, page, size, type },
     })
     return response.data
   },

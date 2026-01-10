@@ -16,15 +16,19 @@ import { cn } from '@/lib/utils'
 interface ReportModalProps {
   isOpen: boolean
   onClose: () => void
-  postId: string
+  postId?: string
+  commentId?: string
 }
 
 const MAX_DETAILS_LENGTH = 2048
 
-export const ReportModal = ({ isOpen, onClose, postId }: ReportModalProps) => {
+export const ReportModal = ({ isOpen, onClose, postId, commentId }: ReportModalProps) => {
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(null)
   const [additionalDetails, setAdditionalDetails] = useState('')
-  const { submitReport, isSubmitting, isSuccess, reset } = useReport(postId)
+  
+  const reportableId = postId || commentId || ''
+  const reportableType = postId ? 'POST' : 'COMMENT'
+  const { submitReport, isSubmitting, isSuccess, reset } = useReport(reportableId, reportableType as 'POST' | 'COMMENT')
 
   const handleClose = () => {
     setSelectedReason(null)
@@ -54,7 +58,7 @@ export const ReportModal = ({ isOpen, onClose, postId }: ReportModalProps) => {
             </div>
             <h2 className="text-xl font-bold text-center">Thanks for reporting</h2>
             <p className="text-center text-muted-foreground">
-              We'll review this post and take action if it violates our community guidelines.
+              We'll review this {reportableType.toLowerCase()} and take action if it violates our community guidelines.
             </p>
           </div>
           <DialogFooter className="sm:justify-center">
@@ -75,7 +79,7 @@ export const ReportModal = ({ isOpen, onClose, postId }: ReportModalProps) => {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] rounded-none bg-yellow-50 dark:bg-yellow-950">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Report this post</DialogTitle>
+          <DialogTitle className="text-xl font-bold">Report this {reportableType.toLowerCase()}</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">

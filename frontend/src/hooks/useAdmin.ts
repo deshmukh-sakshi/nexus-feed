@@ -159,11 +159,11 @@ export const useDeleteComment = () => {
 }
 
 
-export const useAdminReports = (page = 0, size = 10, reason?: ReportReason) => {
+export const useAdminReports = (page = 0, size = 10, reason?: ReportReason, type?: 'POST' | 'COMMENT') => {
   return useQuery({
-    queryKey: ['admin', 'reports', page, size, reason],
+    queryKey: ['admin', 'reports', page, size, reason, type],
     queryFn: () => reason 
-      ? adminApi.getReportsByReason(reason, page, size)
-      : adminApi.getReports(page, size),
+      ? adminApi.getReportsByReason(reason, page, size, type)
+      : adminApi.getReports(page, size, type),
   })
 }

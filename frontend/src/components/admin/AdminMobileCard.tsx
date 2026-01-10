@@ -18,6 +18,7 @@ type AdminMobileCardProps = {
   onDeleteClick?: (id: string) => void
   onDeleteConfirm?: (id: string) => void
   onDeleteCancel?: () => void
+  deleteLabel?: string
 }
 
 const statColorClasses = {
@@ -36,6 +37,7 @@ export const AdminMobileCard = ({
   onDeleteClick,
   onDeleteConfirm,
   onDeleteCancel,
+  deleteLabel = 'Delete',
 }: AdminMobileCardProps) => {
   const isConfirming = deleteConfirm === id
   const showDeleteActions = onDeleteClick && onDeleteConfirm && onDeleteCancel
@@ -93,7 +95,7 @@ export const AdminMobileCard = ({
               className="flex items-center gap-2 px-3 py-2 bg-red-400 border-2 border-black font-semibold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             >
               <Trash2 className="h-4 w-4" />
-              Delete
+              {deleteLabel}
             </button>
           )
         )}

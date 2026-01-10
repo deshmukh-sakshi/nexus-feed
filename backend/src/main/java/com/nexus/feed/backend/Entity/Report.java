@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Entity representing a user report against a post.
- * Each user can only report a post once (enforced by unique constraint).
+ * Entity representing a user report against a post or comment.
+ * Each user can only report a specific item once (enforced by unique constraint).
  */
 @Getter
 @Setter
@@ -18,10 +18,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "reports",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_report_post_reporter", columnNames = {"post_id", "reporter_id"})
+        @UniqueConstraint(name = "uk_report_reportable_reporter", columnNames = {"reportable_id", "reportable_type", "reporter_id"})
     },
     indexes = {
-        @Index(name = "idx_report_post_id", columnList = "post_id"),
+        @Index(name = "idx_report_reportable", columnList = "reportable_id, reportable_type"),
         @Index(name = "idx_report_created_at", columnList = "created_at"),
         @Index(name = "idx_report_reason", columnList = "reason")
     }
@@ -31,9 +31,12 @@ public class Report {
     @GeneratedValue
     private UUID id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @Column(name = "reportable_id", nullable = false)
+    private UUID reportableId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reportable_type", nullable = false)
+    private ReportableType reportableType;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
@@ -52,5 +55,9 @@ public class Report {
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
+    }
+
+    public enum ReportableType {
+        POST, COMMENT
     }
 }

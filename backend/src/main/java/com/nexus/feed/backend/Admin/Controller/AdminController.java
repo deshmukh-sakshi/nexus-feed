@@ -2,6 +2,7 @@ package com.nexus.feed.backend.Admin.Controller;
 
 import com.nexus.feed.backend.Admin.DTO.*;
 import com.nexus.feed.backend.Admin.Service.AdminService;
+import com.nexus.feed.backend.Entity.Report.ReportableType;
 import com.nexus.feed.backend.Entity.ReportReason;
 import com.nexus.feed.backend.Service.ReportService;
 import jakarta.validation.Valid;
@@ -101,13 +102,18 @@ public class AdminController {
     public ResponseEntity<Page<AdminReportResponse>> getAllReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) ReportReason reason) {
-        log.debug("Admin fetching reports: page={}, size={}, reason={}", page, size, reason);
+            @RequestParam(required = false) ReportReason reason,
+            @RequestParam(required = false) ReportableType type) {
+        log.debug("Admin fetching reports: page={}, size={}, reason={}, type={}", page, size, reason, type);
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
         
         Page<AdminReportResponse> reports;
-        if (reason != null) {
+        if (reason != null && type != null) {
+            reports = reportService.getReportsByReasonAndType(reason, type, pageRequest);
+        } else if (reason != null) {
             reports = reportService.getReportsByReason(reason, pageRequest);
+        } else if (type != null) {
+            reports = reportService.getReportsByType(type, pageRequest);
         } else {
             reports = reportService.getAllReports(pageRequest);
         }
