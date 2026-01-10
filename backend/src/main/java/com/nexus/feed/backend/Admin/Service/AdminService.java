@@ -11,6 +11,7 @@ public interface AdminService {
     AdminUserResponse updateUserRole(UUID userId, String role);
     void deleteUser(UUID userId);
     Page<AdminPostResponse> getAllPosts(Pageable pageable);
+    Page<AdminPostResponse> getAllPosts(Pageable pageable, String sortBy, String sortDirection);
     void deletePost(UUID postId);
     Page<AdminCommentResponse> getAllComments(Pageable pageable);
     void deleteComment(UUID commentId);

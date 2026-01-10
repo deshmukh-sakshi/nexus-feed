@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.nexus.feed.backend.Auth.Service.JwtService;
 import com.nexus.feed.backend.Auth.Service.UserDetailsServiceImpl;
+import com.nexus.feed.backend.Service.ReportService;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 
 @WebMvcTest(controllers = CommentController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
@@ -62,6 +63,9 @@ class CommentControllerTest {
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
+
+    @MockitoBean
+    private ReportService reportService;
 
     private UUID userId;
     private UUID postId;

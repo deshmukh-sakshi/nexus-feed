@@ -12,12 +12,14 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ReportModal } from "@/components/posts/ReportModal";
 import { cn, formatNumber } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { useComments } from "@/hooks/useComments";
@@ -45,6 +47,7 @@ export const CommentItem = ({
   const [replyBody, setReplyBody] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const score = comment.upvotes - comment.downvotes;
@@ -115,6 +118,14 @@ export const CommentItem = ({
   const handleCancelReply = () => {
     setReplyBody("");
     setIsReplying(false);
+  };
+
+  const handleReport = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    setShowReportModal(true);
   };
 
   return (
@@ -273,6 +284,18 @@ export const CommentItem = ({
                     </Button>
                   </>
                 )}
+
+                {!isOwner && !isTempComment && (
+                  <Button
+                    size="sm"
+                    className="h-7 sm:h-8 px-2 sm:px-3 bg-orange-300 text-black hover:bg-orange-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-full font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    onClick={handleReport}
+                    title="Report this comment"
+                  >
+                    <Flag className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Report</span>
+                  </Button>
+                )}
               </div>
 
               {isReplying && (
@@ -334,6 +357,12 @@ export const CommentItem = ({
         description="Are you sure you want to delete this comment? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
+      />
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        commentId={comment.id}
       />
     </>
   );

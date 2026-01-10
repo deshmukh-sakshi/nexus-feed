@@ -2,6 +2,9 @@ package com.nexus.feed.backend.Admin.Controller;
 
 import com.nexus.feed.backend.Admin.DTO.*;
 import com.nexus.feed.backend.Admin.Service.AdminService;
+import com.nexus.feed.backend.Entity.Report.ReportableType;
+import com.nexus.feed.backend.Entity.ReportReason;
+import com.nexus.feed.backend.Service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final ReportService reportService;
 
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsResponse> getStats() {
@@ -55,9 +59,21 @@ public class AdminController {
     @GetMapping("/posts")
     public ResponseEntity<Page<AdminPostResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminService.getAllPosts(
-                PageRequest.of(page, size, Sort.by("createdAt").descending())));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        log.debug("Admin fetching posts: page={}, size={}, sortBy={}, sortDirection={}", page, size, sortBy, sortDirection);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        
+        Page<AdminPostResponse> posts;
+        if (sortBy != null && !sortBy.isEmpty()) {
+            posts = adminService.getAllPosts(pageRequest, sortBy, sortDirection);
+        } else {
+            posts = adminService.getAllPosts(
+                    PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        }
+        
+        return ResponseEntity.ok(posts);
     }
 
     @DeleteMapping("/posts/{postId}")
@@ -80,5 +96,28 @@ public class AdminController {
         log.info("Admin deleting comment: {}", commentId);
         adminService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reports")
+    public ResponseEntity<Page<AdminReportResponse>> getAllReports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) ReportReason reason,
+            @RequestParam(required = false) ReportableType type) {
+        log.debug("Admin fetching reports: page={}, size={}, reason={}, type={}", page, size, reason, type);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        
+        Page<AdminReportResponse> reports;
+        if (reason != null && type != null) {
+            reports = reportService.getReportsByReasonAndType(reason, type, pageRequest);
+        } else if (reason != null) {
+            reports = reportService.getReportsByReason(reason, pageRequest);
+        } else if (type != null) {
+            reports = reportService.getReportsByType(type, pageRequest);
+        } else {
+            reports = reportService.getAllReports(pageRequest);
+        }
+        
+        return ResponseEntity.ok(reports);
     }
 }
