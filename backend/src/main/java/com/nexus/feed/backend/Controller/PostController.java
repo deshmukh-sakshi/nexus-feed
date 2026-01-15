@@ -3,6 +3,7 @@ package com.nexus.feed.backend.Controller;
 import com.nexus.feed.backend.DTO.*;
 import com.nexus.feed.backend.Service.AuthenticationService;
 import com.nexus.feed.backend.Service.PostService;
+import com.nexus.feed.backend.Service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class PostController {
 
     private final PostService postService;
     private final AuthenticationService authenticationService;
+    private final ReportService reportService;
 
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@Valid @RequestBody PostCreateRequest request) {
@@ -110,5 +112,23 @@ public class PostController {
         log.debug("Deleting post: {} by user: {}", id, userId);
         postService.deletePost(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/report")
+    public ResponseEntity<ApiResponse<Void>> reportPost(
+            @PathVariable UUID id,
+            @Valid @RequestBody ReportRequest request) {
+        UUID userId = authenticationService.getCurrentUserId();
+        log.debug("User {} reporting post {} with reason {}", userId, id, request.reason());
+        reportService.createReport(id, userId, request.reason(), request.additionalDetails());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Report submitted successfully", null));
+    }
+
+    @GetMapping("/{id}/report/status")
+    public ResponseEntity<ReportStatusResponse> getReportStatus(@PathVariable UUID id) {
+        UUID userId = authenticationService.getCurrentUserId();
+        boolean hasReported = reportService.hasUserReportedPost(id, userId);
+        return ResponseEntity.ok(new ReportStatusResponse(hasReported));
     }
 }

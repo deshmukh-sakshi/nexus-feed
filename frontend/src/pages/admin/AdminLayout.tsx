@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, FileText, MessageSquare, Home, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, MessageSquare, Home, LogOut, Flag } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/posts', label: 'Posts', icon: FileText },
   { to: '/admin/comments', label: 'Comments', icon: MessageSquare },
+  { to: '/admin/reports', label: 'Reports', icon: Flag },
 ]
 
 export const AdminLayout = () => {

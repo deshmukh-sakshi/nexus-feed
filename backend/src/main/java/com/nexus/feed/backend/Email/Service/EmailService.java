@@ -4,5 +4,6 @@ public interface EmailService {
     void sendEmail(String to, String subject, String body);
     void sendWelcomeEmail(String to, String username);
     void sendBadgeAwardedEmail(String to, String username, String badgeName, String badgeDescription, String badgeIcon);
+    void sendReportConfirmationEmail(String to, String username, String postTitle);
     boolean isEnabled();
 }

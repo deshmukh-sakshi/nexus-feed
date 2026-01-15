@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAdminComments, useDeleteComment } from '@/hooks/useAdmin'
 import { Trash2, ExternalLink, ArrowUpDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AdminMobileCard } from '@/components/admin/AdminMobileCard'
@@ -10,13 +10,15 @@ type SortField = 'body' | 'username' | 'postTitle' | 'votes' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
 export const AdminComments = () => {
+  const [searchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') || ''
   const [page, setPage] = useState(0)
   const { data, isLoading, error } = useAdminComments(page, 20)
   const deleteComment = useDeleteComment()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
   const debouncedSearch = useDebounce(searchTerm, 300)
 
   const handleDelete = (commentId: string) => {

@@ -13,6 +13,7 @@ import com.nexus.feed.backend.Exception.ResourceNotFoundException;
 import com.nexus.feed.backend.Exception.UnauthorizedException;
 import com.nexus.feed.backend.Service.AuthenticationService;
 import com.nexus.feed.backend.Service.PostService;
+import com.nexus.feed.backend.Service.ReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,6 +66,9 @@ class PostControllerTest {
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
+
+    @MockitoBean
+    private ReportService reportService;
 
     private UUID userId;
     private UUID postId;

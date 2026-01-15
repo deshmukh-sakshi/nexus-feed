@@ -57,4 +57,28 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
         countQuery = "SELECT COUNT(p.id) FROM posts p",
         nativeQuery = true)
     Page<Post> findAllOrderByHot(Pageable pageable);
+    
+    @Query(value = """
+        SELECT p.* FROM posts p 
+        LEFT JOIN (
+            SELECT r.post_id, COUNT(*) as report_count
+            FROM reports r GROUP BY r.post_id
+        ) rc ON rc.post_id = p.id
+        ORDER BY COALESCE(rc.report_count, 0) DESC, p.created_at DESC
+        """, 
+        countQuery = "SELECT COUNT(p.id) FROM posts p",
+        nativeQuery = true)
+    Page<Post> findAllOrderByReportsDesc(Pageable pageable);
+    
+    @Query(value = """
+        SELECT p.* FROM posts p 
+        LEFT JOIN (
+            SELECT r.post_id, COUNT(*) as report_count
+            FROM reports r GROUP BY r.post_id
+        ) rc ON rc.post_id = p.id
+        ORDER BY COALESCE(rc.report_count, 0) ASC, p.created_at DESC
+        """, 
+        countQuery = "SELECT COUNT(p.id) FROM posts p",
+        nativeQuery = true)
+    Page<Post> findAllOrderByReportsAsc(Pageable pageable);
 }

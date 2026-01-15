@@ -15,6 +15,7 @@ public record AdminPostResponse(
     int upvotes,
     int downvotes,
     int commentCount,
+    int reportCount,
     Instant createdAt,
     Instant updatedAt
 ) {}
