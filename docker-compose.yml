@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: nexus-backend
+    ports:
+      - "10008:10008"
+    env_file:
+      - ./backend/.env
+    networks:
+      - nexus-network
+  
+  frontend:
+    build: ./frontend
+    container_name: nexus-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - nexus-network
+
+networks:
+  nexus-network:
+    driver: bridge
